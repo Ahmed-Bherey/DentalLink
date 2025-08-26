@@ -1,0 +1,41 @@
+<?php
+
+namespace App\Http\Resources\Financial;
+
+use App\Models\Store\Inventory;
+use Illuminate\Http\Resources\Json\JsonResource;
+
+class OrderResource extends JsonResource
+{
+    /**
+     * Transform the resource into an array.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
+     */
+    public function toArray($request)
+    {
+        return [
+            'id'          => $this->id,
+            'doctor_name' => $this->doctor->name,
+            'notes'       => $this->notes,
+            'status'      => $this->status,
+            'status_name'      => $this->status_name,
+            'created_at'  => $this->created_at->format('Y-m-d H:i'),
+
+            // المنتجات الخاصة بالطلب
+            'products'       => $this->orderItems->map(function ($item) {
+                return [
+                    'product_id'      => $item->product->id,
+                    'name'              => $item->product->name,
+                    'desc'              => $item->product->desc,
+                    'img'               => $item->product->img,
+                    'price'             => $item->product->price,
+                    'quantity'          => $item->quantity,
+                    'quantityAvailable' => $item->product->quantity,
+                    'total_price'       => $item->product->price * $item->quantity,
+                ];
+            }),
+        ];
+    }
+}
