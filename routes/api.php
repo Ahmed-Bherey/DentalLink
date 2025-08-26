@@ -36,8 +36,8 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     // Orders
     Route::controller(OrderController::class)->prefix('order')->group(function () {
-        Route::get('index-supplier', 'indexForSupplier');
-        Route::get('all-delivered', 'deliveredOrdersForSupplier');
+        Route::get('index-type', 'indexForTypes');
+        Route::get('all-delivered', 'deliveredOrders');
         Route::post('store', 'store');
         Route::post('update-status/{order_id}', 'updateStatus');
     });

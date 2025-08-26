@@ -24,12 +24,12 @@ class OrderController extends Controller
         $this->orderService = $OrderService;
     }
 
-    // عرض قائمة الطلبات للمورد
-    public function indexForSupplier()
+    // عرض قائمة الطلبات للمورد والطبيب
+    public function indexForTypes()
     {
         try {
             $user = request()->user();
-            $supplierOrders = $this->orderService->getAllForSupplies($user);
+            $supplierOrders = $this->orderService->indexForTypes($user);
             return $this->successResponse(
                 OrderResource::collection($supplierOrders),
                 200,
@@ -42,12 +42,12 @@ class OrderController extends Controller
         }
     }
 
-    // عرض قائمة الطلبات المسلمة للمورد
-    public function deliveredOrdersForSupplier()
+    // عرض قائمة الطلبات المسلمة للمورد والطبيب
+    public function deliveredOrders()
     {
         try {
             $user = request()->user();
-            $supplierOrders = $this->orderService->getDeliveredOrdersForSupplier($user);
+            $supplierOrders = $this->orderService->getDeliveredOrders($user);
             return $this->successResponse(
                 OrderResource::collection($supplierOrders),
                 200,

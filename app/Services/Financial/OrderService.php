@@ -7,32 +7,36 @@ use App\Models\Financial\OrderExpense;
 
 class OrderService
 {
-    // عرض قائمة الطلبات للمورد
-    public function getAllForSupplies($user)
+    // عرض قائمة الطلبات للمورد والطبيب
+    public function indexForTypes($user)
     {
-        $query = Order::whereHas('orderItems.product', function ($q) use ($user) {
-            $q->where('user_id', $user->id);
-        });
+        $query = Order::query();
 
         // fillter by doctor
         if (request()->has('doctor_id') && request('doctor_id') !== null) {
             $query->where('doctor_id', request('doctor_id'));
+        } else {
+            $query->whereHas('orderItems.product', function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+            });
         }
 
-        return $query->orderBy('created_at', 'desc')->get();
+        return $query->get();
     }
 
-    // عرض قائمة الطلبات المسلمة للمورد
-    public function getDeliveredOrdersForSupplier($user)
+    // عرض قائمة الطلبات المسلمة للمورد والطبيب
+    public function getDeliveredOrders($user)
     {
-        $query = Order::whereHas('orderItems.product', function ($q) use ($user) {
-            $q->where('user_id', $user->id);
-        })->where('status', 'delivered')
-            ->where('payment_method', 'like', '%مدفوعات%');
+        $query = Order::query();
 
         // fillter by doctor
         if (request()->has('doctor_id') && request('doctor_id') !== null) {
             $query->where('doctor_id', request('doctor_id'));
+        } else {
+            $query->whereHas('orderItems.product', function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+            })->where('status', 'delivered')
+                ->where('payment_method', 'like', '%مدفوعات%');
         }
 
         return $query->orderBy('created_at', 'desc')->get();
