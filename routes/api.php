@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\UserAuthController;
 use App\Http\Controllers\Financial\OrderController;
+use App\Http\Controllers\Financial\PaymentController;
 use App\Http\Controllers\Store\InventoryController;
 use App\Http\Controllers\System\DepartmentController;
 use Illuminate\Http\Request;
@@ -26,7 +27,6 @@ Route::post('login', [UserAuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     // departments
     Route::controller(DepartmentController::class)->prefix('department')->group(function () {
-        Route::get('index', 'index');
         Route::post('store', 'store');
     });
     // store
@@ -41,4 +41,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('store', 'store');
         Route::post('update-status/{order_id}', 'updateStatus');
     });
+
+    // payments
+    Route::controller(PaymentController::class)->prefix('payment')->group(function () {
+        Route::get('index', 'index');
+        Route::post('store', 'store');
+        Route::post('update/{payment_id}', 'update');
+    });
 });
+// Un Auth
+// Index department
+Route::get('department/index', [DepartmentController::class, 'index']);

@@ -46,7 +46,9 @@ class UserAuthController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'phone' => $user->phone,
-                'code' => $user->department?->code,
+                'phone2' => $user->phone2,
+                'address' => $user->address,
+                'role' => $user->department?->code,
                 'token' => $token,
             ];
 
@@ -59,14 +61,14 @@ class UserAuthController extends Controller
     // انشاء حساب
     public function userRegister(RegisterRequest $request)
     {
-        //try {
+        try {
             $user = $this->authService->register($request->validated());
 
             $token = $user->createToken('API Token')->plainTextToken;
 
             return $this->createSuccessResponse('تم انشاء حسابك بنجاح', new UserResource($user), 201);
-        // } catch (Exception $e) {
-        //     return $this->errorResponse('عذرا حدث خطأ ما, برجاء المحاولة مرة اخرى', 422);
-        // }
+        } catch (Exception $e) {
+            return $this->errorResponse('عذرا حدث خطأ ما, برجاء المحاولة مرة اخرى', 422);
+        }
     }
 }

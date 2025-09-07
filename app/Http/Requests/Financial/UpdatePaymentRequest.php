@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Http\Requests\Auth;
+namespace App\Http\Requests\Financial;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
-class RegisterRequest extends FormRequest
+class UpdatePaymentRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -18,16 +18,24 @@ class RegisterRequest extends FormRequest
         return true;
     }
 
-    public function rules(): array
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, mixed>
+     */
+    public function rules()
     {
         return [
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email',
-            'phone'    => 'required|string|unique:users,phone',
-            'phone2'    => 'nullable|string',
-            'address' => 'required|string',
-            'department_id' => 'exists:departments,id',
-            'password' => 'required|string|min:6',
+            'amount' => 'required|numeric|min:0.01',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'amount.required' => 'الرجاء تحديد المبلغ.',
+            'amount.numeric' => 'المبلغ يجب أن يكون رقمًا.',
+            'amount.min' => 'المبلغ يجب أن يكون أكبر من 0.',
         ];
     }
 

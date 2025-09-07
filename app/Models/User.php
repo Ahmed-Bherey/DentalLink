@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Models\Financial\Order;
 use App\Models\Financial\OrderExpense;
+use App\Models\Financial\Payment;
 use App\Models\General\Department;
 use App\Models\Store\Inventory;
 use App\Models\Store\Product;
@@ -27,6 +28,8 @@ class User extends Authenticatable
         'name',
         'email',
         'phone',
+        'phone2',
+        'address',
         'password',
         'department_id',
         'active',
@@ -74,5 +77,10 @@ class User extends Authenticatable
     public function supplier_orderExpenses()
     {
         return $this->hasMany(OrderExpense::class, 'supplier_id');
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class, 'doctor_id');
     }
 }
