@@ -17,8 +17,8 @@ class InventoryService
     {
         return DB::transaction(function () use ($data) {
             $imgPath = null;
-            if (!empty($data['image'])) {
-                $img = $data['image'];
+            if (!empty($data['img'])) {
+                $img = $data['img'];
                 $imgPath = $img->store('products', 'public');
             }
 
@@ -26,7 +26,7 @@ class InventoryService
                 'user_id'    => auth()->id(),
                 'name'  => $data['name'],
                 'img'  => $imgPath,
-                'desc'  => $data['description'],
+                'desc'  => $data['desc'],
                 'price' => $data['price'],
                 'quantity'   => $data['quantity'],
             ]);

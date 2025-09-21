@@ -41,18 +41,18 @@ class InventoryController extends Controller
     // اضافة منتج جديد
     public function Store(InventoryRequest $request)
     {
-        //try {
+        try {
             $inventory = $this->inventoryService->create($request->validated());
             return $this->successResponseWithId(
                 'تم إضافة المنتج بنجاح',
                 $inventory['product']?->id
             );
-        // } catch (Exception $e) {
-        //     return $this->errorResponse(
-        //         'عذراً، حدث خطأ ما. برجاء المحاولة مرة أخرى',
-        //         422
-        //     );
-        // }
+        } catch (Exception $e) {
+            return $this->errorResponse(
+                'عذراً، حدث خطأ ما. برجاء المحاولة مرة أخرى',
+                422
+            );
+        }
     }
 
     // عرض قائمة منتجات كل الموردين للطبيب
