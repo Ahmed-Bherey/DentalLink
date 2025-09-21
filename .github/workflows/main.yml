@@ -12,6 +12,6 @@ jobs:
       - name: 📂 Sync files
         uses: SamKirkland/FTP-Deploy-Action@v4.3.6
         with:
-          server: ftp.bright-ignite.com
+          server: 91.204.209.29
           username: igniteas@dental-link.azda-cs.com
           password: 5U6QL{vVNg*#f)n#
