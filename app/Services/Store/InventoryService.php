@@ -36,4 +36,13 @@ class InventoryService
             ];
         });
     }
+
+    public function getAllSuppliersProducts()
+    {
+        return Product::whereHas('user.department', function ($q) {
+            $q->where('code', '!=', 'doctor');
+        })
+            ->latest()
+            ->get();
+    }
 }

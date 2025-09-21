@@ -41,15 +41,32 @@ class InventoryController extends Controller
     // اضافة منتج جديد
     public function Store(InventoryRequest $request)
     {
-        try {
+        //try {
             $inventory = $this->inventoryService->create($request->validated());
             return $this->successResponseWithId(
                 'تم إضافة المنتج بنجاح',
                 $inventory['product']?->id
             );
+        // } catch (Exception $e) {
+        //     return $this->errorResponse(
+        //         'عذراً، حدث خطأ ما. برجاء المحاولة مرة أخرى',
+        //         422
+        //     );
+        // }
+    }
+
+    // عرض قائمة منتجات كل الموردين للطبيب
+    public function allSuppliersProducts()
+    {
+        try {
+            $inventories = $this->inventoryService->getAllSuppliersProducts();
+            return $this->successResponse(
+                InventoryResource::collection($inventories),
+                200,
+            );
         } catch (Exception $e) {
             return $this->errorResponse(
-                'عذراً، حدث خطأ ما. برجاء المحاولة مرة أخرى',
+                'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
                 422
             );
         }

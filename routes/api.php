@@ -33,6 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::controller(InventoryController::class)->prefix('product')->group(function () {
         Route::get('index', 'index');
         Route::post('store', 'store');
+        Route::get('all', 'allSuppliersProducts');
     });
     // Orders
     Route::controller(OrderController::class)->prefix('order')->group(function () {
