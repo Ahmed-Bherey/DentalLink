@@ -27,8 +27,8 @@ class InventoryRequest extends FormRequest
     {
         return [
             'name'     => 'required|string|max:255',
-            'img'      => 'required|image|mimes:jpeg,png,jpg|max:2048',
-            'desc'     => 'nullable|string|max:1000',
+            'image'      => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            'description'     => 'nullable|string|max:1000',
             'price'    => ['required', 'numeric', 'regex:/^\d+(\.5)?$/', 'min:0'],
             'quantity' => 'required|integer|min:1',
         ];
@@ -38,10 +38,10 @@ class InventoryRequest extends FormRequest
     {
         return [
             'name.required'     => 'اسم المنتج مطلوب',
-            'img.required'      => 'صورة المنتج مطلوبة',
-            'img.image'         =>  'يجب ان تكون صورة وليست ملف',
-            'img.mimes'         => '(jpeg,png,jpg) امتداد الصورة غير مناسب, يجب ان تكون',
-            'img.max'           => 'حجم الصورة يجب الا يزيد عن 2 ميجا',
+            'image.required'      => 'صورة المنتج مطلوبة',
+            'image.image'         =>  'يجب ان تكون صورة وليست ملف',
+            'image.mimes'         => '(jpeg,png,jpg) امتداد الصورة غير مناسب, يجب ان تكون',
+            'image.max'           => 'حجم الصورة يجب الا يزيد عن 2 ميجا',
             'price.required'    => 'سعر المنتج مطلوب',
             'price.numeric'     => 'السعر يجب أن يكون رقم',
             'price.regex'       => 'السعر يجب أن يكون عددًا صحيحًا أو يحتوي فقط على .5',
