@@ -21,7 +21,8 @@ return [
 
     //'allowed_origins' => ['*'],
     'allowed_origins' => [
-        'https://your-angular-app.ngrok-free.app',
+        'http://localhost:4200', 
+        'https://denthub.xo.je', 
     ],
 
     'allowed_origins_patterns' => [],
