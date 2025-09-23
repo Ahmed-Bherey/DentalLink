@@ -6,7 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
-class OrderRequest extends FormRequest
+class OrderUpdateRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -26,20 +26,20 @@ class OrderRequest extends FormRequest
     public function rules()
     {
         return [
-            'products'            => 'required|array|min:1',
-            'products.*.id'       => 'required|exists:products,id',
-            'products.*.quantity' => 'required|integer|min:1',
-            'notes'               => 'nullable|string',
-            'status'              => 'nullable|in:pending,preparing,delivered,rejected',
-            'payment_method'      => 'required|in:كاش,الكترونى,مدفوعات',
-        ];
+        'products'            => 'nullable|array|min:1',
+        'products.*.id'       => 'required_with:products|exists:products,id',
+        'products.*.quantity' => 'required_with:products|integer|min:1',
+        'notes'               => 'nullable|string',
+        'status'              => 'nullable|in:pending,preparing,delivered,rejected',
+        'payment_method'      => 'nullable|in:كاش,الكترونى,مدفوعات',
+    ];
     }
 
     protected function failedValidation(Validator $validator)
     {
         throw new HttpResponseException(response()->json([
             'message' => 'Validation errors',
-            'errors' => $validator->errors()
+            'errors'  => $validator->errors(),
         ], 422));
     }
 }

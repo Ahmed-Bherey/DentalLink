@@ -33,6 +33,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::controller(InventoryController::class)->prefix('product')->group(function () {
         Route::get('index', 'index');
         Route::post('store', 'store');
+        Route::post('update/{id}', 'update');
+        Route::delete('delete/{id}', 'destroy');
+        Route::post('multi-delete', 'multiDestroy');
         Route::get('all', 'allSuppliersProducts');
     });
     // Orders
@@ -41,6 +44,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('all-delivered', 'deliveredOrders');
         Route::post('store', 'store');
         Route::post('update-status/{order_id}', 'updateStatus');
+        Route::post('update/{id}', 'update');
+        Route::delete('delete/{id}', 'destroy');
     });
 
     // payments

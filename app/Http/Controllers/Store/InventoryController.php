@@ -8,7 +8,9 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Services\Store\InventoryService;
 use App\Http\Requests\Store\InventoryRequest;
+use App\Http\Requests\Store\MultiDeleteRequest;
 use App\Http\Resources\Store\InventoryResource;
+use App\Http\Requests\Store\InventoryUpdateRequest;
 
 class InventoryController extends Controller
 {
@@ -54,6 +56,52 @@ class InventoryController extends Controller
             );
         }
     }
+
+    // تحديث المنتج
+    public function update(InventoryUpdateRequest $request, $id)
+    {
+        try {
+            $inventory = $this->inventoryService->update($id, $request->validated());
+            return $this->successResponseWithId(
+                'تم تحديث المنتج بنجاح',
+                $inventory['product']?->id
+            );
+        } catch (Exception $e) {
+            return $this->errorResponse(
+                'عذراً، حدث خطأ ما أثناء التحديث. برجاء المحاولة مرة أخرى',
+                422
+            );
+        }
+    }
+
+    // حذف منتج واحد
+    public function destroy($id)
+    {
+        try {
+            $this->inventoryService->delete($id);
+            return $this->successResponse('تم حذف المنتج بنجاح');
+        } catch (Exception $e) {
+            return $this->errorResponse(
+                'عذراً، حدث خطأ ما أثناء الحذف. برجاء المحاولة مرة أخرى',
+                422
+            );
+        }
+    }
+
+    // حذف مجموعة منتجات
+    public function multiDestroy(MultiDeleteRequest $request)
+{
+    try {
+        $this->inventoryService->multiDelete($request->validated()['ids']);
+
+        return $this->successResponse('تم حذف المنتجات بنجاح');
+    } catch (Exception $e) {
+        return $this->errorResponse(
+            'عذراً، حدث خطأ ما أثناء الحذف. برجاء المحاولة مرة أخرى.',
+            422
+        );
+    }
+}
 
     // عرض قائمة منتجات كل الموردين للطبيب
     public function allSuppliersProducts()

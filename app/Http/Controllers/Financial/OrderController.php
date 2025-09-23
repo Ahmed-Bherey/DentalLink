@@ -11,6 +11,7 @@ use App\Services\Financial\OrderService;
 use App\Http\Requests\Financial\OrderRequest;
 use App\Http\Resources\Financial\OrderResource;
 use Illuminate\Auth\Access\AuthorizationException;
+use App\Http\Requests\Financial\OrderUpdateRequest;
 use App\Http\Requests\Financial\UpdateStatusRequest;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
@@ -103,6 +104,53 @@ class OrderController extends Controller
                 'عذراً، حدث خطأ ما. برجاء المحاولة مرة أخرى',
                 422
             );
+        }
+    }
+
+    // تحديث بيانات الطلب
+    public function update(OrderUpdateRequest $request, $id)
+    {
+        try {
+            $order = Order::findOrFail($id);
+
+            $this->authorize('update', $order);
+
+            if ($order->status != 'pending') {
+                return $this->errorResponse('عفوا, لم يعد بالامكان تعديل بيانات الطلب.', 403);
+            }
+
+            $order = $this->orderService->update($order, $request->validated());
+
+            return $this->successResponseWithId(
+                'تم تحديث الطلب بنجاح',
+                $order->id
+            );
+        } catch (AuthorizationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'عفوا، ليس لديك صلاحية لتحديث هذا الطلب.',
+            ], 403);
+        } catch (Exception $e) {
+            return $this->errorResponse('حدث خطأ أثناء التحديث.', 422);
+        }
+    }
+
+    // حذف الطلب
+    public function destroy($id)
+    {
+        try {
+            $order = Order::findOrFail($id);
+            $this->authorize('delete', $order);
+
+            $this->orderService->delete($order);
+            return $this->successResponse('تم حذف الطلب بنجاح');
+        } catch (AuthorizationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'عفوا، ليس لديك صلاحية لحذف هذا الطلب.',
+            ], 403);
+        } catch (Exception $e) {
+            return $this->errorResponse('حدث خطأ أثناء الحذف.', 422);
         }
     }
 }

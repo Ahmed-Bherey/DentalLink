@@ -3,6 +3,7 @@
 namespace App\Services\Financial;
 
 use App\Models\Financial\Order;
+use Illuminate\Support\Facades\DB;
 use App\Models\Financial\OrderExpense;
 
 class OrderService
@@ -94,5 +95,43 @@ class OrderService
         }
 
         return $order;
+    }
+
+    // تحديث بيانات الطلب
+    public function update(Order $order, array $data)
+    {
+        return DB::transaction(function () use ($order, $data) {
+            // تحديث الحقول الأساسية
+            $order->update([
+                'notes'          => $data['notes'] ?? $order->notes,
+                'status'         => $data['status'] ?? $order->status,
+                'payment_method' => $data['payment_method'] ?? $order->payment_method,
+            ]);
+
+            // تحديث المنتجات فقط إذا تم إرسالها
+            if (array_key_exists('products', $data)) {
+                // حذف القديمة
+                $order->orderItems()->delete();
+
+                // إنشاء الجديدة
+                foreach ($data['products'] as $product) {
+                    $order->orderItems()->create([
+                        'product_id' => $product['id'],
+                        'quantity'   => $product['quantity'],
+                    ]);
+                }
+            }
+
+            return $order;
+        });
+    }
+
+    // حذف الطلب
+    public function delete(Order $order)
+    {
+        return DB::transaction(function () use ($order) {
+            $order->delete();
+            return true;
+        });
     }
 }
