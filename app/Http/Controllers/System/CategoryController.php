@@ -40,7 +40,7 @@ class CategoryController extends Controller
             $user = request()->user();
             $category = $this->categoryService->show($user, $id);
 
-            return $this->successResponseWithData('تم جلب بيانات القسم بنجاح', new CategoryResource($category), 200);
+            return $this->successResponseWithData(new CategoryResource($category), 200);
         // } catch (ModelNotFoundException $e) {
         //     return $this->errorResponse('القسم غير موجود', 404);
         // } catch (Exception $e) {
