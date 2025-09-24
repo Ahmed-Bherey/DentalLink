@@ -42,7 +42,7 @@ class CategoryController extends Controller
 
             return $this->successResponseWithData('تم جلب بيانات القسم بنجاح', new CategoryResource($category), 200);
         } catch (ModelNotFoundException $e) {
-            return $this->errorResponse('القسم غير موجود أو لا يتبع هذا المستخدم', 404);
+            return $this->errorResponse('القسم غير موجود', 404);
         } catch (Exception $e) {
             return $this->errorResponse('عذراً، حدث خطأ ما أثناء جلب البيانات', 500);
         }
