@@ -36,16 +36,16 @@ class CategoryController extends Controller
     // عرض بيانات تصنيف
     public function show($id)
     {
-        try {
+        //try {
             $user = request()->user();
             $category = $this->categoryService->show($user, $id);
 
             return $this->successResponseWithData('تم جلب بيانات القسم بنجاح', new CategoryResource($category), 200);
-        } catch (ModelNotFoundException $e) {
-            return $this->errorResponse('القسم غير موجود', 404);
-        } catch (Exception $e) {
-            return $this->errorResponse('عذراً، حدث خطأ ما أثناء جلب البيانات', 422);
-        }
+        // } catch (ModelNotFoundException $e) {
+        //     return $this->errorResponse('القسم غير موجود', 404);
+        // } catch (Exception $e) {
+        //     return $this->errorResponse('عذراً، حدث خطأ ما أثناء جلب البيانات', 422);
+        // }
     }
 
     // انشاء تصنيف جديد
