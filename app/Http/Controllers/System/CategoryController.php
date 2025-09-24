@@ -44,7 +44,7 @@ class CategoryController extends Controller
         } catch (ModelNotFoundException $e) {
             return $this->errorResponse('القسم غير موجود', 404);
         } catch (Exception $e) {
-            return $this->errorResponse('عذراً، حدث خطأ ما أثناء جلب البيانات', 500);
+            return $this->errorResponse('عذراً، حدث خطأ ما أثناء جلب البيانات', 422);
         }
     }
 
