@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Models\Financial\Order;
 use App\Models\Financial\OrderExpense;
 use App\Models\Financial\Payment;
+use App\Models\General\Category;
 use App\Models\General\Department;
 use App\Models\Store\Inventory;
 use App\Models\Store\Product;
@@ -82,5 +83,10 @@ class User extends Authenticatable
     public function payments()
     {
         return $this->hasMany(Payment::class, 'doctor_id');
+    }
+
+    public function categories()
+    {
+        return $this->hasMany(Category::class, 'user_id');
     }
 }

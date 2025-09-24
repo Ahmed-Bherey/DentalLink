@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\UserAuthController;
 use App\Http\Controllers\Financial\OrderController;
 use App\Http\Controllers\Financial\PaymentController;
 use App\Http\Controllers\Store\InventoryController;
+use App\Http\Controllers\System\CategoryController;
 use App\Http\Controllers\System\DepartmentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -28,6 +29,14 @@ Route::middleware('auth:sanctum')->group(function () {
     // departments
     Route::controller(DepartmentController::class)->prefix('department')->group(function () {
         Route::post('store', 'store');
+    });
+    // Category
+    Route::controller(CategoryController::class)->prefix('category')->group(function () {
+        Route::get('index', 'index');
+        Route::post('store', 'store');
+        Route::get('show/{id}', 'show');
+        Route::post('update/{id}', 'update');
+        Route::delete('delete/{id}', 'destroy');
     });
     // store
     Route::controller(InventoryController::class)->prefix('product')->group(function () {
