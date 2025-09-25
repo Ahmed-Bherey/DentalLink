@@ -35,7 +35,7 @@ class PaymentRequest extends FormRequest
     {
         return [
             'doctor_id.required' => 'الرجاء تحديد طبيب.',
-            'doctor_id.exists' => 'عفوا, الطبيب غير صحيح',
+            'doctor_id.exists' => 'عفوا, الطبيب غير موجود',
             'amount.required' => 'الرجاء تحديد المبلغ.',
             'amount.numeric' => 'المبلغ يجب أن يكون رقمًا.',
             'amount.min' => 'المبلغ يجب أن يكون أكبر من 0.',

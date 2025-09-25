@@ -26,28 +26,31 @@ class InventoryRequest extends FormRequest
     public function rules()
     {
         return [
-            'name'     => 'required|string|max:255',
-            'img'      => 'required|image|mimes:jpeg,png,jpg|max:2048',
-            'desc'     => 'nullable|string|max:1000',
-            'price'    => ['required', 'numeric', 'regex:/^\d+(\.5)?$/', 'min:0'],
-            'quantity' => 'required|integer|min:1',
+            'name'        => 'required|string|max:255',
+            'category_id' => 'required|exists:users,id|integer',
+            'img'         => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            'desc'        => 'nullable|string|max:1000',
+            'price'       => ['required', 'numeric', 'regex:/^\d+(\.5)?$/', 'min:0'],
+            'quantity'    => 'required|integer|min:1',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'name.required'     => 'اسم المنتج مطلوب',
-            'img.required'      => 'صورة المنتج مطلوبة',
-            'img.image'         =>  'يجب ان تكون صورة وليست ملف',
-            'img.mimes'         => '(jpeg,png,jpg) امتداد الصورة غير مناسب, يجب ان تكون',
-            'img.max'           => 'حجم الصورة يجب الا يزيد عن 2 ميجا',
-            'price.required'    => 'سعر المنتج مطلوب',
-            'price.numeric'     => 'السعر يجب أن يكون رقم',
-            'price.regex'       => 'السعر يجب أن يكون عددًا صحيحًا أو يحتوي فقط على .5',
-            'quantity.required' => 'الكمية مطلوبة',
-            'quantity.integer'  => 'الكمية يجب أن تكون عدد صحيح',
-            'quantity.min'      => 'الكمية يجب أن تكون أكبر من صفر',
+            'name.required'        => 'اسم المنتج مطلوب',
+            'category_id.required' => 'الرجاء تحديد تصنيف.',
+            'category_id.exists'   => 'عفوا, التصنيف غير موجود',
+            'img.required'         => 'صورة المنتج مطلوبة',
+            'img.image'            =>  'يجب ان تكون صورة وليست ملف',
+            'img.mimes'            => '(jpeg,png,jpg) امتداد الصورة غير مناسب, يجب ان تكون',
+            'img.max'              => 'حجم الصورة يجب الا يزيد عن 2 ميجا',
+            'price.required'       => 'سعر المنتج مطلوب',
+            'price.numeric'        => 'السعر يجب أن يكون رقم',
+            'price.regex'          => 'السعر يجب أن يكون عددًا صحيحًا أو يحتوي فقط على .5',
+            'quantity.required'    => 'الكمية مطلوبة',
+            'quantity.integer'     => 'الكمية يجب أن تكون عدد صحيح',
+            'quantity.min'         => 'الكمية يجب أن تكون أكبر من صفر',
         ];
     }
 

@@ -26,6 +26,7 @@ class InventoryService
             $product = Product::create([
                 'user_id'    => request()->user()->id,
                 'name'  => $data['name'],
+                'category_id'  => $data['category_id'],
                 'img'  => $imgPath,
                 'desc'  => $data['desc'],
                 'price' => $data['price'],
@@ -45,17 +46,17 @@ class InventoryService
             $product = Product::findOrFail($productId);
 
             // معالجة الصورة إن وجدت
-            if (!empty($data['img'])) {
+            // معالجة الصورة إن وجدت وكانت ملف فعلي
+            if (!empty($data['img']) && $data['img'] instanceof \Illuminate\Http\UploadedFile) {
                 // حذف الصورة القديمة إن وجدت
-                if ($product->img && Storage::disk('public')->exists($product->img)) {
+                if (!empty($product->img) && Storage::disk('public')->exists($product->img)) {
                     Storage::disk('public')->delete($product->img);
                 }
 
                 // رفع الصورة الجديدة
-                $img = $data['img'];
-                $data['img'] = $img->store('products', 'public');
+                $data['img'] = $data['img']->store('products', 'public');
             } else {
-                unset($data['img']); // تجنب تعديل الحقل إذا لم يتم رفع صورة جديدة
+                unset($data['img']); // لتجنب تعديل img إذا لم تُرسل
             }
 
             $product->update($data);
