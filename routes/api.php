@@ -67,4 +67,4 @@ Route::middleware('auth:sanctum')->group(function () {
 // Un Auth
 // Index department
 Route::get('department/index', [DepartmentController::class, 'index']);
-Route::get('department/store', [DepartmentController::class, 'store']);
+Route::post('department/store', [DepartmentController::class, 'store']);
