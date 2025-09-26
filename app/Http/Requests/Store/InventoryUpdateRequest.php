@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Store;
 
+use App\Rules\ValidImageOrString;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -28,7 +29,7 @@ class InventoryUpdateRequest extends FormRequest
         return [
             'name'        => 'sometimes|string|max:255',
             'category_id' => 'sometimes|exists:categories,id|integer',
-            'img'         => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'img'         => ['sometimes', new ValidImageOrString],
             'desc'        => 'nullable|string|max:1000',
             'price'       => ['sometimes', 'numeric', 'regex:/^\d+(\.0+|\.5)?$/', 'min:0'],
             'quantity'    => 'sometimes|integer|min:1',
