@@ -54,7 +54,7 @@ class CategoryController extends Controller
         try {
             $user = request()->user();
             $category = $this->categoryService->create($user, $request->validated());
-            return $this->successResponseWithId('تم انشاء القسم بنجاح', $category->id, 201);
+            return $this->createSuccessResponse('تم انشاء القسم بنجاح', new CategoryResource($category));
         } catch (Exception $e) {
             return $this->errorResponse('عذرا حدث خطأ ما, برجاء المحاولة مرة اخرى', 422);
         }

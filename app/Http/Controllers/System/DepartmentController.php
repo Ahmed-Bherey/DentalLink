@@ -41,7 +41,7 @@ class DepartmentController extends Controller
 
             $department = $this->departmentService->create($data);
 
-            return $this->successResponseWithId('تم انشاء القسم بنجاح', $department->id, 201);
+            return $this->createSuccessResponse('تم انشاء القسم بنجاح', new DepartmentResource($department));
         } catch (Exception $e) {
             return $this->errorResponse('عذرا حدث خطأ ما, برجاء المحاولة مرة اخرى', 422);
         }

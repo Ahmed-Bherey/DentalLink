@@ -55,7 +55,7 @@ class PaymentService
     public function updatePaymentStatus($data, $paymentRecord)
     {
         $amount = $paymentRecord->requested_amount;
-        if ($data['amount'] == 'rejected') {
+        if ($data['status'] == 'rejected') {
             $amount = $paymentRecord->amount;
         }
         $paymentRecord->update([

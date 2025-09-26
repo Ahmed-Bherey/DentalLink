@@ -45,9 +45,9 @@ class InventoryController extends Controller
     {
         try {
             $inventory = $this->inventoryService->create($request->validated());
-            return $this->successResponseWithId(
+            return $this->createSuccessResponse(
                 'تم إضافة المنتج بنجاح',
-                $inventory['product']?->id
+                new InventoryResource($inventory['product']),
             );
         } catch (Exception $e) {
             return $this->errorResponse(
@@ -90,18 +90,18 @@ class InventoryController extends Controller
 
     // حذف مجموعة منتجات
     public function multiDestroy(MultiDeleteRequest $request)
-{
-    try {
-        $this->inventoryService->multiDelete($request->validated()['ids']);
+    {
+        try {
+            $this->inventoryService->multiDelete($request->validated()['ids']);
 
-        return $this->successResponse('تم حذف المنتجات بنجاح');
-    } catch (Exception $e) {
-        return $this->errorResponse(
-            'عذراً، حدث خطأ ما أثناء الحذف. برجاء المحاولة مرة أخرى.',
-            422
-        );
+            return $this->successResponse('تم حذف المنتجات بنجاح');
+        } catch (Exception $e) {
+            return $this->errorResponse(
+                'عذراً، حدث خطأ ما أثناء الحذف. برجاء المحاولة مرة أخرى.',
+                422
+            );
+        }
     }
-}
 
     // عرض قائمة منتجات كل الموردين للطبيب
     public function allSuppliersProducts()

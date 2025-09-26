@@ -68,9 +68,9 @@ class OrderController extends Controller
             $this->authorize('create', Order::class);
             $user = request()->user();
             $order = $this->orderService->store($user, $request->validated());
-            return $this->successResponseWithId(
+            return $this->createSuccessResponse(
                 'تم إضافة المنتج بنجاح',
-                $order->id
+                new OrderResource($order),
             );
         } catch (AuthorizationException $e) {
             return response()->json([

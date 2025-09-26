@@ -47,9 +47,9 @@ class PaymentController extends Controller
         try {
             $user = request()->user();
             $payment = $this->paymentService->store($user, $request->validated());
-            return $this->successResponseWithId(
+            return $this->createSuccessResponse(
                 'تم انشاء المدفوعة بنجاح',
-                $payment->id,
+                new PaymentResource($payment),
             );
         } catch (Exception $e) {
             return $this->errorResponse(
