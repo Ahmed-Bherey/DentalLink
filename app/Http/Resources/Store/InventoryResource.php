@@ -24,6 +24,20 @@ class InventoryResource extends JsonResource
             'price' => $this->price,
             'quantity' => $this->quantity,
             'rating' => 5,
+            'status' => $this->getStatus(),
         ];
+    }
+
+    private function getStatus(): string
+    {
+        if ($this->quantity == 0) {
+            return 'OUTOFSTOCK';
+        }
+
+        if ($this->quantity <= 10) {
+            return 'LOWSTOCK';
+        }
+
+        return 'INSTOCK';
     }
 }
