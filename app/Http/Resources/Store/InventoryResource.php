@@ -34,7 +34,7 @@ class InventoryResource extends JsonResource
             return 'OUTOFSTOCK';
         }
 
-        if ($this->quantity <= 10) {
+        if ($this->quantity <= 5) {
             return 'LOWSTOCK';
         }
 
