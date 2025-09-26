@@ -27,9 +27,9 @@ Route::post('login', [UserAuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
     // departments
-    // Route::controller(DepartmentController::class)->prefix('department')->group(function () {
-    //     Route::post('store', 'store');
-    // });
+    Route::controller(DepartmentController::class)->prefix('department')->group(function () {
+        Route::post('store', 'store');
+    });
     // Category
     Route::controller(CategoryController::class)->prefix('category')->group(function () {
         Route::get('index', 'index');
@@ -67,4 +67,3 @@ Route::middleware('auth:sanctum')->group(function () {
 // Un Auth
 // Index department
 Route::get('department/index', [DepartmentController::class, 'index']);
-Route::post('department/store', [DepartmentController::class, 'store']);

@@ -27,7 +27,7 @@ class InventoryUpdateRequest extends FormRequest
     {
         return [
             'name'        => 'required|string|max:255',
-            'category_id' => 'sometimes|exists:users,id|integer',
+            'category_id' => 'sometimes|exists:categories,id|integer',
             'img'         => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'desc'        => 'nullable|string|max:1000',
             'price'       => ['required', 'numeric', 'regex:/^\d+(\.5)?$/', 'min:0'],
