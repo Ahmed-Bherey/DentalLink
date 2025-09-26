@@ -30,7 +30,7 @@ class InventoryUpdateRequest extends FormRequest
             'category_id' => 'sometimes|exists:categories,id|integer',
             'img'         => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'desc'        => 'nullable|string|max:1000',
-            'price'       => ['required', 'numeric', 'regex:/^\d+(\.5)?$/', 'min:0'],
+            'price'       => ['required', 'numeric', 'regex:/^\d+(\.0+|\.5)?$/', 'min:0'],
             'quantity'    => 'required|integer|min:1',
         ];
     }
