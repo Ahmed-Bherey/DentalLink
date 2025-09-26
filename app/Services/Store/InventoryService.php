@@ -47,16 +47,25 @@ class InventoryService
 
             // معالجة الصورة إن وجدت
             // معالجة الصورة إن وجدت وكانت ملف فعلي
-            if (!empty($data['img']) && $data['img'] instanceof \Illuminate\Http\UploadedFile) {
-                // حذف الصورة القديمة إن وجدت
-                if (!empty($product->img) && Storage::disk('public')->exists($product->img)) {
-                    Storage::disk('public')->delete($product->img);
-                }
+            if (array_key_exists('img', $data)) {
+                if ($data['img'] instanceof \Illuminate\Http\UploadedFile) {
+                    // حذف الصورة القديمة إن وجدت
+                    if (!empty($product->img) && Storage::disk('public')->exists($product->img)) {
+                        Storage::disk('public')->delete($product->img);
+                    }
 
-                // رفع الصورة الجديدة
-                $data['img'] = $data['img']->store('products', 'public');
+                    // رفع الصورة الجديدة
+                    $data['img'] = $data['img']->store('products', 'public');
+                } elseif (is_string($data['img'])) {
+                    // صورة لم تتغير - لا حاجة لفعل أي شيء (الاسم سيُستبدل بنفسه)
+                    // إذا أردت، يمكنك التحقق أنه يساوي $product->img لضمان عدم التلاعب
+                } else {
+                    // نوع غير صالح للصورة - احذفه
+                    unset($data['img']);
+                }
             } else {
-                unset($data['img']); // لتجنب تعديل img إذا لم تُرسل
+                // img لم تُرسل أساسًا
+                unset($data['img']);
             }
 
             $product->update($data);
