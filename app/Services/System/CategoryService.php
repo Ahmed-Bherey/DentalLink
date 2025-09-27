@@ -55,6 +55,10 @@ class CategoryService
     {
         $category = Category::where('user_id', $user->id)->findOrFail($id);
 
+        if ($category->products()->exists()) {
+            throw new \Exception('لا يمكن حذف القسم لأنه يحتوي على منتجات');
+        }
+
         // حذف الصورة من التخزين
         if ($category->img && Storage::disk('public')->exists($category->img)) {
             Storage::disk('public')->delete($category->img);
