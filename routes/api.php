@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\UserAuthController;
+use App\Http\Controllers\Clinic\ProductController;
 use App\Http\Controllers\Financial\OrderController;
 use App\Http\Controllers\Financial\PaymentController;
 use App\Http\Controllers\Store\InventoryController;
@@ -62,6 +63,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('index', 'index');
         Route::post('store', 'store');
         Route::post('update/{payment_id}', 'update');
+    });
+    // clinic
+    Route::prefix('clinic')->group(function () {
+        Route::controller(ProductController::class)->prefix('product')->group(function () {
+            Route::get('search', 'search');
+        });
     });
 });
 // Un Auth
