@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Store;
 use Exception;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
+use App\Exports\ProductsExport;
 use App\Http\Controllers\Controller;
+use Maatwebsite\Excel\Facades\Excel;
 use App\Services\Store\InventoryService;
 use App\Http\Requests\Store\InventoryRequest;
 use App\Http\Requests\Store\MultiDeleteRequest;
@@ -136,6 +138,19 @@ class InventoryController extends Controller
         } catch (Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ أثناء البحث. برجاء المحاولة لاحقاً',
+                422
+            );
+        }
+    }
+
+    public function exportExcel()
+    {
+        try {
+            $user = request()->user();
+            return Excel::download(new ProductsExport($user), 'products.xlsx');
+        } catch (\Exception $e) {
+            return $this->errorResponse(
+                'عذراً، حدث خطأ أثناء تحميل البيانات. برجاء المحاولة لاحقاً',
                 422
             );
         }

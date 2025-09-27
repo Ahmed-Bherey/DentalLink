@@ -48,6 +48,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('multi-delete', 'multiDestroy');
         Route::get('all', 'allSuppliersProducts');
         Route::get('search', 'search');
+        Route::get('export', 'exportExcel');
     });
     // Orders
     Route::controller(OrderController::class)->prefix('order')->group(function () {
