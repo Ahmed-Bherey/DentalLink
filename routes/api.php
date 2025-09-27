@@ -46,6 +46,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('delete/{id}', 'destroy');
         Route::post('multi-delete', 'multiDestroy');
         Route::get('all', 'allSuppliersProducts');
+        Route::get('search', 'search');
     });
     // Orders
     Route::controller(OrderController::class)->prefix('order')->group(function () {
@@ -56,7 +57,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('update/{id}', 'update');
         Route::delete('delete/{id}', 'destroy');
     });
-
     // payments
     Route::controller(PaymentController::class)->prefix('payment')->group(function () {
         Route::get('index', 'index');

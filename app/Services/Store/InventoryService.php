@@ -121,4 +121,15 @@ class InventoryService
             ->latest()
             ->get();
     }
+
+    // البحث
+    public function search($user, $search)
+    {
+        return Product::where('user_id', $user->id)
+            ->where(function ($query) use ($search) {
+                $query->where('name', 'like', '%' . $search . '%');
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
 }

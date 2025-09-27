@@ -119,4 +119,25 @@ class InventoryController extends Controller
             );
         }
     }
+
+    // البحث
+    public function search()
+    {
+        try {
+            $user = request()->user();
+            $search = request()->query('search');
+
+            $results = $this->inventoryService->search($user, $search);
+
+            return $this->successResponse(
+                InventoryResource::collection($results),
+                200,
+            );
+        } catch (Exception $e) {
+            return $this->errorResponse(
+                'عذراً، حدث خطأ أثناء البحث. برجاء المحاولة لاحقاً',
+                422
+            );
+        }
+    }
 }
