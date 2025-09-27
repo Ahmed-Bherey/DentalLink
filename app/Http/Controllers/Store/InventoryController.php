@@ -62,9 +62,9 @@ class InventoryController extends Controller
     {
         try {
             $inventory = $this->inventoryService->update($id, $request->validated());
-            return $this->successResponseWithId(
+            return $this->createSuccessResponse(
                 'تم تحديث المنتج بنجاح',
-                $inventory['product']?->id
+                new InventoryResource($inventory['product']),
             );
         } catch (Exception $e) {
             return $this->errorResponse(
