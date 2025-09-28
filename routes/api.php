@@ -58,6 +58,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('update-status/{order_id}', 'updateStatus');
         Route::post('update/{id}', 'update');
         Route::delete('delete/{id}', 'destroy');
+        Route::post('items/{orderItemId}/return', 'returnItem');
     });
     // payments
     Route::controller(PaymentController::class)->prefix('payment')->group(function () {

@@ -153,4 +153,29 @@ class OrderController extends Controller
             return $this->errorResponse('حدث خطأ أثناء الحذف.', 422);
         }
     }
+
+    public function returnItem(Request $request, $orderItemId)
+    {
+        $request->validate([
+            'quantity' => ['required', 'integer', 'min:1'],
+        ]);
+
+        try {
+            $this->orderService->returnOrderItem(
+                $request->user(),
+                $orderItemId,
+                $request->quantity
+            );
+
+            return $this->successResponseWithoutData("تم استرجاع المنتج بنجاح");
+        } catch (ModelNotFoundException $e) {
+            return $this->errorResponse("العنصر غير موجود", 404);
+        } catch (AuthorizationException $e) {
+            return $this->errorResponse("لا تملك صلاحية استرجاع هذا العنصر", 403);
+        } catch (\InvalidArgumentException $e) {
+            return $this->errorResponse($e->getMessage(), 422);
+        } catch (\Exception $e) {
+            return $this->errorResponse("حدث خطأ أثناء الاسترجاع", 500);
+        }
+    }
 }

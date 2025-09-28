@@ -2,9 +2,12 @@
 
 namespace App\Services\Financial;
 
+use App\Models\User;
 use App\Models\Financial\Order;
 use Illuminate\Support\Facades\DB;
+use App\Models\Financial\OrderItem;
 use App\Models\Financial\OrderExpense;
+use Illuminate\Auth\Access\AuthorizationException;
 
 class OrderService
 {
@@ -155,6 +158,49 @@ class OrderService
             $order->delete();
 
             return true;
+        });
+    }
+
+    public function returnOrderItem(User $doctor, int $orderItemId, int $quantityToReturn): void
+    {
+        DB::transaction(function () use ($doctor, $orderItemId, $quantityToReturn) {
+            $orderItem = OrderItem::with(['order', 'product'])->findOrFail($orderItemId);
+
+            // تحقق أن الطبيب هو صاحب الطلب
+            if ($orderItem->order->doctor_id !== $doctor->id) {
+                throw new AuthorizationException();
+            }
+
+            // تحقق أن الكمية المسترجعة منطقية
+            if ($quantityToReturn <= 0 || $quantityToReturn > $orderItem->quantity) {
+                throw new \InvalidArgumentException("الكمية المطلوبة غير صالحة.");
+            }
+
+            // احسب قيمة المسترجع
+            $unitPrice = $orderItem->product->price;
+            $totalRefund = $unitPrice * $quantityToReturn;
+
+            // حدث سجل الطلب
+            $orderItem->quantity -= $quantityToReturn;
+            if ($orderItem->quantity === 0) {
+                $orderItem->delete();
+            } else {
+                $orderItem->save();
+            }
+
+            // أعد الكمية للمخزون
+            $orderItem->product->increment('quantity', $quantityToReturn);
+
+            // حدث سجل المصاريف (OrderExpense)
+            $expense = OrderExpense::where('doctor_id', $doctor->id)
+                ->where('supplier_id', $orderItem->product->user_id)
+                ->first();
+
+            if ($expense) {
+                $expense->total     = max(0, $expense->total - $totalRefund);
+                $expense->remaining = max(0, $expense->remaining - $totalRefund);
+                $expense->save();
+            }
         });
     }
 }
