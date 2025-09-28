@@ -27,6 +27,13 @@ class Order extends Model
         return $this->hasMany(OrderItem::class, 'order_id');
     }
 
+    public function getTotalOrderPriceAttribute(): float
+    {
+        return $this->orderItems->sum(function ($item) {
+            return optional($item->product)->price * $item->quantity;
+        });
+    }
+
     public function getStatusNameAttribute()
     {
         return match ($this->status) {
