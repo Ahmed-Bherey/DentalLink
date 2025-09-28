@@ -16,17 +16,18 @@ class OrderResource extends JsonResource
     public function toArray($request)
     {
         return [
-            'id'          => $this->id,
-            'doctor_name' => $this->doctor->name,
-            'notes'       => $this->notes,
-            'status'      => $this->status,
-            'status_name'      => $this->status_name,
-            'created_at'  => $this->created_at->format('Y-m-d H:i'),
+            'id'                => $this->id,
+            'doctor_name'       => $this->doctor->name,
+            'notes'             => $this->notes,
+            'status'            => $this->status,
+            'status_name'       => $this->status_name,
+            'total_order_price' => $this->orderItems()->sum('price'),
+            'created_at'        => $this->created_at->format('Y-m-d H:i'),
 
             // المنتجات الخاصة بالطلب
             'products'       => $this->orderItems->map(function ($item) {
                 return [
-                    'product_id'      => $item->product->id,
+                    'product_id'        => $item->product->id,
                     'name'              => $item->product->name,
                     'desc'              => $item->product->desc,
                     'img'               => $item->product->img,
