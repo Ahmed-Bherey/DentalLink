@@ -31,21 +31,23 @@ class InventoryController extends Controller
             $user = request()->user();
             $perPage = request()->get('per_page', 10);
             $inventories = $this->inventoryService->getAll($user, $perPage);
-            return $this->successResponse([
-                InventoryResource::collection($inventories->items()),
-                'meta' => [
+            return $this->paginatedResponse(
+                collection: InventoryResource::collection($inventories->items()),
+                data: 'inventories',
+                meta: [
                     'current_page' => $inventories->currentPage(),
                     'last_page'    => $inventories->lastPage(),
                     'per_page'     => $inventories->perPage(),
                     'total'        => $inventories->total(),
                 ],
-                'links' => [
+                links: [
                     'first' => $inventories->url(1),
                     'last'  => $inventories->url($inventories->lastPage()),
                     'prev'  => $inventories->previousPageUrl(),
                     'next'  => $inventories->nextPageUrl(),
-                ]
-            ], 200);
+                ],
+                message: 'تم جلب البيانات بنجاح'
+            );
         } catch (Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',

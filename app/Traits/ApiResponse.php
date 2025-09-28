@@ -47,4 +47,21 @@ trait ApiResponse
             'message' => $message ?? 'Something went wrong',
         ], $code);
     }
+
+    public function paginatedResponse(
+        $collection,
+        string $data,
+        array $meta,
+        array $links,
+        string $message = '',
+        int $code = 200
+    ): JsonResponse {
+        return response()->json([
+            'status'      => true,
+            'message'     => $message,
+            $data  => $collection,
+            'meta'        => $meta,
+            'links'       => $links,
+        ], $code);
+    }
 }
