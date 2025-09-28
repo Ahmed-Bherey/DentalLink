@@ -33,7 +33,7 @@ class InventoryController extends Controller
             $inventories = $this->inventoryService->getAll($user, $perPage);
             return $this->paginatedResponse(
                 collection: InventoryResource::collection($inventories->items()),
-                data: 'inventories',
+                data: 'data',
                 meta: [
                     'current_page' => $inventories->currentPage(),
                     'last_page'    => $inventories->lastPage(),
