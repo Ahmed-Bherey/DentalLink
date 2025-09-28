@@ -21,9 +21,9 @@ class OrderResource extends JsonResource
             'notes'             => $this->notes,
             'status'            => $this->status,
             'status_name'       => $this->status_name,
-            // 'total_order_price' => $this->orderItems->sum(function ($item) {
-            //     return $item->product->price * $item->quantity;
-            // }),
+            'total_order_price' => $this->orderItems->reduce(function ($carry, $item) {
+                return $carry + ($item->product->price * $item->quantity);
+            }, 0),
             'created_at'        => $this->created_at->format('Y-m-d H:i'),
 
             // المنتجات الخاصة بالطلب
