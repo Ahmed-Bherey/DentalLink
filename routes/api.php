@@ -77,3 +77,4 @@ Route::middleware('auth:sanctum')->group(function () {
 // Un Auth
 // Index department
 Route::get('department/index', [DepartmentController::class, 'index']);
+Route::get('database/backup', [OrderController::class, 'backupDatabase']);

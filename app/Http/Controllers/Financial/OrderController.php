@@ -187,4 +187,29 @@ class OrderController extends Controller
         $orders = $this->orderService->getDeliveredOrders($user);
         return Excel::download(new DeliveredOrdersExport($orders), 'delivered_orders.xlsx');
     }
+
+    public function backupDatabase()
+    {
+        $dbHost     = config('database.connections.mysql.host');
+        $dbPort     = config('database.connections.mysql.port');
+        $dbName     = config('database.connections.mysql.database');
+        $dbUser     = config('database.connections.mysql.username');
+        $dbPassword = config('database.connections.mysql.password');
+
+        $fileName   = "db-backup-" . now()->format('Y-m-d-H-i-s') . ".sql";
+        $backupPath = storage_path("app/backups/{$fileName}");
+
+        // escape password
+        $command = "mysqldump -h {$dbHost} -P {$dbPort} -u {$dbUser} -p\"{$dbPassword}\" {$dbName} > \"{$backupPath}\"";
+
+        $result = null;
+        $output = null;
+        exec($command, $output, $result);
+
+        if ($result === 0 && file_exists($backupPath)) {
+            return response()->download($backupPath)->deleteFileAfterSend();
+        } else {
+            return response()->json(['message' => 'فشل في إنشاء النسخة الاحتياطية'], 500);
+        }
+    }
 }
