@@ -167,9 +167,9 @@ class OrderService
             $orderItem = OrderItem::with(['order', 'product'])->findOrFail($orderItemId);
 
             // تحقق أن الطبيب هو صاحب الطلب
-            // if ($orderItem->order->doctor_id !== $doctor->id) {
-            //     throw new AuthorizationException();
-            // }
+            if ($orderItem->order->doctor_id !== $doctor->id) {
+                throw new AuthorizationException();
+            }
 
             // تحقق أن الكمية المسترجعة منطقية
             if ($quantityToReturn <= 0 || $quantityToReturn > $orderItem->quantity) {

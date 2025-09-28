@@ -7,6 +7,8 @@ use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use App\Models\Financial\Order;
 use App\Http\Controllers\Controller;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\DeliveredOrdersExport;
 use App\Services\Financial\OrderService;
 use App\Http\Requests\Financial\OrderRequest;
 use App\Http\Resources\Financial\OrderResource;
@@ -177,5 +179,12 @@ class OrderController extends Controller
         } catch (\Exception $e) {
             return $this->errorResponse("حدث خطأ أثناء الاسترجاع", 500);
         }
+    }
+
+    public function exportDeliveredOrders()
+    {
+        $user = request()->user();
+        $orders = $this->orderService->getDeliveredOrders($user);
+        return Excel::download(new DeliveredOrdersExport($orders), 'delivered_orders.xlsx');
     }
 }

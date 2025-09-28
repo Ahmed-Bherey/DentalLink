@@ -59,6 +59,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('update/{id}', 'update');
         Route::delete('delete/{id}', 'destroy');
         Route::post('items/{orderItemId}/return', 'returnItem');
+        Route::get('delivered/export', 'exportDeliveredOrders');
     });
     // payments
     Route::controller(PaymentController::class)->prefix('payment')->group(function () {
