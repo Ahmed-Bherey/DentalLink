@@ -140,7 +140,7 @@ class OrderController extends Controller
     {
         try {
             $order = Order::findOrFail($id);
-            $this->authorize('delete', $order);
+            //$this->authorize('delete', $order);
 
             $this->orderService->delete($order);
             return $this->successResponse('تم حذف الطلب بنجاح');
