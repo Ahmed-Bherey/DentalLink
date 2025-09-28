@@ -3,6 +3,8 @@
 namespace App\Traits;
 
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\ResourceCollection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 trait ApiResponse
 {
@@ -48,20 +50,24 @@ trait ApiResponse
         ], $code);
     }
 
-    public function paginatedResponse(
-        $collection,
-        string $data,
-        array $meta,
-        array $links,
-        string $message = '',
-        int $code = 200
-    ): JsonResponse {
-        return response()->json([
-            'status'      => true,
-            'message'     => $message,
-            $data  => $collection,
-            'meta'        => $meta,
-            'links'       => $links,
-        ], $code);
-    }
+    public function paginatedResponse(LengthAwarePaginator $paginator, ResourceCollection $collection, string $message = 'تم جلب البيانات بنجاح'): JsonResponse
+{
+    return response()->json([
+        'status'  => true,
+        'message' => $message,
+        'data'    => $collection,
+        'meta'    => [
+            'current_page' => $paginator->currentPage(),
+            'last_page'    => $paginator->lastPage(),
+            'per_page'     => $paginator->perPage(),
+            'total'        => $paginator->total(),
+        ],
+        'links'   => [
+            'first' => $paginator->url(1),
+            'last'  => $paginator->url($paginator->lastPage()),
+            'prev'  => $paginator->previousPageUrl(),
+            'next'  => $paginator->nextPageUrl(),
+        ],
+    ]);
+}
 }
