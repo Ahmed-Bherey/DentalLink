@@ -135,6 +135,9 @@ class OrderService
     public function delete(Order $order)
     {
         return DB::transaction(function () use ($order) {
+            if ($order->status === 'delivered') {
+            throw new \InvalidArgumentException('عفوا, لم يعد بالامكان حذف الطلب');
+        }
             $order->load('orderItems.product');
 
             $totalToRefund = $order->total_order_price;
