@@ -12,7 +12,7 @@ use Illuminate\Auth\Access\AuthorizationException;
 class OrderService
 {
     // عرض قائمة الطلبات للمورد والطبيب
-    public function indexForTypes($user)
+    public function indexForTypes($user, $perPage = 3)
     {
         $query = Order::query();
 
@@ -25,11 +25,11 @@ class OrderService
             });
         }
 
-        return $query->get();
+        return $query->paginate($perPage);
     }
 
     // عرض قائمة الطلبات المسلمة للمورد والطبيب
-    public function getDeliveredOrders($user)
+    public function getDeliveredOrders($user, $perPage = 3)
     {
         $query = Order::query();
 
@@ -43,7 +43,7 @@ class OrderService
                 ->where('payment_method', 'like', '%مدفوعات%');
         }
 
-        return $query->orderBy('created_at', 'desc')->get();
+        return $query->orderBy('created_at', 'desc')->paginate($perPage);
     }
 
     // create order

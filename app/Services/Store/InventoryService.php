@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Storage;
 
 class InventoryService
 {
-    public function getAll($user, $perPage = 10)
+    public function getAll($user, $perPage = 3)
     {
         return Product::where('user_id', $user->id)
             ->orderBy('created_at', 'desc')->paginate($perPage);
