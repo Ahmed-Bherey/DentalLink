@@ -14,7 +14,7 @@ class OrderService
     // عرض قائمة الطلبات للمورد والطبيب
     public function indexForTypes($user, $perPage = 3)
     {
-        $query = Order::query();
+        $query = Order::where('status', 'pending')->query();
 
         // fillter by doctor
         if ($user->department?->code == 'doctor') {
