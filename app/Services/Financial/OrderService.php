@@ -17,8 +17,8 @@ class OrderService
         $query = Order::query();
 
         // fillter by doctor
-        if (request()->has('doctor_id') && request('doctor_id') !== null) {
-            $query->where('doctor_id', request('doctor_id'));
+        if ($user->department?->code == 'doctor') {
+            $query->where('doctor_id', $user->id);
         } else {
             $query->whereHas('orderItems.product', function ($q) use ($user) {
                 $q->where('user_id', $user->id);
@@ -34,8 +34,8 @@ class OrderService
         $query = Order::query();
 
         // fillter by doctor
-        if (request()->has('doctor_id') && request('doctor_id') !== null) {
-            $query->where('doctor_id', request('doctor_id'));
+        if ($user->department?->code == 'doctor') {
+            $query->where('doctor_id', $user->id);
         } else {
             $query->whereHas('orderItems.product', function ($q) use ($user) {
                 $q->where('user_id', $user->id);
