@@ -6,6 +6,7 @@ use Exception;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use App\Models\Financial\Order;
+use App\Models\Financial\OrderItem;
 use App\Http\Controllers\Controller;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\DeliveredOrdersExport;
@@ -13,10 +14,10 @@ use App\Models\Financial\OrderExpense;
 use App\Services\Financial\OrderService;
 use App\Http\Requests\Financial\OrderRequest;
 use App\Http\Resources\Financial\OrderResource;
+use App\Http\Requests\Financial\UpdateItemRequest;
 use Illuminate\Auth\Access\AuthorizationException;
 use App\Http\Requests\Financial\OrderUpdateRequest;
 use App\Http\Requests\Financial\UpdateStatusRequest;
-use App\Models\Financial\OrderItem;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class OrderController extends Controller
@@ -146,7 +147,6 @@ class OrderController extends Controller
     {
         try {
             $deleteItem = OrderItem::findOrFail($orderItem_id);
-            //$this->authorize('delete', $order);
 
             $this->orderService->deleteItem($deleteItem);
             return $this->successResponse('تم حذف المنتج بنجاح');
@@ -157,6 +157,25 @@ class OrderController extends Controller
             ], 403);
         } catch (Exception $e) {
             return $this->errorResponse('حدث خطأ أثناء الحذف.', 422);
+        }
+    }
+
+    // تعديل منتج من الطلب
+    public function UpdateItem(UpdateItemRequest $request, $orderItem_id)
+    {
+        try {
+            $orderItem = OrderItem::findOrFail($orderItem_id);
+
+            $this->orderService->UpdateItem($orderItem, $request->validated());
+
+            return $this->successResponse('تم تحديث المنتج بنجاح');
+        } catch (AuthorizationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'عفوا، ليس لديك صلاحية لتحديث هذا المنتج.',
+            ], 403);
+        } catch (Exception $e) {
+            return $this->errorResponse('حدث خطأ أثناء التحديث.', 422);
         }
     }
 

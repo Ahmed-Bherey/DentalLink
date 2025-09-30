@@ -37,7 +37,7 @@ class OrderService
         // fillter by doctor
         if ($user->department?->code == 'doctor') {
             $query->where('doctor_id', $user->id)
-            ->where('status', 'delivered');
+                ->where('status', 'delivered');
         } else {
             $query->whereHas('orderItems.product', function ($q) use ($user) {
                 $q->where('user_id', $user->id);
@@ -141,13 +141,22 @@ class OrderService
         });
     }
 
+    // تعديل منتج من الطلب
+    public function UpdateItem(OrderItem $orderItem, $data)
+    {
+        return DB::transaction(function () use ($orderItem, $data) {
+            $orderItem->update($data);
+            return $orderItem;
+        });
+    }
+
     // حذف الطلب
     public function delete(Order $order)
     {
         return DB::transaction(function () use ($order) {
             if ($order->status === 'delivered') {
-            throw new \InvalidArgumentException('عفوا, لم يعد بالامكان حذف الطلب');
-        }
+                throw new \InvalidArgumentException('عفوا, لم يعد بالامكان حذف الطلب');
+            }
             $order->load('orderItems.product');
 
             // $totalToRefund = $order->total_order_price;
