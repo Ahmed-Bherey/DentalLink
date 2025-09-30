@@ -36,7 +36,8 @@ class OrderService
 
         // fillter by doctor
         if ($user->department?->code == 'doctor') {
-            $query->where('doctor_id', $user->id);
+            $query->where('doctor_id', $user->id)
+            ->where('status', 'delivered');
         } else {
             $query->whereHas('orderItems.product', function ($q) use ($user) {
                 $q->where('user_id', $user->id);
