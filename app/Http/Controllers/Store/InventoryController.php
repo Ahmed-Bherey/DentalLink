@@ -29,7 +29,7 @@ class InventoryController extends Controller
     {
         try {
             $user = request()->user();
-            $perPage = request()->get('per_page', 3);
+            $perPage = request()->get('per_page', 10);
             $inventories = $this->inventoryService->getAll($user, $perPage);
             return $this->paginatedResponse(
             InventoryResource::collection($inventories),

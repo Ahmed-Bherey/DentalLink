@@ -32,7 +32,7 @@ class OrderController extends Controller
     {
         try {
             $user = request()->user();
-            $perPage = request()->get('per_page', 3);
+            $perPage = request()->get('per_page', 10);
             $supplierOrders = $this->orderService->indexForTypes($user, $perPage);
             return $this->paginatedResponse(
                 OrderResource::collection($supplierOrders),
@@ -51,7 +51,7 @@ class OrderController extends Controller
     {
         try {
             $user = request()->user();
-            $perPage = request()->get('per_page', 3);
+            $perPage = request()->get('per_page', 10);
             $supplierOrders = $this->orderService->getDeliveredOrders($user, $perPage);
             return $this->paginatedResponse(
                 OrderResource::collection($supplierOrders),
@@ -195,7 +195,7 @@ class OrderController extends Controller
     {
         try {
             $user = request()->user();
-            $perPage = request()->get('per_page', 3);
+            $perPage = request()->get('per_page', 10);
 
             $orders = $this->orderService->searchOrders($user, $perPage);
 

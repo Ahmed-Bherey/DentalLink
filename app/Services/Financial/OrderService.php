@@ -12,7 +12,7 @@ use Illuminate\Auth\Access\AuthorizationException;
 class OrderService
 {
     // عرض قائمة الطلبات للمورد والطبيب
-    public function indexForTypes($user, $perPage = 3)
+    public function indexForTypes($user, $perPage = 10)
     {
         $query = Order::query();
 
@@ -29,7 +29,7 @@ class OrderService
     }
 
     // عرض قائمة الطلبات المسلمة للمورد والطبيب
-    public function getDeliveredOrders($user, $perPage = 3)
+    public function getDeliveredOrders($user, $perPage = 10)
     {
         $query = Order::query();
 
