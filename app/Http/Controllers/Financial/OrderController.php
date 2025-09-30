@@ -9,6 +9,7 @@ use App\Models\Financial\Order;
 use App\Http\Controllers\Controller;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\DeliveredOrdersExport;
+use App\Models\Financial\OrderExpense;
 use App\Services\Financial\OrderService;
 use App\Http\Requests\Financial\OrderRequest;
 use App\Http\Resources\Financial\OrderResource;
@@ -188,6 +189,15 @@ class OrderController extends Controller
         $user = request()->user();
         $orders = $this->orderService->getDeliveredOrders($user);
         return Excel::download(new DeliveredOrdersExport($orders), 'delivered_orders.xlsx');
+    }
+
+    public function showexpen()
+    {
+        $user = request()->user();
+        $expense = OrderExpense::where('doctor_id', $user->id)
+            ->where('supplier_id', 2)
+            ->first();
+        dd($expense);
     }
 
     // البحث باسم الطبيب او حالة الطلب

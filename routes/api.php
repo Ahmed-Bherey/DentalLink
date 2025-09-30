@@ -61,6 +61,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('items/{orderItemId}/return', 'returnItem');
         Route::get('delivered/export', 'exportDeliveredOrders');
         Route::get('search', 'searchOrders');
+        Route::get('showexpen', 'showexpen');
     });
     // payments
     Route::controller(PaymentController::class)->prefix('payment')->group(function () {
