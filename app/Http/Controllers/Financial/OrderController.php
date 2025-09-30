@@ -33,9 +33,9 @@ class OrderController extends Controller
         try {
             $user = request()->user();
             $supplierOrders = $this->orderService->indexForTypes($user);
-            return $this->successResponse(
+            return $this->paginatedResponse(
                 OrderResource::collection($supplierOrders),
-                200,
+                $supplierOrders,
             );
         } catch (Exception $e) {
             return $this->errorResponse(
@@ -51,9 +51,9 @@ class OrderController extends Controller
         try {
             $user = request()->user();
             $supplierOrders = $this->orderService->getDeliveredOrders($user);
-            return $this->successResponse(
+            return $this->paginatedResponse(
                 OrderResource::collection($supplierOrders),
-                200,
+                $supplierOrders,
             );
         } catch (Exception $e) {
             return $this->errorResponse(
