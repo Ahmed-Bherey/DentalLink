@@ -148,7 +148,7 @@ class OrderController extends Controller
             $deleteItem = OrderItem::findOrFail($orderItem_id);
             //$this->authorize('delete', $order);
 
-            $this->orderService->delete($deleteItem);
+            $this->orderService->deleteItem($deleteItem);
             return $this->successResponse('تم حذف المنتج بنجاح');
         } catch (AuthorizationException $e) {
             return response()->json([
