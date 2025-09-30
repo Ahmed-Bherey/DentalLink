@@ -18,7 +18,7 @@ class OrderService
 
         // fillter by doctor
         if ($user->department?->code == 'doctor') {
-            $query->where('status', 'pending')->where('doctor_id', $user->id);
+            $query->where('status', '!=', 'delivered')->where('doctor_id', $user->id);
         } else {
             $query->whereHas('orderItems.product', function ($q) use ($user) {
                 $q->whereNotIn('status', ['delivered', 'rejected'])
