@@ -50,24 +50,17 @@ trait ApiResponse
         ], $code);
     }
 
-    public function paginatedResponse(LengthAwarePaginator $paginator, ResourceCollection $collection, string $message = 'تم جلب البيانات بنجاح'): JsonResponse
-{
-    return response()->json([
-        'status'  => true,
-        'message' => $message,
-        'data'    => $collection,
-        'meta'    => [
-            'current_page' => $paginator->currentPage(),
-            'last_page'    => $paginator->lastPage(),
-            'per_page'     => $paginator->perPage(),
-            'total'        => $paginator->total(),
-        ],
-        'links'   => [
-            'first' => $paginator->url(1),
-            'last'  => $paginator->url($paginator->lastPage()),
-            'prev'  => $paginator->previousPageUrl(),
-            'next'  => $paginator->nextPageUrl(),
-        ],
-    ]);
-}
+    public function paginatedResponse($data, $paginator, int $code = 200): JsonResponse
+    {
+        return response()->json([
+            'status' => true,
+            'data'   => $data,
+            'meta'   => [
+                'current_page' => $paginator->currentPage(),
+                'last_page'    => $paginator->lastPage(),
+                'per_page'     => $paginator->perPage(),
+                'total'        => $paginator->total(),
+            ],
+        ], $code);
+    }
 }

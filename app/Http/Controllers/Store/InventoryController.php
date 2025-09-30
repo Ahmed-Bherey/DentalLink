@@ -32,8 +32,8 @@ class InventoryController extends Controller
             $perPage = request()->get('per_page', 10);
             $inventories = $this->inventoryService->getAll($user, $perPage);
             return $this->paginatedResponse(
-            $inventories,
-            InventoryResource::collection($inventories)
+            InventoryResource::collection($inventories),
+            $inventories
         );
         } catch (Exception $e) {
             return $this->errorResponse(
