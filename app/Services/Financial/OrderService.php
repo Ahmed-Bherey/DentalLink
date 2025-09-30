@@ -203,4 +203,44 @@ class OrderService
             }
         });
     }
+
+    // البحث باسم الطبيب او حالة الطلب
+    public function searchOrders($user, $perPage = 10)
+    {
+        $query = Order::query();
+
+        // جلب قيمة البحث من الريكوست
+        $search = trim(request('search', ''));
+
+        if ($search !== '') {
+            // خريطة الحالات (العربي → الإنجليزي)
+            $statusMap = [
+                'قيد الانتظار'  => 'pending',
+                'جاري التحضير' => 'preparing',
+                'تم التوصيل'   => 'delivered',
+                'مرفوض'         => 'rejected',
+            ];
+
+            $query->where(function ($q) use ($search, $statusMap) {
+                // ✅ البحث باسم الدكتور
+                $q->whereHas('doctor', function ($doctorQuery) use ($search) {
+                    $doctorQuery->where('name', 'like', "%{$search}%");
+                });
+
+                // ✅ البحث بالحالة (عربي أو إنجليزي)
+                if (isset($statusMap[$search])) {
+                    $q->orWhere('status', $statusMap[$search]);
+                } else {
+                    $q->orWhere('status', 'like', "%{$search}%");
+                }
+            });
+        }
+
+        // ✅ فلترة الطلبات الخاصة بالمورد
+        $query->whereHas('orderItems.product', function ($q) use ($user) {
+            $q->where('user_id', $user->id);
+        });
+
+        return $query->orderBy('created_at', 'desc')->paginate($perPage);
+    }
 }

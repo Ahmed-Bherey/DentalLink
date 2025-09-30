@@ -190,6 +190,27 @@ class OrderController extends Controller
         return Excel::download(new DeliveredOrdersExport($orders), 'delivered_orders.xlsx');
     }
 
+    // البحث باسم الطبيب او حالة الطلب
+    public function searchOrders()
+    {
+        try {
+            $user = request()->user();
+            $perPage = request()->get('per_page', 3);
+
+            $orders = $this->orderService->searchOrders($user, $perPage);
+
+            return $this->paginatedResponse(
+                OrderResource::collection($orders),
+                $orders
+            );
+        } catch (Exception $e) {
+            return $this->errorResponse(
+                'عذراً، حدث خطأ أثناء البحث. برجاء المحاولة لاحقاً',
+                422
+            );
+        }
+    }
+
     public function backupDatabase()
     {
         $dbHost     = config('database.connections.mysql.host');
