@@ -15,9 +15,18 @@ class OrderResource extends JsonResource
      */
     public function toArray($request)
     {
+        $authUser = $request->user();
+
+        $name = null;
+        if ($authUser->department?->code === 'doctor') {
+            $name = $this->doctor->name;
+        } elseif ($authUser->department?->code === 'supplier') {
+            $name = optional($this->orderItems->first()?->product?->user)->name;
+        }
+
         return [
             'id'                => $this->id,
-            'doctor_name'       => $this->doctor->name,
+            'doctor_name'       => $name,
             'notes'             => $this->notes,
             'status'            => $this->status,
             'status_name'       => $this->status_name,
