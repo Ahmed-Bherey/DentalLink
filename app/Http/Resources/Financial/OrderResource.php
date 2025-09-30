@@ -19,9 +19,9 @@ class OrderResource extends JsonResource
 
         $name = null;
         if ($authUser->department?->code === 'doctor') {
-            $name = $this->doctor->name;
-        } elseif ($authUser->department?->code === 'supplier') {
             $name = optional($this->orderItems->first()?->product?->user)->name;
+        } elseif ($authUser->department?->code === 'supplier') {
+            $name = $this->doctor->name;
         }
 
         return [
