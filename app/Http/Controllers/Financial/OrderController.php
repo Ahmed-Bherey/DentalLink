@@ -30,7 +30,7 @@ class OrderController extends Controller
     // عرض قائمة الطلبات للمورد والطبيب
     public function indexForTypes()
     {
-        try {
+        //try {
             $user = request()->user();
             $perPage = request()->get('per_page', 3);
             $supplierOrders = $this->orderService->indexForTypes($user, $perPage);
@@ -38,12 +38,12 @@ class OrderController extends Controller
                 OrderResource::collection($supplierOrders),
                 $supplierOrders,
             );
-        } catch (Exception $e) {
-            return $this->errorResponse(
-                'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
-                422
-            );
-        }
+        // } catch (Exception $e) {
+        //     return $this->errorResponse(
+        //         'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
+        //         422
+        //     );
+        // }
     }
 
     // عرض قائمة الطلبات المسلمة للمورد والطبيب
