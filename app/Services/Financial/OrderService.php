@@ -131,6 +131,16 @@ class OrderService
         });
     }
 
+    // حذف منتج من الطلب
+    public function deleteItem(OrderItem $orderItem)
+    {
+        return DB::transaction(function () use ($orderItem) {
+            $orderItem->delete();
+
+            return true;
+        });
+    }
+
     // حذف الطلب
     public function delete(Order $order)
     {
@@ -140,23 +150,23 @@ class OrderService
         }
             $order->load('orderItems.product');
 
-            $totalToRefund = $order->total_order_price;
+            // $totalToRefund = $order->total_order_price;
 
-            // الحصول على المورد من أول منتج
-            $firstItem = $order->orderItems->first();
-            $supplierId = $firstItem?->product?->user_id;
+            // // الحصول على المورد من أول منتج
+            // $firstItem = $order->orderItems->first();
+            // $supplierId = $firstItem?->product?->user_id;
 
-            if ($supplierId) {
-                $expense = OrderExpense::where('doctor_id', $order->doctor_id)
-                    ->where('supplier_id', $supplierId)
-                    ->first();
+            // if ($supplierId) {
+            //     $expense = OrderExpense::where('doctor_id', $order->doctor_id)
+            //         ->where('supplier_id', $supplierId)
+            //         ->first();
 
-                if ($expense) {
-                    $expense->total     = max(0, $expense->total - $totalToRefund);
-                    $expense->remaining = max(0, $expense->remaining - $totalToRefund);
-                    $expense->save();
-                }
-            }
+            //     if ($expense) {
+            //         $expense->total     = max(0, $expense->total - $totalToRefund);
+            //         $expense->remaining = max(0, $expense->remaining - $totalToRefund);
+            //         $expense->save();
+            //     }
+            // }
 
             // حذف عناصر الطلب ثم الطلب نفسه
             $order->orderItems()->delete();

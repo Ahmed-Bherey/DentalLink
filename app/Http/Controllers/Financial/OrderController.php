@@ -16,6 +16,7 @@ use App\Http\Resources\Financial\OrderResource;
 use Illuminate\Auth\Access\AuthorizationException;
 use App\Http\Requests\Financial\OrderUpdateRequest;
 use App\Http\Requests\Financial\UpdateStatusRequest;
+use App\Models\Financial\OrderItem;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class OrderController extends Controller
@@ -137,6 +138,25 @@ class OrderController extends Controller
             ], 403);
         } catch (Exception $e) {
             return $this->errorResponse('حدث خطأ أثناء التحديث.', 422);
+        }
+    }
+
+    // حذف منتج من الطلب
+    public function deleteItem($orderItem_id)
+    {
+        try {
+            $deleteItem = OrderItem::findOrFail($orderItem_id);
+            //$this->authorize('delete', $order);
+
+            $this->orderService->delete($deleteItem);
+            return $this->successResponse('تم حذف المنتج بنجاح');
+        } catch (AuthorizationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'عفوا، ليس لديك صلاحية لحذف هذا المنتج.',
+            ], 403);
+        } catch (Exception $e) {
+            return $this->errorResponse('حدث خطأ أثناء الحذف.', 422);
         }
     }
 
