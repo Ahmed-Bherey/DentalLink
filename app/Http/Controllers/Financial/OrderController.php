@@ -168,7 +168,7 @@ class OrderController extends Controller
 
             $this->orderService->UpdateItem($orderItem, $request->validated());
 
-            return $this->successResponse('تم تحديث المنتج بنجاح');
+            return $this->createSuccessResponse('تم تحديث المنتج بنجاح', $orderItem->order->total_order_price, 200);
         } catch (AuthorizationException $e) {
             return response()->json([
                 'success' => false,
