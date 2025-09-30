@@ -21,7 +21,8 @@ class OrderService
             $query->where('status', 'pending')->where('doctor_id', $user->id);
         } else {
             $query->whereHas('orderItems.product', function ($q) use ($user) {
-                $q->where('status', '!=', 'delivered')->where('user_id', $user->id);
+                $q->whereNotIn('status', ['delivered', 'rejected'])
+                    ->where('user_id', $user->id);
             });
         }
 
