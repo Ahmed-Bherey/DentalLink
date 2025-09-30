@@ -14,14 +14,14 @@ class OrderService
     // عرض قائمة الطلبات للمورد والطبيب
     public function indexForTypes($user, $perPage = 3)
     {
-        $query = Order::where('status', 'pending')->query();
+        $query = Order::query();
 
         // fillter by doctor
         if ($user->department?->code == 'doctor') {
-            $query->where('doctor_id', $user->id);
+            $query->where('status', 'pending')->where('doctor_id', $user->id);
         } else {
             $query->whereHas('orderItems.product', function ($q) use ($user) {
-                $q->where('user_id', $user->id);
+                $q->where('status', 'pending')->where('user_id', $user->id);
             });
         }
 
