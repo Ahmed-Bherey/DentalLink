@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\UserAuthController;
 use App\Http\Controllers\Clinic\ProductController;
 use App\Http\Controllers\Financial\OrderController;
 use App\Http\Controllers\Financial\PaymentController;
+use App\Http\Controllers\Financial\ReceiptController;
 use App\Http\Controllers\Store\InventoryController;
 use App\Http\Controllers\System\CategoryController;
 use App\Http\Controllers\System\DepartmentController;
@@ -70,6 +71,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('index', 'index');
         Route::post('store', 'store');
         Route::post('update/{payment_id}', 'update');
+    });
+    // receipts
+    Route::controller(ReceiptController::class)->prefix('receipt')->group(function () {
+        Route::get('index', 'index');
+        Route::post('store', 'store');
+        Route::get('show/{id}', 'show');
+        Route::post('update/{id}', 'update');
+        Route::delete('delete/{id}', 'destroy');
+        Route::post('deleteByDate', 'destroyByDate');
     });
     // clinic
     Route::prefix('clinic')->group(function () {

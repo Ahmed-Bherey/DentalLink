@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Models\Financial\Order;
 use App\Models\Financial\OrderExpense;
 use App\Models\Financial\Payment;
+use App\Models\Financial\Receipt;
 use App\Models\General\Category;
 use App\Models\General\Department;
 use App\Models\Store\Inventory;
@@ -88,5 +89,10 @@ class User extends Authenticatable
     public function categories()
     {
         return $this->hasMany(Category::class, 'user_id');
+    }
+
+    public function receipts()
+    {
+        return $this->hasMany(Receipt::class, 'user_id');
     }
 }
