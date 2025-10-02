@@ -16,6 +16,7 @@ class Receipt extends Model
         'img',
         'date',
     ];
+    protected $casts = ['date' => 'date'];
 
     public function user()
     {
