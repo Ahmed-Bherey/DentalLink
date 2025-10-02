@@ -24,7 +24,7 @@ class ReceiptCollection extends ResourceCollection
         return $grouped->map(function ($receipts, $date) {
             return [
                 'date'        => $date,
-                'total_price' => 123412,
+                'total_price' => $receipts->sum('value'),
                 'receipts' => ReceiptResource::collection($receipts),
             ];
         })->values(); // values علشان يرجّع Array مش associative
