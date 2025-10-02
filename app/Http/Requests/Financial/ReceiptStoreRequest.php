@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Financial;
 
+use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -47,6 +48,27 @@ class ReceiptStoreRequest extends FormRequest
             'receipts.*.date.required' => 'تاريخ الفاتورة مطلوب',
             'receipts.*.date.date' => 'تنسيق التايخ غير صحيح',
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('receipts')) {
+            $receipts = $this->input('receipts');
+
+            foreach ($receipts as $i => $receipt) {
+                if (isset($receipt['date'])) {
+                    try {
+                        // نحول التاريخ من JS Date لصيغة Y-m-d
+                        $receipts[$i]['date'] = Carbon::parse($receipt['date'])->format('Y-m-d');
+                    } catch (\Exception $e) {
+                        // لو Carbon معرفش يـparseه، يفضل زي ما هو علشان يضرب في ال validation
+                    }
+                }
+            }
+
+            // نرجع المصفوفة بعد التعديل
+            $this->merge(['receipts' => $receipts]);
+        }
     }
 
     protected function failedValidation(Validator $validator)
