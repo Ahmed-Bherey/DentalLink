@@ -2,7 +2,6 @@
 
 namespace App\Services\Financial;
 
-use Carbon\Carbon;
 use App\Models\Financial\Receipt;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -27,16 +26,12 @@ class ReceiptService
                 $imagePath = $file->store('receipts', 'public');
             }
 
-            $date = !empty($receiptData['date'])
-            ? Carbon::parse($receiptData['date'])->format('Y-m-d')
-            : null;
-
             Receipt::create([
                 'user_id' => $user->id,
                 'name'    => $receiptData['name'],
                 'value'   => $receiptData['price'],
                 'img'     => $imagePath,
-                'date'    => $date,
+                'date'    => $receiptData['date'],
             ]);
         }
 
@@ -62,10 +57,6 @@ class ReceiptService
             $data['img'] = $data['img']->store('receipts', 'public');
         } else {
             unset($data['img']); // علشان ما يكتبش null مكان الصورة
-        }
-
-        if (!empty($data['date'])) {
-            $data['date'] = Carbon::parse($data['date'])->format('Y-m-d');
         }
 
         $receipt->update($data);
