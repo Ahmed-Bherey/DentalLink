@@ -15,18 +15,18 @@ class ReceiptCollection extends ResourceCollection
      */
     public function toArray($request)
     {
-        // Group receipts by date
+        // Group receipts by month + year
         $grouped = $this->collection->groupBy(function ($item) {
-            return $item->date->format('Y-m-d'); // صيغة التاريخ
+            return $item->date->format('Y-m'); // مثال: 2025-10
         });
 
-        // اعادة صياغة الاستجابة بحيث يكون التاريخ = key وتحته الفواتير
-        return $grouped->map(function ($receipts, $date) {
+        // اعادة صياغة الاستجابة بحيث يكون الشهر والسنة = key وتحته الفواتير
+        return $grouped->map(function ($receipts, $monthYear) {
             return [
-                'date'        => $date,
-                'total_price' => $receipts->sum('value'),
-                'receipts' => ReceiptResource::collection($receipts),
+                'month_year'  => $monthYear, // 2025-10
+                'total_price' => (float) $receipts->sum('value'),
+                'receipts'    => ReceiptResource::collection($receipts),
             ];
-        })->values(); // values علشان يرجّع Array مش associative
+        })->values(); // علشان يرجع Array مش associative
     }
 }
