@@ -17,11 +17,11 @@ class ReceiptCollection extends ResourceCollection
     {
         // Group receipts by date
         $grouped = $this->collection->groupBy(function ($item) {
-            return $item->date->format('Y-m-d'); // صيغة التاريخ
+            return $item->date?->format('Y-m-d'); // صيغة التاريخ
         });
 
         // اعادة صياغة الاستجابة بحيث يكون التاريخ = key وتحته الفواتير
-        return $grouped->map(function ($receipts, $date) {
+        return $grouped?->map(function ($receipts, $date) {
             return [
                 'date'     => $date,
                 'receipts' => ReceiptResource::collection($receipts),
