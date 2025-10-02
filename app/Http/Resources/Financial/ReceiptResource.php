@@ -20,7 +20,7 @@ class ReceiptResource extends JsonResource
             'name'  => $this->name,
             'price' => $this->value,
             'img'   => $this->img ? asset('storage/' . $this->img) : null,
-            'date'  => $this->date,
+            'date'  => $this->date->format('Y-m-d'),
         ];
     }
 }
