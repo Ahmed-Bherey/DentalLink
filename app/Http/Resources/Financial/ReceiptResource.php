@@ -18,7 +18,7 @@ class ReceiptResource extends JsonResource
         return [
             'id'    => $this->id,
             'name'  => $this->name,
-            'price' => (int)$this->value,
+            'price' => (float)$this->value,
             'img'   => $this->img ? asset('storage/' . $this->img) : null,
             'date'  => $this->date->format('Y-m-d'),
         ];
