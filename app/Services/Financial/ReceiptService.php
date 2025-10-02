@@ -8,6 +8,13 @@ use Illuminate\Support\Facades\Storage;
 
 class ReceiptService
 {
+    public function index($user)
+    {
+        return Receipt::where('user_id', $user->id)
+            ->orderBy('date', 'desc')
+            ->orderBy('id', 'desc'); // للتأكد لو نفس التاريخ، الأحدث id ييجي الأول
+    }
+
     // انشاء ايصال
     public function store($user, $data)
     {
