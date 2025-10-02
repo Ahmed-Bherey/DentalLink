@@ -23,7 +23,8 @@ class ReceiptCollection extends ResourceCollection
         // اعادة صياغة الاستجابة بحيث يكون التاريخ = key وتحته الفواتير
         return $grouped->map(function ($receipts, $date) {
             return [
-                'date'     => $date,
+                'date'        => $date,
+                'total_price' => 123412,
                 'receipts' => ReceiptResource::collection($receipts),
             ];
         })->values(); // values علشان يرجّع Array مش associative
