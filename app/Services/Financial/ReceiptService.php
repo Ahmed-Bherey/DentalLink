@@ -29,7 +29,7 @@ class ReceiptService
             Receipt::create([
                 'user_id' => $user->id,
                 'name'    => $receiptData['name'],
-                'value'   => $receiptData['value'],
+                'value'   => $receiptData['price'],
                 'img'     => $imagePath,
                 'date'    => $receiptData['date'],
             ]);

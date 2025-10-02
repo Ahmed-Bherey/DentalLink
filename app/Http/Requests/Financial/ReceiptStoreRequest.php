@@ -28,7 +28,7 @@ class ReceiptStoreRequest extends FormRequest
         return [
             'receipts' => 'required|array|min:1',
             'receipts.*.name' => 'required|string|max:255',
-            'receipts.*.value' => 'required|numeric',
+            'receipts.*.price' => 'required|numeric',
             'receipts.*.date' => 'required|date',
             'receipts.*.img' => 'nullable|image|max:2048',
         ];
@@ -42,8 +42,8 @@ class ReceiptStoreRequest extends FormRequest
 
             'receipts.*.name.required' => 'الرجاء ادخال اسم الفاتورة.',
             'receipts.*.name.string' => 'اسم الفاتورة يجب ان يكون نص',
-            'receipts.*.value.required' => 'قيمة الفاتورة مطلوبة',
-            'receipts.*.value.numeric' => 'مبلغ الفاتورة يجب أن يكون رقمًا.',
+            'receipts.*.price.required' => 'قيمة الفاتورة مطلوبة',
+            'receipts.*.price.numeric' => 'مبلغ الفاتورة يجب أن يكون رقمًا.',
             'receipts.*.date.required' => 'تاريخ الفاتورة مطلوب',
             'receipts.*.date.date' => 'تنسيق التايخ غير صحيح',
         ];

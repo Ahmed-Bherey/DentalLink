@@ -74,7 +74,7 @@ class ReceiptController extends Controller
     {
         $validated = $request->validate([
             'name'  => 'sometimes|required|string|max:255',
-            'value' => 'sometimes|required|numeric',
+            'price' => 'sometimes|required|numeric',
             'date'  => 'sometimes|required|date',
             'img'   => 'nullable|image|max:2048',
         ]);
