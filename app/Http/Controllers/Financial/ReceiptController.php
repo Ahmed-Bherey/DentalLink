@@ -27,27 +27,33 @@ class ReceiptController extends Controller
     public function index(Request $request)
     {
         try {
-            // نجيب query من الخدمة
-            $query = $this->receiptService->index($request->user());
+            // نجيب كل الفواتير ونرتبها
+            $receipts = $this->receiptService->index($request->user())->get();
 
-            // paginate عادى
-            $paginator = $query->paginate(10);
+            // نجروبهم حسب الشهر/السنة
+            $grouped = $receipts->groupBy(function ($receipt) {
+                return $receipt->date->format('Y-m');
+            })->map(function ($receipts, $month) use ($request) {
+                return [
+                    'month' => $month,
+                    'receipts' => (new ReceiptCollection($receipts))->toArray($request)
+                ];
+            })->values();
 
-            // نحول النتائج لمجموعة حسب الشهر/السنة
-            $grouped = $paginator->getCollection()
-                ->groupBy(function ($receipt) {
-                    return $receipt->date->format('Y-m'); // تجميع بالشهر والسنة
-                })
-                ->map(function ($receipts, $month) use ($request) {
-                    return [
-                        'month' => $month,
-                        'receipts' => (new ReceiptCollection($receipts))->toArray($request)
-                    ];
-                })
-                ->values();
+            // نعمل pagination على مستوى الجروبات (الشهور)
+            $perPage = 10;
+            $currentPage = LengthAwarePaginator::resolveCurrentPage();
+            $currentItems = $grouped->slice(($currentPage - 1) * $perPage, $perPage)->values();
 
-            // نرجع response موحد مع meta
-            return $this->paginatedResponse($grouped, $paginator);
+            $paginator = new LengthAwarePaginator(
+                $currentItems,
+                $grouped->count(),
+                $perPage,
+                $currentPage,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+
+            return $this->paginatedResponse($paginator->items(), $paginator);
         } catch (\Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ أثناء تحميل الفواتير',
