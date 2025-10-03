@@ -60,10 +60,15 @@ class ReceiptService
 
             $data['img'] = $data['img']->store('receipts', 'public');
         } else {
-            unset($data['img']); // علشان ما يكتبش null مكان الصورة
+            unset($data['img']);
         }
 
-        $receipt->update($data);
+        $receipt->update([
+            'name'    => $data['name'],
+            'value'   => $data['price'],
+            //'img'     => $imagePath,
+            'date'    => $data['date'],
+        ]);
 
         return $receipt;
     }
