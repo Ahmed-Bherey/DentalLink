@@ -23,9 +23,11 @@ class ReceiptCollection extends ResourceCollection
         // اعادة صياغة الاستجابة بحيث يكون الشهر والسنة = key وتحته الفواتير
         return $grouped->map(function ($receipts, $monthYear) {
             return [
-                'date'  => $monthYear, // 2025-10
+                'date'        => $monthYear, // 2025-10
                 'total_price' => (float) $receipts->sum('value'),
-                'receipts'    => ReceiptResource::collection($receipts),
+                'receipts'    => ReceiptResource::collection(
+                    $receipts->sortByDesc('date')->values() // ← هنا نرتب الفواتير الأحدث أولاً
+                ),
             ];
         })->values(); // علشان يرجع Array مش associative
     }
