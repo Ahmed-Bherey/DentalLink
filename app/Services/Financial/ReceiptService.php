@@ -36,7 +36,7 @@ class ReceiptService
             ]);
         }
 
-        // ترتيب حسب التاريخ الأحدث للإيصال نفسه
+        // هنا بنجيب البيانات بعد ما خلصنا تخزين
         return Receipt::where('user_id', $user->id)
             ->orderBy('date', 'desc')
             ->orderBy('id', 'desc')
