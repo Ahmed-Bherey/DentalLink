@@ -81,6 +81,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('delete/{id}', 'destroy');
         Route::post('deleteByDate', 'destroyByDate');
     });
+    // packages
+    Route::controller(ReceiptController::class)->prefix('package')->group(function () {
+        Route::post('store', 'createPackage');
+        Route::post('buy', 'buyPackage');
+    });
     // clinic
     Route::prefix('clinic')->group(function () {
         Route::controller(ProductController::class)->prefix('product')->group(function () {

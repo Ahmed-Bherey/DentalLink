@@ -10,6 +10,7 @@ use App\Services\Financial\ReceiptService;
 use App\Http\Resources\Financial\ReceiptResource;
 use App\Http\Resources\Financial\ReceiptCollection;
 use App\Http\Requests\Financial\ReceiptStoreRequest;
+use App\Http\Requests\Financial\ReceiptUpdateRequest;
 
 class ReceiptController extends Controller
 {
@@ -70,7 +71,7 @@ class ReceiptController extends Controller
         }
     }
 
-    public function update(Request $request, $id)
+    public function update(ReceiptUpdateRequest $request, $id)
     {
         $validated = $request->validate([
             'name'  => 'sometimes|required|string|max:255',

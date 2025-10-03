@@ -3,8 +3,9 @@
 namespace App\Models\Store;
 
 use App\Models\User;
-use App\Models\Financial\OrderItem;
 use App\Models\General\Category;
+use App\Models\Financial\OrderItem;
+use App\Models\Financial\PackageItem;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -23,7 +24,7 @@ class Product extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class,'user_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function orderItems()
@@ -33,11 +34,16 @@ class Product extends Model
 
     public function category()
     {
-        return $this->belongsTo(Category::class,'category_id');
+        return $this->belongsTo(Category::class, 'category_id');
     }
 
     public function getImgAttribute($value)
     {
         return $value ? asset('storage/' . $value) : null;
+    }
+
+    public function packageItems()
+    {
+        return $this->hasMany(PackageItem::class, 'product_id');
     }
 }
