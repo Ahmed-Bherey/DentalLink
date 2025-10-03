@@ -26,7 +26,7 @@ class ReceiptCollection extends ResourceCollection
                 'date'        => $monthYear, // 2025-10
                 'total_price' => (float) $receipts->sum('value'),
                 'receipts'    => ReceiptResource::collection(
-                    $receipts->sortByDesc('date')->values() // ← هنا نرتب الفواتير الأحدث أولاً
+                    $receipts->sortByDesc('created_at')->values() // ← هنا نرتب الفواتير الأحدث أولاً
                 ),
             ];
         })->values(); // علشان يرجع Array مش associative
