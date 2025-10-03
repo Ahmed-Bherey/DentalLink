@@ -24,23 +24,25 @@ class ReceiptController extends Controller
 
     public function index(Request $request)
     {
-        //try {
+        try {
+            // نجيب query من الخدمة
             $query = $this->receiptService->index($request->user());
 
-            // paginate على مستوى query
+            // نعمل paginate على مستوى query
             $paginator = $query->paginate(10);
 
-            // نمرر الكولكشن بس للـ Resource
-            return $this->paginatedResponse(
-                new ReceiptCollection($paginator),
-                $paginator
+            // نجهز الكولكشن و نحوله Array علشان نتجنب data of data
+            $collection = (new ReceiptCollection($paginator->getCollection()))
+                ->toArray($request);
+
+            // نرجع الاستجابة باستخدام دالة موحدة
+            return $this->paginatedResponse($collection, $paginator);
+        } catch (\Exception $e) {
+            return $this->errorResponse(
+                'عذراً، حدث خطأ أثناء تحميل الفواتير',
+                500
             );
-        // } catch (\Exception $e) {
-        //     return $this->errorResponse(
-        //         'عذراً، حدث خطأ أثناء تحميل الفواتير',
-        //         500
-        //     );
-        // }
+        }
     }
 
     public function store(ReceiptStoreRequest $request)
