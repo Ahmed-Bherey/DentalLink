@@ -76,6 +76,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // receipts
     Route::controller(ReceiptController::class)->prefix('receipt')->group(function () {
         Route::get('index', 'index');
+        Route::get('index-test', 'indexTest');
         Route::post('store', 'store');
         Route::get('show/{id}', 'show');
         Route::post('update/{id}', 'update');

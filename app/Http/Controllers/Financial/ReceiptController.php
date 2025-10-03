@@ -11,6 +11,7 @@ use App\Http\Resources\Financial\ReceiptResource;
 use App\Http\Resources\Financial\ReceiptCollection;
 use App\Http\Requests\Financial\ReceiptStoreRequest;
 use App\Http\Requests\Financial\ReceiptUpdateRequest;
+use App\Models\Financial\Receipt;
 
 class ReceiptController extends Controller
 {
@@ -37,6 +38,24 @@ class ReceiptController extends Controller
 
             // نرجع الاستجابة باستخدام دالة موحدة
             return $this->paginatedResponse($collection, $paginator);
+        } catch (\Exception $e) {
+            return $this->errorResponse(
+                'عذراً، حدث خطأ أثناء تحميل الفواتير',
+                500
+            );
+        }
+    }
+
+    public function indexTest(Request $request)
+    {
+        try {
+            // نجيب query من الخدمة
+            $user = request()->user();
+            $receipts = Receipt::where('user_id',$user->id)
+            ->orderBy('created_at','desc')->get();
+
+            // نرجع الاستجابة باستخدام دالة موحدة
+            return response()->json($receipts);
         } catch (\Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ أثناء تحميل الفواتير',
