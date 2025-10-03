@@ -103,7 +103,7 @@ class ReceiptController extends Controller
     public function destroyByDate(Request $request)
     {
         $validated = $request->validate([
-            'date' => 'required|date',
+            'date' => 'required',
         ]);
 
         try {

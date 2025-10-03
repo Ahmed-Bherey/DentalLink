@@ -80,7 +80,7 @@ class ReceiptService
     public function deleteByDate($user, $date)
     {
         $receipts = Receipt::where('user_id', $user->id)
-            ->whereDate('date', $date)
+            ->where('date', $date)
             ->get();
 
         if ($receipts->isEmpty()) {
