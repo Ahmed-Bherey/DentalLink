@@ -66,54 +66,55 @@ class ReceiptController extends Controller
     }
 
     public function store(ReceiptStoreRequest $request)
-{
-    try {
-        // خد Query من الخدمة
-        $query = $this->receiptService->store($request->user(), $request->validated());
+    {
+        try {
+            // خد Query من الخدمة
+            $query = $this->receiptService->store($request->user(), $request->validated());
 
-        // اعمل paginate على مستوى الإيصالات
-        $paginator = $query->paginate(1000); // نجيب عدد كبير بحيث نقدر نـ Group الأول
+            // هات كل الإيصالات (عدد كبير عشان نضمن grouping صحيح)
+            $paginator = $query->paginate(1000);
 
-        // نـ Group بالـ month-year
-        $grouped = $paginator->getCollection()
-            ->groupBy(function ($item) {
-                return $item->date->format('Y-m');
-            })
-            ->map(function ($receipts, $monthYear) {
-                return [
-                    'date'        => $monthYear,
-                    'total_price' => (float) $receipts->sum('value'),
-                    'receipts'    => ReceiptResource::collection(
-                        $receipts->sortByDesc('created_at')->values()
-                    ),
-                ];
-            })
-            ->values();
+            // Group by month-year بعد ترتيب التاريخ تنازلي
+            $grouped = $paginator->getCollection()
+                ->sortByDesc('date') // <-- ده يضمن ظهور يناير قبل ديسمبر حسب السنة والشهر
+                ->groupBy(function ($item) {
+                    return $item->date->format('Y-m');
+                })
+                ->map(function ($receipts, $monthYear) {
+                    return [
+                        'date'        => $monthYear,
+                        'total_price' => (float) $receipts->sum('value'),
+                        'receipts'    => ReceiptResource::collection(
+                            $receipts->sortByDesc('created_at')->values()
+                        ),
+                    ];
+                })
+                ->values();
 
-        // نعمل Pagination على مستوى الشهور مش الإيصالات
-        $perPage   = 5; // مثلا 5 شهور فى الصفحة
-        $current   = LengthAwarePaginator::resolveCurrentPage();
-        $currentItems = $grouped->forPage($current, $perPage);
+            // Pagination على مستوى الشهور (الجروبات)
+            $perPage   = 5; // عدد الشهور في الصفحة
+            $current   = \Illuminate\Pagination\LengthAwarePaginator::resolveCurrentPage();
+            $currentItems = $grouped->forPage($current, $perPage);
 
-        $paginatedGroups = new \Illuminate\Pagination\LengthAwarePaginator(
-            $currentItems,
-            $grouped->count(),
-            $perPage,
-            $current,
-            ['path' => request()->url(), 'query' => request()->query()]
-        );
+            $paginatedGroups = new \Illuminate\Pagination\LengthAwarePaginator(
+                $currentItems,
+                $grouped->count(),
+                $perPage,
+                $current,
+                ['path' => request()->url(), 'query' => request()->query()]
+            );
 
-        return $this->paginatedResponse(
-            $paginatedGroups->values(),
-            $paginatedGroups
-        );
-    } catch (\Exception $e) {
-        return $this->errorResponse(
-            'عذراً، حدث خطأ ما. برجاء المحاولة لاحقاً',
-            422
-        );
+            return $this->paginatedResponse(
+                $paginatedGroups->values(),
+                $paginatedGroups
+            );
+        } catch (\Exception $e) {
+            return $this->errorResponse(
+                'عذراً، حدث خطأ ما. برجاء المحاولة لاحقاً',
+                422
+            );
+        }
     }
-}
 
     public function show($id)
     {
