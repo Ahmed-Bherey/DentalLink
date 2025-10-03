@@ -98,15 +98,9 @@ class ReceiptController extends Controller
 
     public function update(ReceiptUpdateRequest $request, $id)
     {
-        $validated = $request->validate([
-            'name'  => 'sometimes|required|string|max:255',
-            'price' => 'sometimes|required|numeric',
-            'date'  => 'sometimes|required|date',
-            'img'   => 'nullable|image|max:2048',
-        ]);
 
         try {
-            $receipt = $this->receiptService->update($id, $request->user(), $validated);
+            $receipt = $this->receiptService->update($id, $request->user(), $request->validated());
 
             return $this->successResponse(new ReceiptResource($receipt), 'تم تحديث الإيصال بنجاح');
         } catch (\Exception $e) {
