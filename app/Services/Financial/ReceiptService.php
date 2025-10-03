@@ -79,8 +79,11 @@ class ReceiptService
 
     public function deleteByDate($user, $date)
     {
+        // نفصل السنة والشهر من القيمة المرسلة "2025-09"
+        [$year, $month] = explode('-', $date);
         $receipts = Receipt::where('user_id', $user->id)
-            ->where('date', $date)
+            ->whereYear('date', $year)
+            ->whereMonth('date', $month)
             ->get();
 
         if ($receipts->isEmpty()) {
