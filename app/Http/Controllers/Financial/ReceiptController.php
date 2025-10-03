@@ -93,10 +93,10 @@ class ReceiptController extends Controller
 
             // Pagination على مستوى الشهور (الجروبات)
             $perPage   = 5; // عدد الشهور في الصفحة
-            $current   = \Illuminate\Pagination\LengthAwarePaginator::resolveCurrentPage();
+            $current   = LengthAwarePaginator::resolveCurrentPage();
             $currentItems = $grouped->forPage($current, $perPage);
 
-            $paginatedGroups = new \Illuminate\Pagination\LengthAwarePaginator(
+            $paginatedGroups = new LengthAwarePaginator(
                 $currentItems,
                 $grouped->count(),
                 $perPage,
