@@ -25,9 +25,16 @@ class ReceiptController extends Controller
     public function index(Request $request)
     {
         try {
-            $receipts = $this->receiptService->index($request->user());
+            $query = $this->receiptService->index($request->user());
 
-            return new ReceiptCollection($receipts);
+            // paginate على مستوى query
+            $paginator = $query->paginate(10);
+
+            // نمرر الكولكشن بس للـ Resource
+            return $this->paginatedResponse(
+                new ReceiptCollection($paginator->getCollection()),
+                $paginator
+            );
         } catch (\Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ أثناء تحميل الفواتير',
