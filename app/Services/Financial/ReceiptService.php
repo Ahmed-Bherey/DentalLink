@@ -36,11 +36,11 @@ class ReceiptService
             ]);
         }
 
-        // هنا بنجيب البيانات بعد ما خلصنا تخزين
+        // هنا رجع Collection مش Query
         return Receipt::where('user_id', $user->id)
             ->orderBy('date', 'desc')
             ->orderBy('id', 'desc')
-            ->paginate(10);
+            ->get();
     }
 
     public function show($id, $user)

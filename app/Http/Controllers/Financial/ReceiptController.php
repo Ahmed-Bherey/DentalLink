@@ -5,13 +5,14 @@ namespace App\Http\Controllers\Financial;
 use Exception;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
+use App\Models\Financial\Receipt;
 use App\Http\Controllers\Controller;
 use App\Services\Financial\ReceiptService;
+use Illuminate\Pagination\LengthAwarePaginator;
 use App\Http\Resources\Financial\ReceiptResource;
 use App\Http\Resources\Financial\ReceiptCollection;
 use App\Http\Requests\Financial\ReceiptStoreRequest;
 use App\Http\Requests\Financial\ReceiptUpdateRequest;
-use App\Models\Financial\Receipt;
 
 class ReceiptController extends Controller
 {
@@ -67,13 +68,27 @@ class ReceiptController extends Controller
     public function store(ReceiptStoreRequest $request)
     {
         try {
-            $receipts = $this->receiptService->store($request->user(), $request->validated());
+            // نحصل على كل الريسيتات بعد الحفظ
+            $collection = $this->receiptService->store($request->user(), $request->validated());
 
-            return $this->paginatedResponse(
-                new ReceiptCollection($receipts),
-                $receipts
+            // نعمل pagination يدوي على الكولكشن
+            $page    = LengthAwarePaginator::resolveCurrentPage();
+            $perPage = 10;
+
+            $paginator = new LengthAwarePaginator(
+                $collection->forPage($page, $perPage), // قص الصفحة الحالية
+                $collection->count(),                  // العدد الكلي
+                $perPage,                              // عدد العناصر في الصفحة
+                $page,                                 // الصفحة الحالية
+                ['path' => $request->url(), 'query' => $request->query()]
             );
-        } catch (Exception $e) {
+
+            // نحولها للـ Resource
+            $data = (new ReceiptCollection($paginator->getCollection()))->toArray($request);
+
+            // نرجعها بنفس شكل الاستجابة الموحدة
+            return $this->paginatedResponse($data, $paginator);
+        } catch (\Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ ما. برجاء المحاولة لاحقاً',
                 422
