@@ -32,7 +32,7 @@ class ReceiptController extends Controller
 
             // نمرر الكولكشن بس للـ Resource
             return $this->paginatedResponse(
-                new ReceiptCollection($paginator->getCollection()),
+                new ReceiptCollection($paginator),
                 $paginator
             );
         // } catch (\Exception $e) {
