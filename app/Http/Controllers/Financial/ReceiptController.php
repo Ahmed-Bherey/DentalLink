@@ -66,35 +66,54 @@ class ReceiptController extends Controller
     }
 
     public function store(ReceiptStoreRequest $request)
-    {
-        try {
-            // نحصل على كل الريسيتات بعد الحفظ
-            $collection = $this->receiptService->store($request->user(), $request->validated());
+{
+    try {
+        // خد Query من الخدمة
+        $query = $this->receiptService->store($request->user(), $request->validated());
 
-            // نعمل pagination يدوي على الكولكشن
-            $page    = LengthAwarePaginator::resolveCurrentPage();
-            $perPage = 10;
+        // اعمل paginate على مستوى الإيصالات
+        $paginator = $query->paginate(1000); // نجيب عدد كبير بحيث نقدر نـ Group الأول
 
-            $paginator = new LengthAwarePaginator(
-                $collection->forPage($page, $perPage), // قص الصفحة الحالية
-                $collection->count(),                  // العدد الكلي
-                $perPage,                              // عدد العناصر في الصفحة
-                $page,                                 // الصفحة الحالية
-                ['path' => $request->url(), 'query' => $request->query()]
-            );
+        // نـ Group بالـ month-year
+        $grouped = $paginator->getCollection()
+            ->groupBy(function ($item) {
+                return $item->date->format('Y-m');
+            })
+            ->map(function ($receipts, $monthYear) {
+                return [
+                    'date'        => $monthYear,
+                    'total_price' => (float) $receipts->sum('value'),
+                    'receipts'    => ReceiptResource::collection(
+                        $receipts->sortByDesc('created_at')->values()
+                    ),
+                ];
+            })
+            ->values();
 
-            // نحولها للـ Resource
-            $data = (new ReceiptCollection($paginator->getCollection()))->toArray($request);
+        // نعمل Pagination على مستوى الشهور مش الإيصالات
+        $perPage   = 5; // مثلا 5 شهور فى الصفحة
+        $current   = LengthAwarePaginator::resolveCurrentPage();
+        $currentItems = $grouped->forPage($current, $perPage);
 
-            // نرجعها بنفس شكل الاستجابة الموحدة
-            return $this->paginatedResponse($data, $paginator);
-        } catch (\Exception $e) {
-            return $this->errorResponse(
-                'عذراً، حدث خطأ ما. برجاء المحاولة لاحقاً',
-                422
-            );
-        }
+        $paginatedGroups = new \Illuminate\Pagination\LengthAwarePaginator(
+            $currentItems,
+            $grouped->count(),
+            $perPage,
+            $current,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+
+        return $this->paginatedResponse(
+            $paginatedGroups->values(),
+            $paginatedGroups
+        );
+    } catch (\Exception $e) {
+        return $this->errorResponse(
+            'عذراً، حدث خطأ ما. برجاء المحاولة لاحقاً',
+            422
+        );
     }
+}
 
     public function show($id)
     {

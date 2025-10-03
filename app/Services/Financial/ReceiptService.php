@@ -22,7 +22,7 @@ class ReceiptService
         foreach ($data['receipts'] as $receiptData) {
             $imagePath = null;
 
-            if (isset($receiptData['img']) && $receiptData['img'] instanceof UploadedFile) {
+            if (isset($receiptData['img']) && $receiptData['img'] instanceof \Illuminate\Http\UploadedFile) {
                 $file = $receiptData['img'];
                 $imagePath = $file->store('receipts', 'public');
             }
@@ -36,11 +36,10 @@ class ReceiptService
             ]);
         }
 
-        // هنا رجع Collection مش Query
+        // رجّع Query عشان نعمل paginate بعدين
         return Receipt::where('user_id', $user->id)
             ->orderBy('date', 'desc')
-            ->orderBy('id', 'desc')
-            ->get();
+            ->orderBy('id', 'desc');
     }
 
     public function show($id, $user)

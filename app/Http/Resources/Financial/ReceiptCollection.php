@@ -16,19 +16,6 @@ class ReceiptCollection extends ResourceCollection
      */
     public function toArray($request)
     {
-        // group by month-year
-        $grouped = $this->collection->groupBy(function ($item) {
-            return $item->date->format('Y-m');
-        })->map(function ($receipts, $monthYear) {
-            return [
-                'date'        => $monthYear,
-                'total_price' => (float) $receipts->sum('value'),
-                'receipts'    => ReceiptResource::collection(
-                    $receipts->sortByDesc('created_at')->values()
-                ),
-            ];
-        })->values();
-
-        return $grouped;
+        return $this->collection;
     }
 }
