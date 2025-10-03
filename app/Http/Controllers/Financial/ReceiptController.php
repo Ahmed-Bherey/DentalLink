@@ -51,8 +51,8 @@ class ReceiptController extends Controller
         try {
             // نجيب query من الخدمة
             $user = request()->user();
-            $receipts = Receipt::where('user_id',$user->id)
-            ->orderBy('created_at','desc')->get();
+            $receipts = Receipt::where('user_id', $user->id)
+                ->orderBy('created_at', 'desc')->get();
 
             // نرجع الاستجابة باستخدام دالة موحدة
             return response()->json($receipts);
@@ -102,7 +102,7 @@ class ReceiptController extends Controller
         try {
             $receipt = $this->receiptService->update($id, $request->user(), $request->validated());
 
-            return $this->successResponse(new ReceiptResource($receipt), 'تم تحديث الإيصال بنجاح');
+            return $this->createSuccessResponse('تم تحديث الإيصال بنجاح', new ReceiptResource($receipt));
         } catch (\Exception $e) {
             return $this->errorResponse('تعذر تحديث الإيصال', 422);
         }
