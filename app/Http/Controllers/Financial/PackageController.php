@@ -25,7 +25,7 @@ class PackageController extends Controller
     // انشاء عرض من المورد
     public function createPackage(PackageStoreRequest $request)
     {
-        try {
+        //try {
             $supplier = request()->user();
             $package = $this->packageService->createPackage($supplier, $request->validated());
 
@@ -33,12 +33,12 @@ class PackageController extends Controller
                 'تم إضافة الباقة بنجاح',
                 new PackageResource($package),
             );
-        } catch (Exception $e) {
-            return $this->errorResponse(
-                'عذراً، حدث خطأ ما. برجاء المحاولة لاحقاً',
-                422
-            );
-        }
+        // } catch (Exception $e) {
+        //     return $this->errorResponse(
+        //         'عذراً، حدث خطأ ما. برجاء المحاولة لاحقاً',
+        //         422
+        //     );
+        // }
     }
 
     // الطبيب يشترى العرض
