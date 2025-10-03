@@ -12,7 +12,8 @@ class ReceiptService
     {
         return Receipt::where('user_id', $user->id)
             ->orderBy('date', 'desc')
-            ->orderBy('id', 'desc'); // للتأكد لو نفس التاريخ، الأحدث id ييجي الأول
+            ->orderBy('id', 'desc')
+            ->get();
     }
 
     // انشاء ايصال
