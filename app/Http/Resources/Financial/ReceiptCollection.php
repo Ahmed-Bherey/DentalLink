@@ -3,8 +3,8 @@
 namespace App\Http\Resources\Financial;
 
 use Carbon\Carbon;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Resources\Json\ResourceCollection;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class ReceiptCollection extends ResourceCollection
 {
