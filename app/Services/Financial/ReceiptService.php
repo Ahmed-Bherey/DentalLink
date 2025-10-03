@@ -66,9 +66,12 @@ class ReceiptService
         $receipt->update([
             'name'    => $data['name'],
             'value'   => $data['price'],
-            //'img'     => $imagePath,
             'date'    => $data['date'],
         ]);
+
+        if (isset($data['img'])) {
+            $updateData['img'] = $data['img'];
+        }
 
         return $receipt;
     }
