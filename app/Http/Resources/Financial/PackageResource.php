@@ -14,6 +14,25 @@ class PackageResource extends JsonResource
      */
     public function toArray($request)
     {
-        return parent::toArray($request);
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'desc' => $this->desc,
+            'price' => $this->price,
+            'created_at' => $this->created_at->format('Y-m-d'),
+            'products'       => $this->packageItems->map(function ($item) {
+                return [
+                    'id'                => $item->id,
+                    'product_id'        => $item->product?->id,
+                    'category_id'       => (int)$item->product?->category_id,
+                    'category_name'     => $item->product?->category?->name,
+                    'name'              => $item->product?->name,
+                    'desc'              => $item->product?->desc,
+                    'img'               => $item->product?->img,
+                    'price'             => (int)$item->product?->price,
+                    'quantity'          => (int)$item->quantity,
+                ];
+            }),
+        ];
     }
 }
