@@ -39,7 +39,8 @@ class ReceiptService
         // ترتيب حسب التاريخ الأحدث للإيصال نفسه
         return Receipt::where('user_id', $user->id)
             ->orderBy('date', 'desc')
-            ->orderBy('id', 'desc');
+            ->orderBy('id', 'desc')
+            ->paginate(10);
     }
 
     public function show($id, $user)

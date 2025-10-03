@@ -67,11 +67,7 @@ class ReceiptController extends Controller
     public function store(ReceiptStoreRequest $request)
     {
         try {
-            // نحصل على Query fresh
-            $query = $this->receiptService->store($request->user(), $request->validated());
-
-            // نعمل paginate
-            $receipts = $query->paginate(10);
+            $receipts = $this->receiptService->store($request->user(), $request->validated());
 
             return $this->paginatedResponse(
                 new ReceiptCollection($receipts),
@@ -98,7 +94,6 @@ class ReceiptController extends Controller
 
     public function update(ReceiptUpdateRequest $request, $id)
     {
-
         try {
             $receipt = $this->receiptService->update($id, $request->user(), $request->validated());
 
