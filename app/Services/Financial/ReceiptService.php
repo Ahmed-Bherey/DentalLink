@@ -13,7 +13,7 @@ class ReceiptService
         return Receipt::where('user_id', $user->id)
             ->orderBy('date', 'desc')
             ->orderBy('id', 'desc');
-        // لاحظ: مفيش get()
+        // لاحظ: مفيش get() => علشان نقدر نعمل paginate فى الكنترولر
     }
 
     // انشاء ايصال

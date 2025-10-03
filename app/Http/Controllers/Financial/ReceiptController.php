@@ -30,15 +30,24 @@ class ReceiptController extends Controller
             // نجيب query من الخدمة
             $query = $this->receiptService->index($request->user());
 
-            // نعمل paginate على مستوى query
+            // paginate عادى
             $paginator = $query->paginate(10);
 
-            // نجهز الكولكشن و نحوله Array علشان نتجنب data of data
-            $collection = (new ReceiptCollection($paginator->getCollection()))
-                ->toArray($request);
+            // نحول النتائج لمجموعة حسب الشهر/السنة
+            $grouped = $paginator->getCollection()
+                ->groupBy(function ($receipt) {
+                    return $receipt->date->format('Y-m'); // تجميع بالشهر والسنة
+                })
+                ->map(function ($receipts, $month) use ($request) {
+                    return [
+                        'month' => $month,
+                        'receipts' => (new ReceiptCollection($receipts))->toArray($request)
+                    ];
+                })
+                ->values();
 
-            // نرجع الاستجابة باستخدام دالة موحدة
-            return $this->paginatedResponse($collection, $paginator);
+            // نرجع response موحد مع meta
+            return $this->paginatedResponse($grouped, $paginator);
         } catch (\Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ أثناء تحميل الفواتير',
