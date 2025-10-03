@@ -22,7 +22,7 @@ class PackageService
 
             // إضافة المنتجات للباقة
             foreach ($data['products'] as $productData) {
-                $package->items()->create([
+                $package->packageItems()->create([
                     'product_id' => $productData['id'],
                     'quantity'   => $productData['quantity'],
                 ]);
