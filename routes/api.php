@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\UserAuthController;
 use App\Http\Controllers\Clinic\ProductController;
 use App\Http\Controllers\Financial\OrderController;
+use App\Http\Controllers\Financial\PackageController;
 use App\Http\Controllers\Financial\PaymentController;
 use App\Http\Controllers\Financial\ReceiptController;
 use App\Http\Controllers\Store\InventoryController;
@@ -82,7 +83,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('deleteByDate', 'destroyByDate');
     });
     // packages
-    Route::controller(ReceiptController::class)->prefix('package')->group(function () {
+    Route::controller(PackageController::class)->prefix('package')->group(function () {
         Route::post('store', 'createPackage');
         Route::post('buy', 'buyPackage');
     });
