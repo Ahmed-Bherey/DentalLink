@@ -24,7 +24,7 @@ class ReceiptController extends Controller
 
     public function index(Request $request)
     {
-        try {
+        //try {
             $query = $this->receiptService->index($request->user());
 
             $paginator = $query->paginate(10);
@@ -33,12 +33,12 @@ class ReceiptController extends Controller
                 new ReceiptCollection($paginator),
                 $paginator
             );
-        } catch (\Exception $e) {
-            return $this->errorResponse(
-                'عذراً، حدث خطأ أثناء تحميل الفواتير',
-                500
-            );
-        }
+        // } catch (\Exception $e) {
+        //     return $this->errorResponse(
+        //         'عذراً، حدث خطأ أثناء تحميل الفواتير',
+        //         500
+        //     );
+        // }
     }
 
     public function store(ReceiptStoreRequest $request)
