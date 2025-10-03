@@ -85,7 +85,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // packages
     Route::controller(PackageController::class)->prefix('package')->group(function () {
         Route::post('store', 'createPackage');
-        Route::post('buy', 'buyPackage');
+        Route::post('buy/{packageId}', 'buyPackage');
     });
     // clinic
     Route::prefix('clinic')->group(function () {
