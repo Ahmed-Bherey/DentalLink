@@ -52,26 +52,21 @@ class ReceiptService
     {
         $receipt = Receipt::where('user_id', $user->id)->findOrFail($id);
 
+        $updateData = [
+            'name'  => $data['name'],
+            'value' => $data['price'],
+            'date'  => $data['date'],
+        ];
+
         if (isset($data['img']) && $data['img'] instanceof UploadedFile) {
-            // لو فيه صورة قديمة امسحها
             if ($receipt->img && Storage::disk('public')->exists($receipt->img)) {
                 Storage::disk('public')->delete($receipt->img);
             }
 
-            $data['img'] = $data['img']->store('receipts', 'public');
-        } else {
-            unset($data['img']);
+            $updateData['img'] = $data['img']->store('receipts', 'public');
         }
 
-        $receipt->update([
-            'name'    => $data['name'],
-            'value'   => $data['price'],
-            'date'    => $data['date'],
-        ]);
-
-        if (isset($data['img'])) {
-            $updateData['img'] = $data['img'];
-        }
+        $receipt->update($updateData);
 
         return $receipt;
     }
