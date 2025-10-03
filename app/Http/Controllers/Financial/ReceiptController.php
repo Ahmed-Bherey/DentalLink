@@ -24,7 +24,7 @@ class ReceiptController extends Controller
 
     public function index(Request $request)
     {
-        //try {
+        try {
             // نجيب query من الخدمة
             $query = $this->receiptService->index($request->user());
 
@@ -37,12 +37,12 @@ class ReceiptController extends Controller
 
             // نرجع الاستجابة باستخدام دالة موحدة
             return $this->paginatedResponse($collection, $paginator);
-        // } catch (\Exception $e) {
-        //     return $this->errorResponse(
-        //         'عذراً، حدث خطأ أثناء تحميل الفواتير',
-        //         500
-        //     );
-        // }
+        } catch (\Exception $e) {
+            return $this->errorResponse(
+                'عذراً، حدث خطأ أثناء تحميل الفواتير',
+                500
+            );
+        }
     }
 
     public function store(ReceiptStoreRequest $request)
