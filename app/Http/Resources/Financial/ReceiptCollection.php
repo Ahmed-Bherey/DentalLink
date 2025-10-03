@@ -18,7 +18,7 @@ class ReceiptCollection extends ResourceCollection
     {
         // group by month-year
         $grouped = $this->collection->groupBy(function ($item) {
-            return $item->date->format('Y-m'); // مثال: 2025-09
+            return $item->date->format('Y-m');
         })->map(function ($receipts, $monthYear) {
             return [
                 'date'        => $monthYear,
@@ -29,33 +29,6 @@ class ReceiptCollection extends ResourceCollection
             ];
         })->values();
 
-        // pagination على مستوى المجموعات (الشهور)
-        $page    = request()->get('page', 1);
-        $perPage = 10;
-
-        $paged = new LengthAwarePaginator(
-            $grouped->forPage($page, $perPage),
-            $grouped->count(),
-            $perPage,
-            $page,
-            ['path' => request()->url(), 'query' => request()->query()]
-        );
-
-        return [
-            'status' => true,
-            'data'   => $paged->items(),
-            'meta'   => [
-                'current_page' => $paged->currentPage(),
-                'last_page'    => $paged->lastPage(),
-                'per_page'     => $paged->perPage(),
-                'total'        => $paged->total(),
-            ],
-            'links'  => [
-                'first' => $paged->url(1),
-                'last'  => $paged->url($paged->lastPage()),
-                'prev'  => $paged->previousPageUrl(),
-                'next'  => $paged->nextPageUrl(),
-            ]
-        ];
+        return $grouped;
     }
 }

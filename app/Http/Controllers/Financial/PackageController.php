@@ -11,6 +11,7 @@ use App\Http\Requests\Financial\BuyPackageRequest;
 use App\Services\Financial\PackageService;
 use App\Http\Resources\Financial\PackageResource;
 use App\Http\Requests\Financial\PackageStoreRequest;
+use App\Http\Requests\Financial\PackageUpdateRequest;
 
 class PackageController extends Controller
 {
@@ -51,6 +52,59 @@ class PackageController extends Controller
             $order = $this->packageService->buyPackage($doctor, $package, $request->validated());
             return $this->successResponseWithoutData(
                 'تم طلب العرض بنجاح',
+            );
+        } catch (Exception $e) {
+            return $this->errorResponse(
+                'عذراً، حدث خطأ ما. برجاء المحاولة لاحقاً',
+                422
+            );
+        }
+    }
+
+    public function update(PackageUpdateRequest $request, Package $package)
+    {
+        try {
+            //$this->authorize('update', $package);
+
+            $updated = $this->packageService->update($package, $request->validated());
+
+            return $this->successResponse(new PackageResource($updated), 'تم تحديث العرض بنجاح');
+        } catch (Exception $e) {
+            return $this->errorResponse(
+                'عذراً، حدث خطأ ما. برجاء المحاولة لاحقاً',
+                422
+            );
+        }
+    }
+
+
+    // حذف باقة
+    public function destroy(Package $package)
+    {
+        try {
+            //$this->authorize('delete', $package);
+
+            $this->packageService->delete($package);
+
+            return $this->successResponse('تم حذف العرض بنجاح');
+        } catch (\Exception $e) {
+            return $this->errorResponse('تعذر حذف العرض', 422);
+        }
+    }
+
+    // تفعيل/تعطيل باقة
+    public function toggleStatus(Package $package)
+    {
+        try {
+            //$this->authorize('update', $package);
+
+            $updated = $this->packageService->toggleStatus($package);
+
+            return $this->createSuccessResponse(
+                $updated->is_active
+                    ? 'تم تفعيل الباقة بنجاح'
+                    : 'تم إلغاء تفعيل الباقة بنجاح',
+                $updated->active,
             );
         } catch (Exception $e) {
             return $this->errorResponse(

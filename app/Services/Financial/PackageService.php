@@ -52,4 +52,47 @@ class PackageService
 
         return $order;
     }
+
+    public function update(Package $package, array $data): Package
+    {
+        $package->update([
+            'name'        => $data['name'],
+            'desc'        => $data['desc'],
+            'price'       => $data['price'], // المورد بيحدد السعر
+        ]);
+
+        // تعديل المنتجات المرتبطة (اختياري لو عايز تحدث المنتجات كمان)
+        if (isset($data['products'])) {
+            $package->packageItems()->delete();
+            foreach ($data['products'] as $product) {
+                $package->packageItems()->create([
+                    'product_id' => $product['id'],
+                    'quantity'   => $product['quantity'],
+                ]);
+            }
+        }
+
+        return $package->fresh('items');
+    }
+
+    /**
+     * حذف الباقة
+     */
+    public function delete(Package $package): void
+    {
+        $package->packageItems()->delete();
+        $package->delete();
+    }
+
+    /**
+     * تفعيل/تعطيل الباقة
+     */
+    public function toggleStatus(Package $package): Package
+    {
+        $package->update([
+            'active' => !$package->is_active,
+        ]);
+
+        return $package->fresh();
+    }
 }
