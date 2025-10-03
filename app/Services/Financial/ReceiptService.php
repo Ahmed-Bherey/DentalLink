@@ -12,8 +12,8 @@ class ReceiptService
     {
         return Receipt::where('user_id', $user->id)
             ->orderBy('date', 'desc')
-            ->orderBy('id', 'desc')
-            ->get();
+            ->orderBy('id', 'desc');
+        // لاحظ: مفيش get()
     }
 
     // انشاء ايصال
