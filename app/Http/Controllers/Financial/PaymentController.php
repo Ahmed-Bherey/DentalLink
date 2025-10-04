@@ -7,6 +7,7 @@ use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use App\Models\Financial\Payment;
 use App\Http\Controllers\Controller;
+use App\Models\Financial\OrderExpense;
 use App\Services\Financial\PaymentService;
 use App\Http\Requests\Financial\PaymentRequest;
 use App\Http\Resources\Financial\PaymentResource;
@@ -27,6 +28,9 @@ class PaymentController extends Controller
     public function index()
     {
         //try {
+        $orderExpense = OrderExpense::where(['doctor_id' => 1, 'supplier_id' => 2])
+            ->latest()->first();
+            dd($orderExpense);
             $user = request()->user();
             $perPage = request()->get('per_page', 10);
             $payments = $this->paymentService->index($user,$perPage);
