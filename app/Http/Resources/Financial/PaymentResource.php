@@ -31,7 +31,7 @@ class PaymentResource extends JsonResource
             'name'          => $name,
             'supplier_name' => $this->supplier->name,
             'paid'          => $this->amount,
-            'remaining'     => $orderExpense - $this->amount,
+            'remaining'     => $orderExpense->remaining - $this->amount,
             'created_at'    => $this->created_at->formant('Y-m-d'),
         ];
     }
