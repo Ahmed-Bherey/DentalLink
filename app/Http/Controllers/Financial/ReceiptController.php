@@ -35,7 +35,8 @@ class ReceiptController extends Controller
                 return $receipt->date->format('Y-m');
             })->map(function ($receipts, $month) use ($request) {
                 return [
-                    'month' => $month,
+                    'date' => $month,
+                    'total_price' => (float) $receipts->sum('value'),
                     'receipts' => (new ReceiptCollection($receipts))->toArray($request)
                 ];
             })->values();
