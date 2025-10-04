@@ -28,10 +28,11 @@ class PaymentController extends Controller
     {
         //try {
             $user = request()->user();
-            $payments = $this->paymentService->index($user);
-            return $this->successResponse(
+            $perPage = request()->get('per_page', 10);
+            $payments = $this->paymentService->index($user,$perPage);
+            return $this->paginatedResponse(
                 PaymentResource::collection($payments),
-                200,
+                $payments,
             );
         // } catch (Exception $e) {
         //     return $this->errorResponse(

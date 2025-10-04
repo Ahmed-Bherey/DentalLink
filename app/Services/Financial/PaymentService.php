@@ -7,7 +7,7 @@ use App\Models\Financial\Payment;
 
 class PaymentService
 {
-    public function index($user)
+    public function index($user, $perPage = 10)
     {
         $baseQuery = Payment::orderBy('created_at', 'desc');
 
@@ -18,7 +18,7 @@ class PaymentService
             $baseQuery->where('supplier_id', $user->id);
         }
 
-        return $baseQuery->get();
+        return $baseQuery->paginate($perPage);
     }
 
     // انشاء مدفوعة
