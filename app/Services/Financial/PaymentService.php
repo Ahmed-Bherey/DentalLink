@@ -27,7 +27,7 @@ class PaymentService
         $payment = Payment::create([
             'doctor_id' => $data['doctor_id'],
             'supplier_id' => $user->id,
-            'amount' => $data['amount'],
+            'amount' => $data['paid'],
         ]);
 
         $orderExpense = OrderExpense::where(['doctor_id' => $payment->doctor_id, 'supplier_id' => $payment->supplier_id])
@@ -45,7 +45,7 @@ class PaymentService
     public function update($user, $data, $paymentRecord)
     {
         $paymentRecord->update([
-            'requested_amount' => $data['amount'],
+            'requested_amount' => $data['paid'],
             'status' => 'pending',
         ]);
         return $paymentRecord;

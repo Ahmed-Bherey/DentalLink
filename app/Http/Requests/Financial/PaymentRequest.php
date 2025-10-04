@@ -27,7 +27,7 @@ class PaymentRequest extends FormRequest
     {
         return [
             'doctor_id' => 'required|exists:users,id|integer',
-            'amount' => 'required|numeric|min:0.01',
+            'paid' => 'required|numeric|min:0.01',
         ];
     }
 
@@ -36,9 +36,9 @@ class PaymentRequest extends FormRequest
         return [
             'doctor_id.required' => 'الرجاء تحديد طبيب.',
             'doctor_id.exists' => 'عفوا, الطبيب غير موجود',
-            'amount.required' => 'الرجاء تحديد المبلغ.',
-            'amount.numeric' => 'المبلغ يجب أن يكون رقمًا.',
-            'amount.min' => 'المبلغ يجب أن يكون أكبر من 0.',
+            'paid.required' => 'الرجاء تحديد المبلغ.',
+            'paid.numeric' => 'المبلغ يجب أن يكون رقمًا.',
+            'paid.min' => 'المبلغ يجب أن يكون أكبر من 0.',
         ];
     }
 

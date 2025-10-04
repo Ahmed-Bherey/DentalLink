@@ -26,16 +26,16 @@ class UpdatePaymentRequest extends FormRequest
     public function rules()
     {
         return [
-            'amount' => 'required|numeric|min:0.01',
+            'paid' => 'required|numeric|min:0.01',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'amount.required' => 'الرجاء تحديد المبلغ.',
-            'amount.numeric' => 'المبلغ يجب أن يكون رقمًا.',
-            'amount.min' => 'المبلغ يجب أن يكون أكبر من 0.',
+            'paid.required' => 'الرجاء تحديد المبلغ.',
+            'paid.numeric' => 'المبلغ يجب أن يكون رقمًا.',
+            'paid.min' => 'المبلغ يجب أن يكون أكبر من 0.',
         ];
     }
 
