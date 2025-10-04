@@ -28,6 +28,7 @@ class PaymentRequest extends FormRequest
         return [
             'doctor_id' => 'required|exists:users,id|integer',
             'paid' => 'required|numeric|min:0.01',
+            'date' => 'required|date',
         ];
     }
 
@@ -39,6 +40,8 @@ class PaymentRequest extends FormRequest
             'paid.required' => 'الرجاء تحديد المبلغ.',
             'paid.numeric' => 'المبلغ يجب أن يكون رقمًا.',
             'paid.min' => 'المبلغ يجب أن يكون أكبر من 0.',
+            'date.required' => 'الرجاء تحديد التاريخ.',
+            'date.date' => 'تنسيق التاريخ غير صحيح',
         ];
     }
 

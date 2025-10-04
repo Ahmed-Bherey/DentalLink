@@ -28,6 +28,7 @@ class PaymentService
             'doctor_id' => $data['doctor_id'],
             'supplier_id' => $user->id,
             'amount' => $data['paid'],
+            'date' => $data['date'],
         ]);
 
         $orderExpense = OrderExpense::where(['doctor_id' => $payment->doctor_id, 'supplier_id' => $payment->supplier_id])
@@ -46,6 +47,7 @@ class PaymentService
     {
         $paymentRecord->update([
             'requested_amount' => $data['paid'],
+            'date' => $data['date'],
             'status' => 'pending',
         ]);
         return $paymentRecord;

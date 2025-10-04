@@ -27,6 +27,7 @@ class UpdatePaymentRequest extends FormRequest
     {
         return [
             'paid' => 'required|numeric|min:0.01',
+            'date'  => 'sometimes|required|date',
         ];
     }
 

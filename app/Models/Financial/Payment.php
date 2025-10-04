@@ -14,6 +14,7 @@ class Payment extends Model
         'supplier_id',
         'amount',
         'requested_amount',
+        'date',
         'status',
     ];
 

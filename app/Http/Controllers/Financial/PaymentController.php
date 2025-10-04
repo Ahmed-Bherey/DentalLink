@@ -28,9 +28,9 @@ class PaymentController extends Controller
     public function index()
     {
         try {
-        $orderExpense = OrderExpense::where(['doctor_id' => 1, 'supplier_id' => 2])
-            ->latest()->first();
-            dd($orderExpense);
+        // $orderExpense = OrderExpense::where(['doctor_id' => 1, 'supplier_id' => 2])
+        //     ->latest()->first();
+        //     dd($orderExpense);
             $user = request()->user();
             $perPage = request()->get('per_page', 10);
             $payments = $this->paymentService->index($user,$perPage);
