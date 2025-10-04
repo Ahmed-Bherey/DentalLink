@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Financial;
 
+use App\Models\Financial\OrderExpense;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class PaymentResource extends JsonResource
@@ -14,12 +15,24 @@ class PaymentResource extends JsonResource
      */
     public function toArray($request)
     {
+        $user = request()->user();
+        $orderExpense = OrderExpense::where(['doctor_id' => $this->doctor_id, 'supplier_id' => $this->supplier_id])
+            ->latest()->first();
+
+        $authUser = $request->user();
+        $name = null;
+        if ($authUser->department?->code === 'doctor') {
+            $name = $this->orderExpense->supplier->name;
+        } elseif ($authUser->department?->code === 'supplier') {
+            $name = $this->orderExpense->doctor->name;
+        }
         return [
-            'id' => $this->id,
-            'doctor_name' => $this->doctor->name,
+            'id'            => $this->id,
+            'name'          => $name,
             'supplier_name' => $this->supplier->name,
-            'amount' => $this->amount,
-            'created_at' => $this->created_at->formant('Y-m-d'),
+            'paid'          => $this->amount,
+            'remaining'     => $orderExpense - $this->amount,
+            'created_at'    => $this->created_at->formant('Y-m-d'),
         ];
     }
 }
