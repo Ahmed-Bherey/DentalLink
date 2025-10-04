@@ -21,7 +21,7 @@ class ReceiptResource extends JsonResource
             'price' => (float)$this->value,
             'img'   => $this->img ? asset('storage/' . $this->img) : null,
             'date'  => $this->date->format('Y-m-d'),
-            'total_price' => isset($this->total_price) ? $this->total_price : null,
+            'total_price' => $this->total_price,
         ];
     }
 }

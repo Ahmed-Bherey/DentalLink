@@ -67,12 +67,6 @@ class ReceiptService
 
         $receipt->update($updateData);
 
-        $totalPrice = Receipt::where('user_id', $user->id)
-            ->whereYear('date', $receipt->date->year)
-            ->whereMonth('date', $receipt->date->month)
-            ->sum('value');
-        $receipt->total_price = (float) $totalPrice;
-
         return $receipt;
     }
 
