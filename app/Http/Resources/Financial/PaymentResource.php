@@ -24,7 +24,7 @@ class PaymentResource extends JsonResource
         if ($authUser->department?->code === 'doctor') {
             $name = $this->orderExpense->supplier->name;
         } elseif ($authUser->department?->code === 'supplier') {
-            $name = $this->orderExpense->doctor->name;
+            $name = $this->orderExpense->doctor?->name;
         }
         return [
             'id'            => $this->id,
