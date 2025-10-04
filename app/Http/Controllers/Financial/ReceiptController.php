@@ -63,24 +63,6 @@ class ReceiptController extends Controller
         }
     }
 
-    public function indexTest(Request $request)
-    {
-        try {
-            // نجيب query من الخدمة
-            $user = request()->user();
-            $receipts = Receipt::where('user_id', $user->id)
-                ->orderBy('created_at', 'desc')->get();
-
-            // نرجع الاستجابة باستخدام دالة موحدة
-            return response()->json($receipts);
-        } catch (\Exception $e) {
-            return $this->errorResponse(
-                'عذراً، حدث خطأ أثناء تحميل الفواتير',
-                500
-            );
-        }
-    }
-
     public function store(ReceiptStoreRequest $request)
     {
         try {
