@@ -26,19 +26,19 @@ class PaymentController extends Controller
     // عرض قائمة المدفوعات للمورد والطبيب
     public function index()
     {
-        try {
+        //try {
             $user = request()->user();
             $payments = $this->paymentService->index($user);
             return $this->successResponse(
                 PaymentResource::collection($payments),
                 200,
             );
-        } catch (Exception $e) {
-            return $this->errorResponse(
-                'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
-                422
-            );
-        }
+        // } catch (Exception $e) {
+        //     return $this->errorResponse(
+        //         'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
+        //         422
+        //     );
+        // }
     }
 
     // انشاء مدفوعة
