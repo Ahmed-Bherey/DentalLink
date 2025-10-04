@@ -3,6 +3,8 @@
 namespace App\Http\Requests\Financial;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class UpdatePaymentStatusRequest extends FormRequest
 {
@@ -13,7 +15,7 @@ class UpdatePaymentStatusRequest extends FormRequest
      */
     public function authorize()
     {
-        return false;
+        return true;
     }
 
     /**
@@ -24,7 +26,15 @@ class UpdatePaymentStatusRequest extends FormRequest
     public function rules()
     {
         return [
-            //
+            'status' => 'required|in:confirmed,rejected',
         ];
+    }
+
+    protected function failedValidation(Validator $validator)
+    {
+        throw new HttpResponseException(response()->json([
+            'message' => 'Validation errors',
+            'errors' => $validator->errors()
+        ], 422));
     }
 }
