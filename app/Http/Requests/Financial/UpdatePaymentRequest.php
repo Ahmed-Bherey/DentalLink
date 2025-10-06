@@ -37,6 +37,8 @@ class UpdatePaymentRequest extends FormRequest
             'paid.required' => 'الرجاء تحديد المبلغ.',
             'paid.numeric' => 'المبلغ يجب أن يكون رقمًا.',
             'paid.min' => 'المبلغ يجب أن يكون أكبر من 0.',
+            'date.required' => 'الرجاء تحديد التاريخ.',
+            'date.date' => 'صيغة التاريخ غير صحيحة.',
         ];
     }
 

@@ -67,7 +67,7 @@ class PaymentController extends Controller
     // تحديث مدفوعة
     public function update(UpdatePaymentRequest $request, $payment_id)
     {
-        //try {
+        try {
             $user = request()->user();
             $paymentRecord = Payment::findOrFail($payment_id);
 
@@ -82,12 +82,12 @@ class PaymentController extends Controller
                 'تم انشاء المدفوعة بنجاح',
                 $payment->id,
             );
-        // } catch (Exception $e) {
-        //     return $this->errorResponse(
-        //         'عذراً، حدث خطأ ما. برجاء المحاولة لاحقاً',
-        //         422
-        //     );
-        // }
+        } catch (Exception $e) {
+            return $this->errorResponse(
+                'عذراً، حدث خطأ ما. برجاء المحاولة لاحقاً',
+                422
+            );
+        }
     }
 
     // تحديث حالة المدفوعة من جانب الطبيب

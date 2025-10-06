@@ -113,7 +113,7 @@ class PaymentService
         // ✅ في حالة رفض الحذف
         if ($data['status'] == 'delete_rejected') {
             $paymentRecord->update([
-                'status' => 'approved', // أو الحالة السابقة التي كانت عليها قبل طلب الحذف
+                'status' => 'confirmed', // أو الحالة السابقة التي كانت عليها قبل طلب الحذف
             ]);
 
             return $paymentRecord;
