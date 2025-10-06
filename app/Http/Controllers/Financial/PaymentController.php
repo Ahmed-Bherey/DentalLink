@@ -28,12 +28,12 @@ class PaymentController extends Controller
     public function index()
     {
         try {
-        // $orderExpense = OrderExpense::where(['doctor_id' => 1, 'supplier_id' => 2])
-        //     ->latest()->first();
-        //     dd($orderExpense);
+            // $orderExpense = OrderExpense::where(['doctor_id' => 1, 'supplier_id' => 2])
+            //     ->latest()->first();
+            //     dd($orderExpense);
             $user = request()->user();
             $perPage = request()->get('per_page', 10);
-            $payments = $this->paymentService->index($user,$perPage);
+            $payments = $this->paymentService->index($user, $perPage);
             return $this->paginatedResponse(
                 PaymentResource::collection($payments),
                 $payments,
@@ -110,6 +110,31 @@ class PaymentController extends Controller
         } catch (Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ ما. برجاء المحاولة لاحقاً',
+                422
+            );
+        }
+    }
+
+    // عرض المدفوعات المعلقة للطبيب
+    public function pendingPyments()
+    {
+        try {
+            $user = request()->user();
+            if ($user->department->code != 'doctor') {
+                return $this->errorResponse(
+                    'عفوا, ليس لديك صلاحية',
+                    403
+                );
+            }
+            $perPage = request()->get('per_page', 10);
+            $payments = $this->paymentService->pendingPyments($user, $perPage);
+            return $this->paginatedResponse(
+                PaymentResource::collection($payments),
+                $payments,
+            );
+        } catch (Exception $e) {
+            return $this->errorResponse(
+                'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
                 422
             );
         }

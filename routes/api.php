@@ -73,6 +73,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('store', 'store');
         Route::post('update/{payment_id}', 'update');
         Route::post('confirm/{payment_id}', 'updatePaymentStatus');
+        Route::get('pending', 'pendingPyments');
     });
     // receipts
     Route::controller(ReceiptController::class)->prefix('receipt')->group(function () {

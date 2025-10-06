@@ -68,11 +68,20 @@ class PaymentService
 
         $orderExpense = OrderExpense::where(['doctor_id' => $paymentRecord->doctor_id, 'supplier_id' => $paymentRecord->supplier_id])
             ->latest()->first();
-            $total = $orderExpense->paid - $paymentRecord->amount;
-            $orderExpense->update([
+        $total = $orderExpense->paid - $paymentRecord->amount;
+        $orderExpense->update([
             'paid' => $orderExpense->paid - $total,
             'remaining' => $orderExpense->remaining + $total,
         ]);
         return $paymentRecord;
+    }
+
+    // عرض المدفوعات المعلقة للطبيب
+    public function pendingPyments($user, $perPage = 10)
+    {
+        $baseQuery = Payment::where('status', 'pending')->where('doctor_id', $user->id)
+            ->orderBy('created_at', 'desc');
+
+        return $baseQuery->paginate($perPage);
     }
 }
