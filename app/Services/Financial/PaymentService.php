@@ -12,9 +12,9 @@ class PaymentService
         $baseQuery = Payment::orderBy('created_at', 'desc');
 
         // fillter by doctor
-        if ($user->department == 'doctor') {
+        if ($user->department->code == 'doctor') {
             $baseQuery->where('doctor_id', $user->id);
-        } elseif ($user->department == 'supplier') {
+        } elseif ($user->department->code == 'supplier') {
             $baseQuery->where('supplier_id', $user->id)
                 ->where('status', 'confirmed');
         }
