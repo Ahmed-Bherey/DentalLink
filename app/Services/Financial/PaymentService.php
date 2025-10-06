@@ -15,7 +15,8 @@ class PaymentService
         if ($user->department == 'doctor') {
             $baseQuery->where('doctor_id', $user->id);
         } elseif ($user->department == 'supplier') {
-            $baseQuery->where('supplier_id', $user->id);
+            $baseQuery->where('supplier_id', $user->id)
+                ->where('status', 'confirmed');
         }
 
         return $baseQuery->paginate($perPage);
