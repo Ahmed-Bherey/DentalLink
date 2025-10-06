@@ -187,4 +187,44 @@ class PaymentService
 
         return $baseQuery->paginate($perPage);
     }
+
+    public function search($user, $perPage = 10)
+    {
+        $query = Payment::with(['doctor', 'supplier'])
+            ->orderBy('created_at', 'desc')
+            ->where('status', 'confirmed');
+
+        // 🔹 فلترة حسب نوع المستخدم (طبيب / مورد)
+        if ($user->department->code === 'doctor') {
+            $query->where('doctor_id', $user->id);
+        } elseif ($user->department->code === 'supplier') {
+            $query->where('supplier_id', $user->id);
+        }
+
+        // 🔹 فلترة بالاسم (doctor أو supplier)
+        if ($search = request()->get('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('doctor', function ($sub) use ($search) {
+                    $sub->where('name', 'like', "%{$search}%");
+                })->orWhereHas('supplier', function ($sub) use ($search) {
+                    $sub->where('name', 'like', "%{$search}%");
+                });
+            });
+        }
+
+        // 🔹 فلترة بالتاريخ (من / إلى)
+        $from = request()->get('from_date');
+        $to   = request()->get('to_date');
+
+        if ($from && $to) {
+            $query->whereBetween('date', [$from, $to]);
+        } elseif ($from) {
+            $query->whereDate('date', '>=', $from);
+        } elseif ($to) {
+            $query->whereDate('date', '<=', $to);
+        }
+
+        // 🔹 Pagination
+        return $query->paginate($perPage);
+    }
 }

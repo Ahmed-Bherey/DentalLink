@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Financial;
 use Exception;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
+use App\Exports\PaymentsExport;
 use App\Models\Financial\Payment;
 use App\Http\Controllers\Controller;
+use Maatwebsite\Excel\Facades\Excel;
 use App\Models\Financial\OrderExpense;
 use App\Services\Financial\PaymentService;
 use App\Http\Requests\Financial\PaymentRequest;
@@ -163,6 +165,41 @@ class PaymentController extends Controller
         } catch (Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ ما. برجاء المحاولة لاحقاً',
+                422
+            );
+        }
+    }
+
+    public function exportToExcel()
+    {
+        try {
+            $user = request()->user();
+            $fileName = 'payments_' . now()->format('Y_m_d_H_i') . '.xlsx';
+            return Excel::download(new PaymentsExport($user), $fileName);
+        } catch (Exception $e) {
+            return $this->errorResponse(
+                'عذراً، حدث خطأ أثناء تصدير الملف. برجاء المحاولة لاحقاً',
+                422
+            );
+        }
+    }
+
+    public function search()
+    {
+        try {
+            $user = request()->user();
+            $perPage = request()->get('per_page', 10);
+
+            // فقط نستدعي الخدمة
+            $payments = $this->paymentService->search($user, $perPage);
+
+            return $this->paginatedResponse(
+                PaymentResource::collection($payments),
+                $payments
+            );
+        } catch (\Exception $e) {
+            return $this->errorResponse(
+                'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
                 422
             );
         }
