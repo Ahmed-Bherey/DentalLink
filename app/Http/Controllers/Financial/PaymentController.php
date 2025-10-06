@@ -139,4 +139,32 @@ class PaymentController extends Controller
             );
         }
     }
+
+    public function deleteRequest($payment_id)
+    {
+        try {
+            $user = request()->user();
+            $paymentRecord = Payment::findOrFail($payment_id);
+
+            if (!$paymentRecord) {
+                return $this->errorResponse(
+                    'عفوا, المدفوعة غير موجودة , برجاء اختيار مدفوعة صحيحة',
+                    404
+                );
+            }
+
+            // نرسل الطلب إلى الطبيب لتأكيد الحذف
+            $payment = $this->paymentService->requestDelete($user, $paymentRecord);
+
+            return $this->successResponseWithId(
+                'تم إرسال طلب حذف المدفوعة للطبيب للمراجعة',
+                $payment->id,
+            );
+        } catch (Exception $e) {
+            return $this->errorResponse(
+                'عذراً، حدث خطأ ما. برجاء المحاولة لاحقاً',
+                422
+            );
+        }
+    }
 }
