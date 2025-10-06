@@ -20,8 +20,6 @@ return new class extends Migration
             'pending',
             'rejected',
             'delete_pending',
-            'delete_approved',
-            'delete_rejected'
         ) DEFAULT 'confirmed'");
     }
 
