@@ -7,6 +7,7 @@ use App\Http\Controllers\Financial\OrderController;
 use App\Http\Controllers\Financial\PackageController;
 use App\Http\Controllers\Financial\PaymentController;
 use App\Http\Controllers\Financial\ReceiptController;
+use App\Http\Controllers\Report\SupplierController;
 use App\Http\Controllers\Store\InventoryController;
 use App\Http\Controllers\System\CategoryController;
 use App\Http\Controllers\System\DepartmentController;
@@ -95,6 +96,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('update/{id}', 'update');
         Route::delete('delete/{id}', 'destroy');
         Route::get('toggle-status/{id}', 'toggleStatus');
+    });
+    // reports
+    Route::prefix('report')->group(function () {
+        Route::controller(SupplierController::class)->prefix('doctor')->group(function () {
+            Route::get('all', 'getAllDoctors');
+        });
     });
     // clinic
     Route::prefix('clinic')->group(function () {
