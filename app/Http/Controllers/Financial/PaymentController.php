@@ -29,7 +29,7 @@ class PaymentController extends Controller
     // عرض قائمة المدفوعات للمورد والطبيب
     public function index()
     {
-        try {
+        //try {
             // $orderExpense = OrderExpense::where(['doctor_id' => 1, 'supplier_id' => 2])
             //     ->latest()->first();
             //     dd($orderExpense);
@@ -40,12 +40,12 @@ class PaymentController extends Controller
                 PaymentResource::collection($payments),
                 $payments,
             );
-        } catch (Exception $e) {
-            return $this->errorResponse(
-                'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
-                422
-            );
-        }
+        // } catch (Exception $e) {
+        //     return $this->errorResponse(
+        //         'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
+        //         422
+        //     );
+        // }
     }
 
     // انشاء مدفوعة
