@@ -155,7 +155,7 @@ class PaymentService
                 // رفض التعديل
                 $paymentRecord->update([
                     'requested_amount' => null,
-                    'status' => 'rejected',
+                    'status' => 'confirmed',
                 ]);
                 return $paymentRecord;
             }
