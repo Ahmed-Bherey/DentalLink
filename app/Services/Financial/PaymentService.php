@@ -196,37 +196,28 @@ class PaymentService
             ->orderBy('created_at', 'desc')
             ->where('status', 'confirmed');
 
-        // 🔹 فلترة حسب نوع المستخدم (طبيب / مورد)
+        // 🔹 فلترة حسب نوع المستخدم
         if ($user->department->code === 'doctor') {
             $query->where('doctor_id', $user->id);
         } elseif ($user->department->code === 'supplier') {
             $query->where('supplier_id', $user->id);
         }
 
-        // 🔹 فلترة بالاسم (doctor أو supplier)
+        // 🔹 فلاتر اختيارية
         if ($search = request()->get('search')) {
             $query->where(function ($q) use ($search) {
-                $q->whereHas('doctor', function ($sub) use ($search) {
-                    $sub->where('name', 'like', "%{$search}%");
-                })->orWhereHas('supplier', function ($sub) use ($search) {
-                    $sub->where('name', 'like', "%{$search}%");
-                });
+                $q->whereHas('doctor', fn($sub) => $sub->where('name', 'like', "%{$search}%"))
+                    ->orWhereHas('supplier', fn($sub) => $sub->where('name', 'like', "%{$search}%"));
             });
         }
 
-        // 🔹 فلترة بالتاريخ (من / إلى)
-        $from = request()->get('from_date');
-        $to   = request()->get('to_date');
-
-        if ($from && $to) {
-            $query->whereBetween('date', [$from, $to]);
-        } elseif ($from) {
+        if ($from = request()->get('from_date')) {
             $query->whereDate('date', '>=', $from);
-        } elseif ($to) {
+        }
+        if ($to = request()->get('to_date')) {
             $query->whereDate('date', '<=', $to);
         }
 
-        // 🔹 Pagination
         return $query->paginate($perPage);
     }
 }

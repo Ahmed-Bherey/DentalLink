@@ -29,23 +29,23 @@ class PaymentController extends Controller
     // عرض قائمة المدفوعات للمورد والطبيب
     public function index()
     {
-        //try {
+        try {
             // $orderExpense = OrderExpense::where(['doctor_id' => 1, 'supplier_id' => 2])
             //     ->latest()->first();
             //     dd($orderExpense);
             $user = request()->user();
             $perPage = request()->get('per_page', 10);
-            $payments = $this->paymentService->index($user, $perPage);
+            $payments = $this->paymentService->search($user, $perPage);
             return $this->paginatedResponse(
                 PaymentResource::collection($payments),
                 $payments,
             );
-        // } catch (Exception $e) {
-        //     return $this->errorResponse(
-        //         'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
-        //         422
-        //     );
-        // }
+        } catch (Exception $e) {
+            return $this->errorResponse(
+                'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
+                422
+            );
+        }
     }
 
     // انشاء مدفوعة
