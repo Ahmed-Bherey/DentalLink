@@ -22,14 +22,14 @@ class PaymentResource extends JsonResource
         $authUser = $request->user();
         $name = null;
         if ($authUser->department?->code === 'doctor') {
-            $name = $orderExpense->supplier?->name;
+            $name = $orderExpense?->supplier?->name;
         } elseif ($authUser->department?->code === 'supplier') {
-            $name = $orderExpense->doctor?->name;
+            $name = $orderExpense?->doctor?->name;
         }
         return [
             'id'             => $this->id,
             'name'           => $name,
-            'supplier_name'  => $this->supplier->name,
+            'supplier_name'  => $this->supplier?->name,
             'paid'           => $this->amount,
             'requested_paid' => $this->requested_amount,
             'remaining'      => $orderExpense->remaining - $this->amount,
