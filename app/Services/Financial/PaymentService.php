@@ -182,7 +182,9 @@ class PaymentService
     // عرض المدفوعات المعلقة للطبيب
     public function pendingPyments($user, $perPage = 10)
     {
-        $baseQuery = Payment::where('status', 'pending')->where('doctor_id', $user->id)
+        $status = ['pending', 'delete_pending'];
+        $baseQuery = Payment::where('doctor_id', $user->id)
+            ->whereIn('status', $status)
             ->orderBy('created_at', 'desc');
 
         return $baseQuery->paginate($perPage);
