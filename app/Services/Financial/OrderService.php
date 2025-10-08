@@ -51,6 +51,13 @@ class OrderService
             $query->where('doctor_id', $doctorId);
         }
 
+        // 🔹 فلترة إضافية حسب الطبيب (إذا أراد المورد مشاهدة طلبات طبيب محدد)
+        if ($supplierId = request()->get('supplier_id')) {
+            $query->whereHas('orderItems.product', function ($q) use ($supplierId) {
+                $q->where('user_id', $supplierId);
+            });
+        }
+
         // 🔹 فلترة بالتاريخ
         if ($from = request()->get('from_date')) {
             $query->whereDate('created_at', '>=', $from);

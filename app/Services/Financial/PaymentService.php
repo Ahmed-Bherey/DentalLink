@@ -217,6 +217,11 @@ class PaymentService
             $query->where('doctor_id', $doctorId);
         }
 
+        // 🔹 فلترة حسب المورد ID
+        if ($supplierId = request()->get('supplier_id')) {
+            $query->where('supplier_id', $supplierId);
+        }
+
         // 🔹 فلترة حسب التاريخ
         if ($from = request()->get('from_date')) {
             $query->whereDate('date', '>=', $from);
