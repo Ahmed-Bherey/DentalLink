@@ -24,7 +24,9 @@ class DoctorResource extends JsonResource
             'phone' => $this->phone,
             'phone2' => $this->phone2,
             'address' => $this->address,
-            'remaining' => $orderExpense?->remaining,
+            'total_paid' => $orderExpense?->paid ?? 0,
+            'total' => $orderExpense?->total ?? 0,
+            'remaining' => $orderExpense?->remaining ?? 0,
         ];
     }
 }
