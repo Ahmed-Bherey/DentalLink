@@ -8,24 +8,22 @@ class DoctorService
 {
     public function getAllsuppliers($user, $perPage = 10)
     {
-        // 👨‍⚕️ القاعدة الأساسية: كل المستخدمين الذين قسمهم supplier
+        $search = request()->get('search');
+        $interactedOnly = request()->boolean('interacted_only');
+
         $query = User::whereHas('department', function ($q) {
             $q->where('code', 'supplier');
-        })->orderByDesc('created_at');
+        })
+            ->when($search, function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%");
+            })
+            ->when($interactedOnly, function ($q) use ($user) {
+                $q->whereHas('supplier_orderExpenses', function ($orderQuery) use ($user) {
+                    $orderQuery->where('doctor_id', $user->id);
+                });
+            })
+            ->orderByDesc('created_at');
 
-        // 🔍 بحث بالاسم إن وُجد
-        if ($search = request()->get('search')) {
-            $query->where('name', 'like', "%{$search}%");
-        }
-
-        // 🤝 فلترة الموردين الذين تعامل معهم الطبيب فقط
-        if (request()->boolean('interacted_only')) {
-            $query->whereHas('orders.doctor', function ($orderQuery) use ($user) {
-                $orderQuery->where('id', $user->id);
-            });
-        }
-
-        // 📄 إرجاع النتائج مع Pagination
         return $query->paginate($perPage);
     }
 }
