@@ -16,8 +16,13 @@ class DoctorResource extends JsonResource
     public function toArray($request)
     {
         $user = request()->user();
-        $orderExpense = OrderExpense::where(['doctor_id' => $this->id, 'supplier_id' => $user->id])
-            ->latest()->first();
+        if ($user->department->code == 'supplier') {
+            $orderExpense = OrderExpense::where(['doctor_id' => $this->id, 'supplier_id' => $user->id])
+                ->latest()->first();
+        } elseif ($user->department->code == 'doctor') {
+            $orderExpense = OrderExpense::where(['supplier_id' => $this->id, 'doctor_id' => $user->id])
+                ->latest()->first();
+        }
         return [
             'id' => $this->id,
             'name' => $this->name,

@@ -35,31 +35,9 @@ class SupplierService
 
     public function getDoctorDetails($supplier, $doctorId)
     {
-        // التحقق من وجود الطبيب
-        $doctor = User::whereHas('department', function ($q) {
-            $q->where('code', 'doctor');
-        })->findOrFail($doctorId);
-
-        // جلب الطلبات الخاصة بهذا الطبيب التي تحتوي على منتجات تخص المورد الحالي
-        $orders = Order::with(['orderItems.product.category'])
-            ->where('doctor_id', $doctor->id)
-            ->whereHas('orderItems.product', function ($q) use ($supplier) {
-                $q->where('user_id', $supplier->id);
-            })
-            ->orderByDesc('created_at')
-            ->get();
-
-        // جلب المدفوعات الخاصة بالطبيب والمورد الحالي فقط
-        $payments = Payment::where('doctor_id', $doctor->id)
-            ->where('supplier_id', $supplier->id)
-            ->where('status', 'confirmed')
-            ->orderByDesc('created_at')
-            ->get();
-
+        $doctor = User::findOrFail($doctorId);
         return [
             'doctor'   => $doctor,
-            'orders'   => $orders,
-            'payments' => $payments,
         ];
     }
 }

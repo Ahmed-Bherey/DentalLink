@@ -49,8 +49,6 @@ class SupplierController extends Controller
 
             return $this->successResponse([
                 'doctor'   => new DoctorResource($data['doctor']),
-                'orders'   => OrderResource::collection($data['orders']),
-                'payments' => PaymentResource::collection($data['payments']),
             ]);
         } catch (\Exception $e) {
             return $this->errorResponse(
