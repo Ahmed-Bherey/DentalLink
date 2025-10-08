@@ -107,7 +107,6 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     // city
     Route::controller(CityController::class)->prefix('city')->group(function () {
-        Route::get('index', 'index');
         Route::post('store', 'store');
         Route::get('show/{id}', 'show');
         Route::post('update/{id}', 'update');
@@ -123,4 +122,5 @@ Route::middleware('auth:sanctum')->group(function () {
 // Un Auth
 // Index department
 Route::get('department/index', [DepartmentController::class, 'index']);
+Route::get('city/index', [CityController::class, 'index']);
 Route::get('database/backup', [OrderController::class, 'backupDatabase']);
