@@ -6,8 +6,10 @@ use Exception;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\Report\DoctorResource;
 use App\Services\Report\SupplierService;
+use App\Http\Resources\Report\DoctorResource;
+use App\Http\Resources\Financial\OrderResource;
+use App\Http\Resources\Financial\PaymentResource;
 
 class SupplierController extends Controller
 {
@@ -38,4 +40,23 @@ class SupplierController extends Controller
             );
         }
     }
+
+    public function showDoctorDetails($doctorId)
+{
+    try {
+        $user = request()->user(); // المورد الحالي
+        $data = $this->supplierService->getDoctorDetails($user, $doctorId);
+
+        return $this->successResponse([
+            'doctor'   => new DoctorResource($data['doctor']),
+            'orders'   => OrderResource::collection($data['orders']),
+            'payments' => PaymentResource::collection($data['payments']),
+        ]);
+    } catch (\Exception $e) {
+        return $this->errorResponse(
+            'عذراً، حدث خطأ أثناء جلب تفاصيل الطبيب',
+            422
+        );
+    }
+}
 }
