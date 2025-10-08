@@ -42,21 +42,21 @@ class SupplierController extends Controller
     }
 
     public function showDoctorDetails($doctorId)
-{
-    try {
-        $user = request()->user(); // المورد الحالي
-        $data = $this->supplierService->getDoctorDetails($user, $doctorId);
+    {
+        try {
+            $user = request()->user(); // المورد الحالي
+            $data = $this->supplierService->getDoctorDetails($user, $doctorId);
 
-        return $this->successResponse([
-            'doctor'   => new DoctorResource($data['doctor']),
-            'orders'   => OrderResource::collection($data['orders']),
-            'payments' => PaymentResource::collection($data['payments']),
-        ]);
-    } catch (\Exception $e) {
-        return $this->errorResponse(
-            'عذراً، حدث خطأ أثناء جلب تفاصيل الطبيب',
-            422
-        );
+            return $this->successResponse([
+                'doctor'   => new DoctorResource($data['doctor']),
+                'orders'   => OrderResource::collection($data['orders']),
+                'payments' => PaymentResource::collection($data['payments']),
+            ]);
+        } catch (\Exception $e) {
+            return $this->errorResponse(
+                'عذراً، حدث خطأ أثناء جلب تفاصيل الطبيب',
+                422
+            );
+        }
     }
-}
 }

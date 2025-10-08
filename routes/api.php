@@ -101,7 +101,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('report')->group(function () {
         Route::controller(SupplierController::class)->prefix('doctor')->group(function () {
             Route::get('all', 'getAllDoctors');
-            Route::get('{doctor_id}/details', 'getAllDoctors');
+            Route::get('{doctor_id}/details', 'showDoctorDetails');
         });
     });
     // clinic
