@@ -7,6 +7,7 @@ use App\Http\Controllers\Financial\OrderController;
 use App\Http\Controllers\Financial\PackageController;
 use App\Http\Controllers\Financial\PaymentController;
 use App\Http\Controllers\Financial\ReceiptController;
+use App\Http\Controllers\Report\DoctorController;
 use App\Http\Controllers\Report\SupplierController;
 use App\Http\Controllers\Store\InventoryController;
 use App\Http\Controllers\System\CategoryController;
@@ -100,8 +101,14 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     // reports
     Route::prefix('report')->group(function () {
+        // المورد
         Route::controller(SupplierController::class)->prefix('doctor')->group(function () {
             Route::get('all', 'getAllDoctors');
+            Route::get('{doctor_id}/details', 'showDoctorDetails');
+        });
+        // الطبيب
+        Route::controller(DoctorController::class)->prefix('supplier')->group(function () {
+            Route::get('all', 'getAllsuppliers');
             Route::get('{doctor_id}/details', 'showDoctorDetails');
         });
     });
