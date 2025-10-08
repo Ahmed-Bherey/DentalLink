@@ -33,6 +33,7 @@ class User extends Authenticatable
         'phone',
         'phone2',
         'address',
+        'city_id',
         'password',
         'department_id',
         'active',
@@ -100,5 +101,10 @@ class User extends Authenticatable
     public function cities()
     {
         return $this->hasMany(City::class, 'user_id');
+    }
+
+    public function city()
+    {
+        return $this->belongsTo(City::class, 'city_id');
     }
 }
