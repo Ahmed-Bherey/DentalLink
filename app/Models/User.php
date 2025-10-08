@@ -9,6 +9,7 @@ use App\Models\Financial\OrderExpense;
 use App\Models\Financial\Payment;
 use App\Models\Financial\Receipt;
 use App\Models\General\Category;
+use App\Models\General\City;
 use App\Models\General\Department;
 use App\Models\Store\Inventory;
 use App\Models\Store\Product;
@@ -94,5 +95,10 @@ class User extends Authenticatable
     public function receipts()
     {
         return $this->hasMany(Receipt::class, 'user_id');
+    }
+
+    public function cities()
+    {
+        return $this->hasMany(City::class, 'user_id');
     }
 }

@@ -10,6 +10,7 @@ use App\Http\Controllers\Financial\ReceiptController;
 use App\Http\Controllers\Report\SupplierController;
 use App\Http\Controllers\Store\InventoryController;
 use App\Http\Controllers\System\CategoryController;
+use App\Http\Controllers\System\CityController;
 use App\Http\Controllers\System\DepartmentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -103,6 +104,14 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('all', 'getAllDoctors');
             Route::get('{doctor_id}/details', 'showDoctorDetails');
         });
+    });
+    // city
+    Route::controller(CityController::class)->prefix('city')->group(function () {
+        Route::get('index', 'index');
+        Route::post('store', 'store');
+        Route::get('show/{id}', 'show');
+        Route::post('update/{id}', 'update');
+        Route::delete('delete/{id}', 'destroy');
     });
     // clinic
     Route::prefix('clinic')->group(function () {
