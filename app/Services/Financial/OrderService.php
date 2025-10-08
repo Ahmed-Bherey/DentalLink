@@ -32,21 +32,37 @@ class OrderService
     // عرض قائمة الطلبات المسلمة للمورد والطبيب
     public function getDeliveredOrders($user, $perPage = 10)
     {
-        $query = Order::query();
+        $query = Order::query()
+            ->with(['doctor', 'orderItems.product'])
+            ->where('status', 'delivered')
+            ->orderBy('created_at', 'desc');
 
-        // fillter by doctor
-        if ($user->department?->code == 'doctor') {
-            $query->where('doctor_id', $user->id)
-                ->where('status', 'delivered');
-        } else {
+        // 🔹 فلترة حسب نوع المستخدم
+        if ($user->department?->code === 'doctor') {
+            $query->where('doctor_id', $user->id);
+        } elseif ($user->department?->code === 'supplier') {
             $query->whereHas('orderItems.product', function ($q) use ($user) {
                 $q->where('user_id', $user->id);
-            })->where('status', 'delivered')
-                ->where('payment_method', 'like', '%مدفوعات%');
+            })->where('payment_method', 'like', '%مدفوعات%');
         }
 
-        return $query->orderBy('created_at', 'desc')->paginate($perPage);
+        // 🔹 فلترة إضافية حسب الطبيب (إذا أراد المورد مشاهدة طلبات طبيب محدد)
+        if ($doctorId = request()->get('doctor_id')) {
+            $query->where('doctor_id', $doctorId);
+        }
+
+        // 🔹 فلترة بالتاريخ
+        if ($from = request()->get('from_date')) {
+            $query->whereDate('created_at', '>=', $from);
+        }
+
+        if ($to = request()->get('to_date')) {
+            $query->whereDate('created_at', '<=', $to);
+        }
+
+        return $query->paginate($perPage);
     }
+
 
     // create order
     public function store($user, $data)

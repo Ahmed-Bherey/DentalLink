@@ -203,7 +203,7 @@ class PaymentService
             $query->where('supplier_id', $user->id);
         }
 
-        // 🔹 فلاتر اختيارية
+        // 🔹 فلترة اختيارية بالبحث العام (الاسم)
         if ($search = request()->get('search')) {
             $query->where(function ($q) use ($search) {
                 $q->whereHas('doctor', fn($sub) => $sub->where('name', 'like', "%{$search}%"))
@@ -211,9 +211,16 @@ class PaymentService
             });
         }
 
+        // 🔹 فلترة حسب الطبيب ID
+        if ($doctorId = request()->get('doctor_id')) {
+            $query->where('doctor_id', $doctorId);
+        }
+
+        // 🔹 فلترة حسب التاريخ
         if ($from = request()->get('from_date')) {
             $query->whereDate('date', '>=', $from);
         }
+
         if ($to = request()->get('to_date')) {
             $query->whereDate('date', '<=', $to);
         }
