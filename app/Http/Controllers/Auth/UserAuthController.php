@@ -48,6 +48,8 @@ class UserAuthController extends Controller
                 'phone' => $user->phone,
                 'phone2' => $user->phone2,
                 'address' => $user->address,
+                'city_id' => $user->city_id,
+                'city_name' => $user->cities?->name,
                 'role' => $user->department?->code,
                 'token' => $token,
             ];

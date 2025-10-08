@@ -29,6 +29,7 @@ class AuthService
             'phone'    => $data['phone'] ?? null,
             'phone2'    => $data['phone2'] ?? null,
             'address'    => $data['address'] ?? null,
+            'city_id'    => $data['city_id'] ?? null,
             'department_id'    => $data['department_id'] ?? null,
             'password'       => Hash::make($data['password']),
         ]);
