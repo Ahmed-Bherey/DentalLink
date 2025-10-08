@@ -169,7 +169,7 @@ class PaymentService
         return $paymentRecord;
     }
 
-
+    // حذف مدفوعة
     public function requestDelete($user, $paymentRecord)
     {
         $paymentRecord->update([
@@ -190,6 +190,7 @@ class PaymentService
         return $baseQuery->paginate($perPage);
     }
 
+    // البحث والفلاتر
     public function search($user, $perPage = 10)
     {
         $query = Payment::with(['doctor', 'supplier'])

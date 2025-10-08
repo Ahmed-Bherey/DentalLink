@@ -139,6 +139,7 @@ class PaymentController extends Controller
         }
     }
 
+    // حذف مدفوعة
     public function deleteRequest($payment_id)
     {
         try {
@@ -167,6 +168,7 @@ class PaymentController extends Controller
         }
     }
 
+    // تحميل المدفوعات فى صيغة اكسيل
     public function exportToExcel()
     {
         try {
@@ -181,6 +183,7 @@ class PaymentController extends Controller
         }
     }
 
+    // البحث والفلاتر
     public function search()
     {
         try {

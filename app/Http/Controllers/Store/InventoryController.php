@@ -30,11 +30,14 @@ class InventoryController extends Controller
         try {
             $user = request()->user();
             $perPage = request()->get('per_page', 10);
-            $inventories = $this->inventoryService->getAll($user, $perPage);
+            $search = request()->query('search');
+
+            $inventories = $this->inventoryService->getAll($user, $perPage, $search);
+
             return $this->paginatedResponse(
-            InventoryResource::collection($inventories),
-            $inventories
-        );
+                InventoryResource::collection($inventories),
+                $inventories
+            );
         } catch (Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
@@ -144,6 +147,7 @@ class InventoryController extends Controller
         }
     }
 
+    // تحميل المنتجات فى صيغة اكسيل
     public function exportExcel()
     {
         try {

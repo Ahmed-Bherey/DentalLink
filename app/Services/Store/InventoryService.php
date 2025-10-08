@@ -8,10 +8,14 @@ use Illuminate\Support\Facades\Storage;
 
 class InventoryService
 {
-    public function getAll($user, $perPage = 10)
+    public function getAll($user, $perPage = 10, $search = null)
     {
         return Product::where('user_id', $user->id)
-            ->orderBy('created_at', 'desc')->paginate($perPage);
+            ->when($search, function ($query) use ($search) {
+                $query->where('name', 'like', '%' . $search . '%');
+            })
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
     }
 
     public function create(array $data)
