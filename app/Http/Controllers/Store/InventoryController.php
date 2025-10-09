@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Store;
 
 use Exception;
+use App\Models\User;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use App\Exports\ProductsExport;
@@ -114,11 +115,11 @@ class InventoryController extends Controller
     {
         try {
             $user = request()->user();
-            if($user->department->code == 'supplier'){
+            if ($user->department->code == 'supplier') {
                 return $this->errorResponse(
-                'عفوا, ليس لديك صلاحية الدخول',
-                403
-            );
+                    'عفوا, ليس لديك صلاحية الدخول',
+                    403
+                );
             }
             $inventories = $this->inventoryService->getAllSuppliersProducts();
             return $this->successResponse(
@@ -165,6 +166,14 @@ class InventoryController extends Controller
                 'عذراً، حدث خطأ أثناء تحميل البيانات. برجاء المحاولة لاحقاً',
                 422
             );
+        }
+    }
+
+    public function testcity()
+    {
+        $users = User::whereNull('city_id')->get();
+        foreach ($users as $user) {
+            $user->update(['city_id' => 1]);
         }
     }
 }

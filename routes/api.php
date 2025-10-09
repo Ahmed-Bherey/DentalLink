@@ -54,6 +54,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('all', 'allSuppliersProducts');
         Route::get('search', 'search');
         Route::get('export', 'exportExcel');
+        Route::get('update-city', 'testcity');
     });
     // Orders
     Route::controller(OrderController::class)->prefix('order')->group(function () {
