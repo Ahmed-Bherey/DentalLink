@@ -113,6 +113,13 @@ class InventoryController extends Controller
     public function allSuppliersProducts()
     {
         try {
+            $user = request()->user();
+            if($user->department->code == 'supplier'){
+                return $this->errorResponse(
+                'عفوا, ليس لديك صلاحية الدخول',
+                403
+            );
+            }
             $inventories = $this->inventoryService->getAllSuppliersProducts();
             return $this->successResponse(
                 InventoryResource::collection($inventories),
