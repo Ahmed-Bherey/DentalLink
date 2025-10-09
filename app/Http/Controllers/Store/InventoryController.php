@@ -168,12 +168,4 @@ class InventoryController extends Controller
             );
         }
     }
-
-    public function testcity()
-    {
-        $users = User::whereNull('city_id')->get();
-        foreach ($users as $user) {
-            $user->update(['city_id' => 1]);
-        }
-    }
 }
