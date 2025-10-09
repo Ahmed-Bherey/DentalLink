@@ -17,6 +17,7 @@ class InventoryResource extends JsonResource
         return [
             'id'            => $this->id,
             'name'          => $this->name,
+            'supplier_name' => $this->user->name,
             'category_id'   => $this->category_id,
             'category_name' => $this->category?->name,
             'city_id'       => (int)$this->user->city_id,
