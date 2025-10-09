@@ -111,22 +111,23 @@ class InventoryController extends Controller
     }
 
     // عرض قائمة منتجات كل الموردين للطبيب
-    public function allSuppliersProducts()
+    public function allSuppliersProducts(Request $request)
     {
         try {
-            $user = request()->user();
+            $user = $request->user();
+
             if ($user->department->code == 'supplier') {
-                return $this->errorResponse(
-                    'عفوا, ليس لديك صلاحية الدخول',
-                    403
-                );
+                return $this->errorResponse('عفوا، ليس لديك صلاحية الدخول', 403);
             }
-            $inventories = $this->inventoryService->getAllSuppliersProducts();
-            return $this->successResponse(
+
+            $filters = $request->only(['search', 'category_id', 'sort']);
+            $inventories = $this->inventoryService->getAllSuppliersProducts($filters);
+
+            return $this->paginatedResponse(
                 InventoryResource::collection($inventories),
-                200,
+                $inventories
             );
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
                 422

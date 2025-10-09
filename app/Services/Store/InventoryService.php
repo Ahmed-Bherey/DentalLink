@@ -117,13 +117,37 @@ class InventoryService
     }
 
     // عرض قائمة منتجات كل الموردين للطبيب
-    public function getAllSuppliersProducts()
+    public function getAllSuppliersProducts($filters = [])
     {
-        return Product::whereHas('user.department', function ($q) {
-            $q->where('code', '!=', 'doctor');
-        })
-            ->latest()
-            ->get();
+        $query = Product::with(['user.department', 'category'])
+            ->whereHas('user.department', function ($q) {
+                $q->where('code', '!=', 'doctor');
+            });
+
+        // 🔍 فلتر بحث عام باسم المنتج أو المورد
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($sub) use ($search) {
+                        $sub->where('name', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        // 🗂️ فلتر بالتصنيف
+        if (!empty($filters['category_id'])) {
+            $query->where('category_id', $filters['category_id']);
+        }
+
+        // ↕️ فلتر ترتيب السعر (الأعلى أو الأقل)
+        if (!empty($filters['sort']) && in_array($filters['sort'], ['asc', 'desc'])) {
+            $query->orderBy('price', $filters['sort']);
+        } else {
+            $query->latest();
+        }
+
+        return $query->paginate(10);
     }
 
     // البحث
