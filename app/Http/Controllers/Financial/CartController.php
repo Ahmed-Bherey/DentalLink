@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Services\Financial\CartService;
 use App\Http\Resources\Financial\CartResource;
 use App\Http\Requests\Financial\CartStoreRequest;
+use App\Http\Requests\Financial\CartUpdateRequest;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
@@ -66,7 +67,7 @@ class CartController extends Controller
     }
 
     // تحديث عنصر في السلة
-    public function update(CartStoreRequest $request, $id)
+    public function update(CartUpdateRequest $request, $id)
     {
         try {
             $cart = $this->cartService->update($id, $request->validated());

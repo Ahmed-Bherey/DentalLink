@@ -4,6 +4,7 @@ namespace App\Services\Financial;
 
 use App\Models\User;
 use App\Models\Store\Product;
+use App\Models\Financial\Cart;
 use App\Models\Financial\Order;
 use Illuminate\Support\Facades\DB;
 use App\Models\Financial\OrderItem;
@@ -101,6 +102,8 @@ class OrderService
         foreach ($supplierIds as $supplierId) {
             // أبث الحدث لقناة المورد
             event(new NewOrderCreated($order, $supplierId));
+
+            Cart::where('doctor_id', $order->doctor_id)->delete();
         }
 
         return $order;

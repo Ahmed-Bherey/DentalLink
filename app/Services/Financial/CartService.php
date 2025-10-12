@@ -32,7 +32,6 @@ class CartService
         $cart = Cart::findOrfail($id);
 
         $cart->update([
-            'product_id' => $data['product_id'],
             'quantity'   => $data['quantity'],
         ]);
 
