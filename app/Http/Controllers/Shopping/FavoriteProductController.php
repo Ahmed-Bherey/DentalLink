@@ -66,10 +66,7 @@ class FavoriteProductController extends Controller
 
             $this->favoriteProductService->removeFromFavorite($doctor, $product_id);
 
-            return $this->successResponse(
-                null,
-                'تم حذف المنتج من المفضلة بنجاح.'
-            );
+            return $this->successResponse('تم حذف المنتج من المفضلة بنجاح.');
         } catch (Exception $e) {
             return $this->errorResponse(
                 $e->getMessage() ?? 'حدث خطأ أثناء محاولة حذف المنتج من المفضلة.',
