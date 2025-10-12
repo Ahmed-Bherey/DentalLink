@@ -18,6 +18,8 @@ class FavoriteProductResource extends JsonResource
         $doctor = $request->user();
         return [
             'id'            => $this->id,
+            'doctor_id'            => $this->doctor_id,
+            'product_id'            => $this->product_id,
             'name'          => $this->product?->name,
             'supplier_name' => $this->product?->user->name,
             'category_id'   => $this->product?->category_id,
