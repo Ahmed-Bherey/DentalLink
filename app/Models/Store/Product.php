@@ -2,6 +2,7 @@
 
 namespace App\Models\Store;
 
+use App\Models\Financial\Cart;
 use App\Models\User;
 use App\Models\General\Category;
 use App\Models\Financial\OrderItem;
@@ -45,5 +46,10 @@ class Product extends Model
     public function packageItems()
     {
         return $this->hasMany(PackageItem::class, 'product_id');
+    }
+
+    public function carts()
+    {
+        return $this->hasMany(Cart::class, 'product_id');
     }
 }

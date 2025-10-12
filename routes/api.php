@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\UserAuthController;
 use App\Http\Controllers\Clinic\ProductController;
+use App\Http\Controllers\Financial\CartController;
 use App\Http\Controllers\Financial\OrderController;
 use App\Http\Controllers\Financial\PackageController;
 use App\Http\Controllers\Financial\PaymentController;
@@ -41,6 +42,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('index', 'index');
         Route::post('store', 'store');
         Route::get('show/{id}', 'show');
+        Route::post('update/{id}', 'update');
+        Route::delete('delete/{id}', 'destroy');
+    });
+    // cart
+    Route::controller(CartController::class)->prefix('cart')->group(function () {
+        Route::get('index', 'index');
+        Route::post('store', 'store');
         Route::post('update/{id}', 'update');
         Route::delete('delete/{id}', 'destroy');
     });

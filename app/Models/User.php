@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
+use App\Models\Financial\Cart;
 use App\Models\Financial\Order;
 use App\Models\Financial\OrderExpense;
 use App\Models\Financial\Payment;
@@ -106,5 +107,10 @@ class User extends Authenticatable
     public function city()
     {
         return $this->belongsTo(City::class, 'city_id');
+    }
+
+    public function carts()
+    {
+        return $this->hasMany(Cart::class, 'doctor_id');
     }
 }

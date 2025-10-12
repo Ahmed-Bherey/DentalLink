@@ -3,9 +3,11 @@
 namespace App\Services\Financial;
 
 use App\Models\User;
+use App\Models\Store\Product;
 use App\Models\Financial\Order;
 use Illuminate\Support\Facades\DB;
 use App\Models\Financial\OrderItem;
+use App\Events\Order\NewOrderCreated;
 use App\Models\Financial\OrderExpense;
 use Illuminate\Auth\Access\AuthorizationException;
 
@@ -81,11 +83,24 @@ class OrderService
             'payment_method' => $data['payment_method'],
         ]);
 
+        $supplierIds = [];
         foreach ($data['products'] as $product) {
             $order->orderItems()->create([
                 'product_id' => $product['id'],
                 'quantity' => $product['quantity'],
             ]);
+
+            $product = Product::find($product['id']);
+            if ($product) {
+                $supplierIds[] = $product->user_id;
+            }
+        }
+
+        $supplierIds = array_unique($supplierIds);
+
+        foreach ($supplierIds as $supplierId) {
+            // أبث الحدث لقناة المورد
+            event(new NewOrderCreated($order, $supplierId));
         }
 
         return $order;
