@@ -28,6 +28,7 @@ class InventoryResource extends JsonResource
             'quantity'      => (int)$this->quantity,
             'rating'        => 5,
             'status'        => $this->getStatus(),
+            'is_added'      => $this->isFavoritedBy($request->user()),
         ];
     }
 

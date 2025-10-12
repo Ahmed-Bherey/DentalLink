@@ -27,7 +27,6 @@ class FavoriteProductResource extends JsonResource
             'price'         => (int)$this->product->price,
             'quantity'      => (int)$this->product->quantity,
             'rating'        => 5,
-            'is_added'      => $this->isFavoritedBy($request->user()),
         ];
     }
 }
