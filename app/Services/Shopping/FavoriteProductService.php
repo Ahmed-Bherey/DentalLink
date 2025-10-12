@@ -32,9 +32,11 @@ class FavoriteProductService
     // حذف منتج من المفضلة
     public function removeFromFavorite($doctor, $product_id)
     {
-        $favorite = FavoriteProduct::where('doctor_id', $doctor->id)
-            ->where('product_id', $product_id)
-            ->first();
+        $favorite = FavoriteProduct::findOrFail($product_id);
+
+        if ($favorite->$doctor != $doctor->id) {
+            throw new \Exception('عفوا ليس لديك صلاحية الازالة من المفضلة.');
+        }
 
         if (! $favorite) {
             throw new \Exception('هذا المنتج غير موجود في قائمة المفضلة.');
