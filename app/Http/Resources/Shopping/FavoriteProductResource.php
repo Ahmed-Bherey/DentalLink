@@ -29,7 +29,7 @@ class FavoriteProductResource extends JsonResource
             'price'         => (int)$this->product?->price,
             'quantity'      => (int)$this->product?->quantity,
             'rating'        => 5,
-            'is_favorite'   => true, // لأنه موجود فعلاً في المفضلة
+            'favorite'   => true, // لأنه موجود فعلاً في المفضلة
             'is_added'      => $this->isAddedToCart($doctor),
         ];
     }
