@@ -58,13 +58,4 @@ class Product extends Model
     {
         return $this->hasMany(FavoriteProduct::class, 'product_id');
     }
-
-    private function isFavoritedBy($user): bool
-    {
-        if (!$user) return false;
-
-        return FavoriteProduct::where('doctor_id', $user->id)
-            ->where('product_id', $this->id)
-            ->exists();
-    }
 }

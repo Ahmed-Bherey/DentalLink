@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Store;
 
+use App\Models\Shopping\FavoriteProduct;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class InventoryResource extends JsonResource
@@ -14,6 +15,7 @@ class InventoryResource extends JsonResource
      */
     public function toArray($request)
     {
+        $doctor = $request->user();
         return [
             'id'            => $this->id,
             'name'          => $this->name,
@@ -28,7 +30,7 @@ class InventoryResource extends JsonResource
             'quantity'      => (int)$this->quantity,
             'rating'        => 5,
             'status'        => $this->getStatus(),
-            'is_added'      => $this->resource->isFavoritedBy($request->user()),
+            'is_added' => $this->isAddedToFavorites($doctor),
         ];
     }
 
@@ -43,5 +45,16 @@ class InventoryResource extends JsonResource
         }
 
         return 'INSTOCK';
+    }
+
+    private function isAddedToFavorites($doctor): bool
+    {
+        if (!$doctor) {
+            return false;
+        }
+
+        return FavoriteProduct::where('doctor_id', $doctor->id)
+            ->where('product_id', $this->id)
+            ->exists();
     }
 }
