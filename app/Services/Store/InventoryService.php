@@ -117,12 +117,19 @@ class InventoryService
     }
 
     // عرض قائمة منتجات كل الموردين للطبيب
-    public function getAllSuppliersProducts($filters = [])
+    public function getAllSuppliersProducts($filters = [], $doctor = null)
     {
         $query = Product::with(['user.department', 'category'])
             ->whereHas('user.department', function ($q) {
                 $q->where('code', '!=', 'doctor');
             });
+
+        if ($doctor) {
+            $query->with([
+                'favoriteProducts' => fn($q) => $q->where('doctor_id', $doctor->id),
+                'carts' => fn($q) => $q->where('doctor_id', $doctor->id),
+            ]);
+        }
 
         // 🔍 فلتر بحث عام باسم المنتج أو المورد
         if (!empty($filters['search'])) {

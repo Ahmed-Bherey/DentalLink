@@ -114,19 +114,19 @@ class InventoryController extends Controller
     public function allSuppliersProducts(Request $request)
     {
         //try {
-            $user = $request->user();
+        $user = $request->user();
 
-            if ($user->department->code == 'supplier') {
-                return $this->errorResponse('عفوا، ليس لديك صلاحية الدخول', 403);
-            }
+        if ($user->department->code == 'supplier') {
+            return $this->errorResponse('عفوا، ليس لديك صلاحية الدخول', 403);
+        }
 
-            $filters = $request->only(['search', 'category_id', 'sort']);
-            $inventories = $this->inventoryService->getAllSuppliersProducts($filters);
+        $filters = $request->only(['search', 'category_id', 'sort']);
+        $inventories = $this->inventoryService->getAllSuppliersProducts($filters, $user);
 
-            return $this->paginatedResponse(
-                InventoryResource::collection($inventories),
-                $inventories
-            );
+        return $this->paginatedResponse(
+            InventoryResource::collection($inventories),
+            $inventories
+        );
         // } catch (\Exception $e) {
         //     return $this->errorResponse(
         //         'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
