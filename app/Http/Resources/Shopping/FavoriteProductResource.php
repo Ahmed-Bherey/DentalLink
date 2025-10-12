@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Shopping;
 
+use App\Models\Financial\Cart;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class FavoriteProductResource extends JsonResource
@@ -14,6 +15,7 @@ class FavoriteProductResource extends JsonResource
      */
     public function toArray($request)
     {
+        $doctor = $request->user();
         return [
             'id'            => $this->id,
             'name'          => $this->product?->name,
@@ -22,11 +24,24 @@ class FavoriteProductResource extends JsonResource
             'category_name' => $this->product?->category?->name,
             'city_id'       => (int)$this->product?->user->city_id,
             'city_name'     => $this->product?->user->city?->name,
-            'img'           => $this->products?->img,
+            'img'           => $this->product?->img,
             'desc'          => $this->product?->desc,
             'price'         => (int)$this->product?->price,
             'quantity'      => (int)$this->product?->quantity,
             'rating'        => 5,
+            'is_favorite'   => true, // لأنه موجود فعلاً في المفضلة
+            'is_added'      => $this->isAddedToCart($doctor),
         ];
+    }
+
+    private function isAddedToCart($doctor): bool
+    {
+        if (!$doctor || !$this->product?->id) {
+            return false;
+        }
+
+        return Cart::where('doctor_id', $doctor->id)
+            ->where('product_id', $this->product->id)
+            ->exists();
     }
 }
