@@ -23,7 +23,7 @@ class FavoriteProductController extends Controller
     // عرض قائمة المفضلة
     public function index()
     {
-        //try {
+        try {
             $doctor = request()->user();
             $perPage = request()->get('per_page', 10);
             $favoriteProducts = $this->favoriteProductService->index($doctor, $perPage);
@@ -31,12 +31,12 @@ class FavoriteProductController extends Controller
                 FavoriteProductResource::collection($favoriteProducts),
                 $favoriteProducts,
             );
-        // } catch (Exception $e) {
-        //     return $this->errorResponse(
-        //         'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
-        //         422
-        //     );
-        // }
+        } catch (Exception $e) {
+            return $this->errorResponse(
+                'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
+                422
+            );
+        }
     }
 
     // اضافة الى المفضلة
