@@ -46,24 +46,24 @@ class CartController extends Controller
     // اضافة السلة
     public function store(CartStoreRequest $request)
     {
-        try {
+        //try {
             $doctor = request()->user();
             $cart = $this->cartService->store($doctor, $request->validated());
             return $this->successResponseWithId(
                 'تم إضافة المنتج بنجاح',
                 $cart->id,
             );
-        } catch (AuthorizationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'عفوا، ليس لديك صلاحية لإنشاء الطلب.',
-            ], 403);
-        } catch (Exception $e) {
-            return $this->errorResponse(
-                'عذراً، حدث خطأ ما. برجاء المحاولة مرة أخرى',
-                422
-            );
-        }
+        // } catch (AuthorizationException $e) {
+        //     return response()->json([
+        //         'success' => false,
+        //         'message' => 'عفوا، ليس لديك صلاحية لإنشاء الطلب.',
+        //     ], 403);
+        // } catch (Exception $e) {
+        //     return $this->errorResponse(
+        //         'عذراً، حدث خطأ ما. برجاء المحاولة مرة أخرى',
+        //         422
+        //     );
+        // }
     }
 
     // تحديث عنصر في السلة
