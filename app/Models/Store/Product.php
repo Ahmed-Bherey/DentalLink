@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\General\Category;
 use App\Models\Financial\OrderItem;
 use App\Models\Financial\PackageItem;
+use App\Models\Shopping\FavoriteProduct;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -51,5 +52,10 @@ class Product extends Model
     public function carts()
     {
         return $this->hasMany(Cart::class, 'product_id');
+    }
+
+    public function favoriteProducts()
+    {
+        return $this->hasMany(FavoriteProduct::class, 'product_id');
     }
 }

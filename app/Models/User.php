@@ -12,6 +12,7 @@ use App\Models\Financial\Receipt;
 use App\Models\General\Category;
 use App\Models\General\City;
 use App\Models\General\Department;
+use App\Models\Shopping\FavoriteProduct;
 use App\Models\Store\Inventory;
 use App\Models\Store\Product;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -112,5 +113,10 @@ class User extends Authenticatable
     public function carts()
     {
         return $this->hasMany(Cart::class, 'doctor_id');
+    }
+
+    public function favoriteProducts()
+    {
+        return $this->hasMany(FavoriteProduct::class, 'doctor_id');
     }
 }

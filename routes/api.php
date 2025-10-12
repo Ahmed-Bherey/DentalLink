@@ -10,6 +10,7 @@ use App\Http\Controllers\Financial\PaymentController;
 use App\Http\Controllers\Financial\ReceiptController;
 use App\Http\Controllers\Report\DoctorController;
 use App\Http\Controllers\Report\SupplierController;
+use App\Http\Controllers\Shopping\FavoriteProductController;
 use App\Http\Controllers\Store\InventoryController;
 use App\Http\Controllers\System\CategoryController;
 use App\Http\Controllers\System\CityController;
@@ -51,6 +52,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('store', 'store');
         Route::post('update/{id}', 'update');
         Route::delete('delete/{id}', 'destroy');
+    });
+    // cart
+    Route::controller(FavoriteProductController::class)->prefix('favorite-product')->group(function () {
+        Route::get('index', 'index');
+        Route::get('add/{product_id}', 'addToFavorite');
+        Route::delete('remove/{product_id}', 'removeFromFavorite');
     });
     // store
     Route::controller(InventoryController::class)->prefix('product')->group(function () {
