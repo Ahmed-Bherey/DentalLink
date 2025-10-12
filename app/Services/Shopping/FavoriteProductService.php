@@ -34,7 +34,7 @@ class FavoriteProductService
     {
         $favorite = FavoriteProduct::findOrFail($product_id);
 
-        if ($favorite->$doctor != $doctor->id) {
+        if ($favorite->$doctor_id != $doctor->id) {
             throw new \Exception('عفوا ليس لديك صلاحية الازالة من المفضلة.');
         }
 
