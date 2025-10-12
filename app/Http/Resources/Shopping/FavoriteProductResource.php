@@ -14,6 +14,20 @@ class FavoriteProductResource extends JsonResource
      */
     public function toArray($request)
     {
-        return parent::toArray($request);
+        return [
+            'id'            => $this->id,
+            'name'          => $this->product->name,
+            'supplier_name' => $this->product->user->name,
+            'category_id'   => $this->product->category_id,
+            'category_name' => $this->product->category?->name,
+            'city_id'       => (int)$this->product->user->city_id,
+            'city_name'     => $this->product->user->city?->name,
+            'img'           => $this->products->img,
+            'desc'          => $this->product->desc,
+            'price'         => (int)$this->product->price,
+            'quantity'      => (int)$this->product->quantity,
+            'rating'        => 5,
+            'is_added'      => $this->isFavoritedBy($request->user()),
+        ];
     }
 }

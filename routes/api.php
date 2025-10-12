@@ -53,7 +53,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('update/{id}', 'update');
         Route::delete('delete/{id}', 'destroy');
     });
-    // cart
+    // favorite
     Route::controller(FavoriteProductController::class)->prefix('favorite-product')->group(function () {
         Route::get('index', 'index');
         Route::get('add/{product_id}', 'addToFavorite');
