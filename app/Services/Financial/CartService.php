@@ -20,7 +20,7 @@ class CartService
         $cart = Cart::create([
             'doctor_id' => $doctor->id,
             'product_id' => $data['product_id'],
-            'quantity' => $data['quantity'],
+            'quantity' => $data['quantity'] ?? null,
         ]);
 
         return $cart;
