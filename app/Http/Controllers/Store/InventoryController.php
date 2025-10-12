@@ -28,7 +28,7 @@ class InventoryController extends Controller
     // عرض قائمة المنتجات
     public function index()
     {
-        //try {
+        try {
             $user = request()->user();
             $perPage = request()->get('per_page', 10);
             $search = request()->query('search');
@@ -39,12 +39,12 @@ class InventoryController extends Controller
                 InventoryResource::collection($inventories),
                 $inventories
             );
-        // } catch (Exception $e) {
-        //     return $this->errorResponse(
-        //         'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
-        //         422
-        //     );
-        // }
+        } catch (Exception $e) {
+            return $this->errorResponse(
+                'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
+                422
+            );
+        }
     }
 
     // اضافة منتج جديد
@@ -113,7 +113,7 @@ class InventoryController extends Controller
     // عرض قائمة منتجات كل الموردين للطبيب
     public function allSuppliersProducts(Request $request)
     {
-        try {
+        //try {
             $user = $request->user();
 
             if ($user->department->code == 'supplier') {
@@ -127,12 +127,12 @@ class InventoryController extends Controller
                 InventoryResource::collection($inventories),
                 $inventories
             );
-        } catch (\Exception $e) {
-            return $this->errorResponse(
-                'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
-                422
-            );
-        }
+        // } catch (\Exception $e) {
+        //     return $this->errorResponse(
+        //         'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
+        //         422
+        //     );
+        // }
     }
 
     // البحث
