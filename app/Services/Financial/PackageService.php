@@ -132,7 +132,7 @@ class PackageService
     public function toggleStatus(Package $package): Package
     {
         $package->update([
-            'active' => !$package->is_active,
+            'active' => !$package->active,
         ]);
 
         return $package;
