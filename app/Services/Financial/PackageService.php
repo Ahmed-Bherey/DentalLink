@@ -99,12 +99,9 @@ class PackageService
                 'price' => $data['price'],
             ]);
 
-            // تعديل المنتجات المرتبطة (نمسح ثم نعيد الإنشاء)
-            if (isset($data['products'])) {
-                // حذف العناصر القديمة
+            if (!empty($data['products'])) {
                 $package->packageItems()->delete();
 
-                // إضافة العناصر الجديدة
                 foreach ($data['products'] as $product) {
                     $package->packageItems()->create([
                         'product_id' => $product['id'],
@@ -113,7 +110,9 @@ class PackageService
                 }
             }
 
-            // نعيد تحميل الباقة مع العلاقة الصحيحة ونعيد الـ model
+            // ✅ تحميل العلاقات قبل الإرجاع
+            $package->load('packageItems.product.category');
+
             return $package;
         });
     }

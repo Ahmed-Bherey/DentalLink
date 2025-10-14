@@ -126,6 +126,10 @@ class PackageController extends Controller
         try {
             $updated = $this->packageService->update($package, $request->validated());
 
+            if (!$updated || !$updated->exists) {
+                return $this->errorResponse('فشل في تحديث الباقة', 422);
+            }
+
             return $this->successResponse(new PackageResource($updated));
         } catch (Exception $e) {
             return $this->errorResponse(
