@@ -160,7 +160,7 @@ class PackageController extends Controller
         try {
             //$this->authorize('update', $package);
 
-            $updated = $this->packageService->toggleStatus($package);
+            $updated = $this->packageService->toggleStatus($package->refresh());
 
             return $this->createSuccessResponse(
                 $updated->is_active
