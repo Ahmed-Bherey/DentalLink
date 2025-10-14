@@ -67,16 +67,16 @@ class PackageService
     }
 
     public function getPackageProducts(Package $package, $perPage = 10, $search = null)
-{
-    return $package->packageItems()
-        ->with(['product.category'])
-        ->when($search, function ($query) use ($search) {
-            $query->whereHas('product', function ($q) use ($search) {
-                $q->where('name', 'like', '%' . $search . '%');
-            });
-        })
-        ->paginate($perPage);
-}
+    {
+        return $package->packageItems()
+            ->with(['product.category'])
+            ->when($search, function ($query) use ($search) {
+                $query->whereHas('product', function ($q) use ($search) {
+                    $q->where('name', 'like', '%' . $search . '%');
+                });
+            })
+            ->paginate($perPage);
+    }
 
 
     public function update(Package $package, array $data): Package

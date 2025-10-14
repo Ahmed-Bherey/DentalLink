@@ -110,7 +110,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('index', 'index');
         Route::post('store', 'createPackage');
         Route::post('buy/{packageId}', 'buyPackage');
-        Route::get('show/{package_id}', 'show');
+        Route::get('show/{package}', 'show');
         Route::post('update/{id}', 'update');
         Route::delete('delete/{id}', 'destroy');
         Route::get('toggle-status/{id}', 'toggleStatus');
