@@ -7,11 +7,12 @@ use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use App\Models\Financial\Package;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Financial\BuyPackageRequest;
 use App\Services\Financial\PackageService;
 use App\Http\Resources\Financial\PackageResource;
+use App\Http\Requests\Financial\BuyPackageRequest;
 use App\Http\Requests\Financial\PackageStoreRequest;
 use App\Http\Requests\Financial\PackageUpdateRequest;
+use App\Http\Resources\Shopping\PackageProductResource;
 
 class PackageController extends Controller
 {
@@ -83,24 +84,42 @@ class PackageController extends Controller
     }
 
     public function show(Request $request, Package $package)
-    {
-        try {
-            $supplier = $request->user();
-            $perPage = $request->get('per_page', 10);
-            $search = $request->query('search');
+{
+    try {
+        $perPage = $request->get('per_page', 10);
+        $search = $request->query('search');
 
-            // نحصل على البيانات من السيرفيس
-            [$package, $paginator] = $this->packageService->getPackageDetailsPaginated($supplier, $package, $perPage, $search);
+        // جلب المنتجات داخل الباقة مع pagination
+        $products = $this->packageService->getPackageProducts($package, $perPage, $search);
 
-            // نستخدم ريسبونس خاص فيه pagination للمنتجات الأخرى
-            return $this->paginatedPackageResponse(new PackageResource($package), $paginator);
-        } catch (\Exception $e) {
-            return $this->errorResponse(
-                'عذراً، حدث خطأ أثناء جلب بيانات الباقة',
-                422
-            );
-        }
+        // تجهيز بيانات الباقة نفسها
+        $packageData = new PackageResource($package);
+
+        // دمج بيانات الباقة مع المنتجات في استجابة واحدة
+        return response()->json([
+            'status' => true,
+            'data' => $packageData,
+            'products' => PackageProductResource::collection($products),
+            'meta' => [
+                'current_page' => $products->currentPage(),
+                'last_page' => $products->lastPage(),
+                'per_page' => $products->perPage(),
+                'total' => $products->total(),
+            ],
+            'links' => [
+                'first' => $products->url(1),
+                'last'  => $products->url($products->lastPage()),
+                'prev'  => $products->previousPageUrl(),
+                'next'  => $products->nextPageUrl(),
+            ]
+        ]);
+    } catch (\Exception $e) {
+        return $this->errorResponse(
+            'عذراً، حدث خطأ أثناء جلب بيانات الباقة',
+            422
+        );
     }
+}
 
 
     public function update(PackageUpdateRequest $request, Package $package)

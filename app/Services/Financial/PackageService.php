@@ -66,32 +66,17 @@ class PackageService
         return $order;
     }
 
-    public function getPackageDetailsPaginated($supplier, Package $package, $perPage = 10, $search = null)
-    {
-        // تحميل تفاصيل الباقة وعلاقاتها
-        $package->load([
-            'packageItems.product.category'
-        ]);
-
-        // نحصل على الـ IDs الخاصة بمنتجات الباقة
-        $packageProductIds = $package->packageItems->pluck('product_id')->toArray();
-
-        // المنتجات الأخرى (خارج الباقة)
-        $otherProductsQuery = $supplier->products()
-            ->with('category')
-            ->whereNotIn('id', $packageProductIds)
-            ->when($search, function ($query) use ($search) {
-                $query->where('name', 'like', '%' . $search . '%');
-            })
-            ->orderBy('created_at', 'desc');
-
-        $paginator = $otherProductsQuery->paginate($perPage);
-
-        // نضيف المنتجات الأخرى داخل الـ package resource مؤقتاً حتى تُرجع بالـ response
-        $package->other_products = collect($paginator->items());
-
-        return [$package, $paginator];
-    }
+    public function getPackageProducts(Package $package, $perPage = 10, $search = null)
+{
+    return $package->packageItems()
+        ->with(['product.category'])
+        ->when($search, function ($query) use ($search) {
+            $query->whereHas('product', function ($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%');
+            });
+        })
+        ->paginate($perPage);
+}
 
 
     public function update(Package $package, array $data): Package
