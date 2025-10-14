@@ -34,5 +34,20 @@ class PackageResource extends JsonResource
                 ];
             }),
         ];
+        if (property_exists($this, 'other_products') && $this->other_products) {
+            $data['other_products'] = $this->other_products->map(function ($product) {
+                return [
+                    'id'            => $product->id,
+                    'category_id'   => (int)$product->category_id,
+                    'category_name' => $product->category?->name,
+                    'name'          => $product->name,
+                    'desc'          => $product->desc,
+                    'img'           => $product->img,
+                    'price'         => (int)$product->price,
+                ];
+            });
+        }
+
+        return $data;
     }
 }

@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Store\Product;
 use App\Models\Financial\Cart;
 use App\Models\Financial\Order;
+use App\Services\FirebaseService;
 use Illuminate\Support\Facades\DB;
 use App\Models\Financial\OrderItem;
 use App\Events\Order\NewOrderCreated;
@@ -84,27 +85,14 @@ class OrderService
             'payment_method' => $data['payment_method'],
         ]);
 
-        $supplierIds = [];
         foreach ($data['products'] as $product) {
             $order->orderItems()->create([
                 'product_id' => $product['id'],
                 'quantity' => $product['quantity'],
             ]);
-
-            $product = Product::find($product['id']);
-            if ($product) {
-                $supplierIds[] = $product->user_id;
-            }
         }
 
-        $supplierIds = array_unique($supplierIds);
-
-        foreach ($supplierIds as $supplierId) {
-            // أبث الحدث لقناة المورد
-            event(new NewOrderCreated($order, $supplierId));
-
-            Cart::where('doctor_id', $order->doctor_id)->delete();
-        }
+        Cart::where('doctor_id', $order->doctor_id)->delete();
 
         return $order;
     }

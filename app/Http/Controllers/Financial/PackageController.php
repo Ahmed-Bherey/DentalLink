@@ -61,6 +61,27 @@ class PackageController extends Controller
         }
     }
 
+    public function show(Request $request, Package $package)
+    {
+        try {
+            $supplier = $request->user();
+            $perPage = $request->get('per_page', 10);
+            $search = $request->query('search');
+
+            // نحصل على البيانات من السيرفيس
+            [$package, $paginator] = $this->packageService->getPackageDetailsPaginated($supplier, $package, $perPage, $search);
+
+            // نستخدم ريسبونس خاص فيه pagination للمنتجات الأخرى
+            return $this->paginatedPackageResponse(new PackageResource($package), $paginator);
+        } catch (\Exception $e) {
+            return $this->errorResponse(
+                'عذراً، حدث خطأ أثناء جلب بيانات الباقة',
+                422
+            );
+        }
+    }
+
+
     public function update(PackageUpdateRequest $request, Package $package)
     {
         try {

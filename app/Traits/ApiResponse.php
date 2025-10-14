@@ -69,4 +69,24 @@ trait ApiResponse
             ]
         ], $code);
     }
+
+    protected function paginatedPackageResponse($packageResource, $paginator, int $code = 200)
+    {
+        return response()->json([
+            'status' => true,
+            'data'   => $packageResource,
+            'meta'   => [
+                'current_page' => $paginator->currentPage(),
+                'last_page'    => $paginator->lastPage(),
+                'per_page'     => $paginator->perPage(),
+                'total'        => $paginator->total(),
+            ],
+            'links'  => [
+                'first' => $paginator->url(1),
+                'last'  => $paginator->url($paginator->lastPage()),
+                'prev'  => $paginator->previousPageUrl(),
+                'next'  => $paginator->nextPageUrl(),
+            ]
+        ], $code);
+    }
 }
