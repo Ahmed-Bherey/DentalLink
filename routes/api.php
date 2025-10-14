@@ -76,7 +76,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('all-delivered', 'deliveredOrders');
         Route::post('store', 'store');
         Route::post('update-status/{order_id}', 'updateStatus');
-        Route::post('update/{id}', 'update');
+        Route::post('update/{package}', 'update');
         Route::post('update-item/{orderItem_id}', 'UpdateItem');
         Route::delete('delete/{id}', 'destroy');
         Route::delete('delete-item/{orderItem_id}', 'deleteItem');
