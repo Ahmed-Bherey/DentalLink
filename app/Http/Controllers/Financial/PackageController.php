@@ -160,13 +160,13 @@ class PackageController extends Controller
         try {
             //$this->authorize('update', $package);
 
-            $updated = $this->packageService->toggleStatus($package->refresh());
+            $updated = $this->packageService->toggleStatus($package);
 
             return $this->createSuccessResponse(
                 $updated->is_active
                     ? 'تم تفعيل الباقة بنجاح'
                     : 'تم إلغاء تفعيل الباقة بنجاح',
-                ['active' => $updated->active],
+                ['active' => $package->active],
                 200
             );
         } catch (Exception $e) {
