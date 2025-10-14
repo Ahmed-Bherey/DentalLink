@@ -158,8 +158,6 @@ class PackageController extends Controller
     public function toggleStatus(Package $package)
     {
         try {
-            //$this->authorize('update', $package);
-
             $updated = $this->packageService->toggleStatus($package);
 
             return $this->createSuccessResponse(
@@ -169,7 +167,7 @@ class PackageController extends Controller
                 ['active' => $updated->active],
                 200
             );
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ ما. برجاء المحاولة لاحقاً',
                 422

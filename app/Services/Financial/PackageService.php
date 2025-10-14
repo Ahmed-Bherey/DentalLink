@@ -131,10 +131,13 @@ class PackageService
      */
     public function toggleStatus(Package $package): Package
     {
+        // لو كانت الباقة مفعلة → تعطيلها
+        // لو كانت معطلة → تفعيلها
         $package->update([
             'active' => !$package->active,
         ]);
 
-        return $package;
+        // نعيد الكائن بعد التحديث للتأكد من القيمة الجديدة
+        return $package->fresh();
     }
 }
