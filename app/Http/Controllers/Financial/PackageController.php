@@ -163,10 +163,10 @@ class PackageController extends Controller
             $updated = $this->packageService->toggleStatus($package);
 
             return $this->createSuccessResponse(
-                $updated->is_active
+                $updated->active
                     ? 'تم تفعيل الباقة بنجاح'
                     : 'تم إلغاء تفعيل الباقة بنجاح',
-                ['active' => $package->active],
+                ['active' => $updated->active],
                 200
             );
         } catch (Exception $e) {
