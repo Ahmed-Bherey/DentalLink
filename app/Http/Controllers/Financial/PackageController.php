@@ -126,7 +126,7 @@ class PackageController extends Controller
         try {
             $updated = $this->packageService->update($package, $request->validated());
 
-            return $this->successResponse(new PackageResource($updated), 'تم تحديث العرض بنجاح');
+            return $this->successResponse(new PackageResource($updated));
         } catch (Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ ما. برجاء المحاولة لاحقاً',
