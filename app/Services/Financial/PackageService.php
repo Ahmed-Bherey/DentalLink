@@ -89,7 +89,7 @@ class PackageService
             ->paginate($perPage);
     }
 
-    public function update(Package $package, array $data): Package
+    public function update(Package $package, array $data)
     {
         return DB::transaction(function () use ($package, $data) {
 
