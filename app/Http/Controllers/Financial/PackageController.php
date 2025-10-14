@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Models\Financial\Package;
 use App\Http\Controllers\Controller;
 use App\Services\Financial\PackageService;
+use App\Http\Resources\Store\InventoryResource;
 use App\Http\Resources\Financial\PackageResource;
 use App\Http\Requests\Financial\BuyPackageRequest;
 use App\Http\Requests\Financial\PackageStoreRequest;
@@ -86,13 +87,34 @@ class PackageController extends Controller
     public function show($package_id)
     {
         try {
-            
-            $package = $this->packageService->getPackageProducts($package_id, request()->user());
+
+            $package = $this->packageService->show($package_id, request()->user());
 
             return $this->successResponse(new PackageResource($package));
         } catch (\Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ أثناء جلب بيانات الباقة',
+                422
+            );
+        }
+    }
+
+    public function remainingProducts(Request $request, $packageId)
+    {
+        try {
+            $supplier = $request->user();
+            $perPage = $request->get('per_page', 10);
+            $search = $request->query('search');
+
+            $products = $this->packageService->getRemainingProducts($packageId, $supplier, $perPage, $search);
+
+            return $this->paginatedResponse(
+                InventoryResource::collection($products),
+                $products
+            );
+        } catch (Exception $e) {
+            return $this->errorResponse(
+                'عذراً، حدث خطأ أثناء جلب المنتجات المتبقية',
                 422
             );
         }

@@ -66,11 +66,28 @@ class PackageService
         return $order;
     }
 
-    public function getPackageProducts($id, $user)
+    public function show($id, $user)
     {
         return Package::where('supplier_id', $user->id)->findOrFail($id);
     }
 
+    public function getRemainingProducts($packageId, $supplier, $perPage = 10, $search = null)
+    {
+        // تأكد أن الباقة تابعة لهذا المورد
+        $package = Package::where('supplier_id', $supplier->id)->findOrFail($packageId);
+
+        // جلب معرفات المنتجات الموجودة في الباقة
+        $productIdsInPackage = $package->packageItems()->pluck('product_id');
+
+        // جلب المنتجات الغير موجودة في الباقة مع دعم البحث والتصفح
+        return $supplier->products()
+            ->whereNotIn('id', $productIdsInPackage)
+            ->when($search, function ($query) use ($search) {
+                $query->where('name', 'like', '%' . $search . '%');
+            })
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
+    }
 
     public function update(Package $package, array $data): Package
     {
