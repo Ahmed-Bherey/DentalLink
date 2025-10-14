@@ -18,6 +18,7 @@ class InventoryResource extends JsonResource
         $doctor = $request->user();
         return [
             'id'            => $this->id,
+            'product_id'            => $this->id,
             'name'          => $this->name,
             'supplier_name' => $this->user->name,
             'category_id'   => $this->category_id,
