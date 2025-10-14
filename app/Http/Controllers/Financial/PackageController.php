@@ -124,8 +124,6 @@ class PackageController extends Controller
     public function update(PackageUpdateRequest $request, Package $package)
     {
         try {
-            //$this->authorize('update', $package);
-
             $updated = $this->packageService->update($package, $request->validated());
 
             return $this->successResponse(new PackageResource($updated), 'تم تحديث العرض بنجاح');

@@ -91,24 +91,31 @@ class PackageService
 
     public function update(Package $package, array $data): Package
     {
-        $package->update([
-            'name'        => $data['name'],
-            'desc'        => $data['desc'],
-            'price'       => $data['price'], // المورد بيحدد السعر
-        ]);
+        return DB::transaction(function () use ($package, $data) {
 
-        // تعديل المنتجات المرتبطة (اختياري لو عايز تحدث المنتجات كمان)
-        if (isset($data['products'])) {
-            $package->packageItems()->delete();
-            foreach ($data['products'] as $product) {
-                $package->packageItems()->create([
-                    'product_id' => $product['id'],
-                    'quantity'   => $product['quantity'],
-                ]);
+            $package->update([
+                'name'  => $data['name'],
+                'desc'  => $data['desc'],
+                'price' => $data['price'],
+            ]);
+
+            // تعديل المنتجات المرتبطة (نمسح ثم نعيد الإنشاء)
+            if (isset($data['products'])) {
+                // حذف العناصر القديمة
+                $package->packageItems()->delete();
+
+                // إضافة العناصر الجديدة
+                foreach ($data['products'] as $product) {
+                    $package->packageItems()->create([
+                        'product_id' => $product['id'],
+                        'quantity'   => $product['quantity'],
+                    ]);
+                }
             }
-        }
 
-        return $package->fresh('packageItems');
+            // نعيد تحميل الباقة مع العلاقة الصحيحة ونعيد الـ model
+            return $package->fresh('packageItems.product');
+        });
     }
 
     /**
