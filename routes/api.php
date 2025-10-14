@@ -111,7 +111,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('store', 'createPackage');
         Route::post('buy/{packageId}', 'buyPackage');
         Route::get('show/{package_id}', 'show');
-        Route::get('remainin-product/{packageId}', 'remainingProducts');
+        Route::get('remain-products/{packageId}', 'remainingProducts');
         Route::post('update/{id}', 'update');
         Route::delete('delete/{id}', 'destroy');
         Route::get('toggle-status/{id}', 'toggleStatus');
