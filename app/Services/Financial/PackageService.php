@@ -135,7 +135,6 @@ class PackageService
             'active' => !$package->is_active,
         ]);
 
-        $package->load('packageItems.product.category');
         return $package;
     }
 }
