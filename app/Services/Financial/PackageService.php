@@ -108,7 +108,7 @@ class PackageService
             }
         }
 
-        return $package->fresh('items');
+        return $package->fresh('packageItems');
     }
 
     /**
