@@ -66,16 +66,9 @@ class PackageService
         return $order;
     }
 
-    public function getPackageProducts(Package $package, $perPage = 10, $search = null)
+    public function getPackageProducts($id, $user)
     {
-        return $package->packageItems()
-            ->with(['product.category'])
-            ->when($search, function ($query) use ($search) {
-                $query->whereHas('product', function ($q) use ($search) {
-                    $q->where('name', 'like', '%' . $search . '%');
-                });
-            })
-            ->paginate($perPage);
+        return Package::where('supplier_id', $user->id)->findOrFail($id);
     }
 
 
