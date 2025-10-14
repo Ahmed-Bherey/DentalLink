@@ -135,6 +135,6 @@ class PackageService
             'active' => !$package->is_active,
         ]);
 
-        return $package;
+        return $package->refresh();
     }
 }
