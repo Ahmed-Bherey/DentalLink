@@ -15,12 +15,12 @@ class PackageResource extends JsonResource
     public function toArray($request)
     {
         return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'desc' => $this->desc,
+            'id'          => $this->id,
+            'name'        => $this->name,
+            'desc'        => $this->desc,
             'total_price' => $this->price,
-            'created_at' => $this->created_at?->format('Y-m-d'),
-            'products'       => $this->packageItems->map(function ($item) {
+            'created_at'  => $this->created_at?->format('Y-m-d'),
+            'products'    => $this->packageItems->map(function ($item) {
                 return [
                     'id'                => $item->id,
                     'product_id'        => $item->product?->id,

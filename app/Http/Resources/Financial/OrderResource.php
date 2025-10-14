@@ -30,7 +30,7 @@ class OrderResource extends JsonResource
             'notes'             => $this->notes,
             'status'            => $this->status,
             'status_name'       => $this->status_name,
-            'total_order_price' => $this->total_order_price,
+            'total_price'       => $this->total_order_price,
             'created_at'        => $this->created_at->format('Y-m-d'),
 
             // المنتجات الخاصة بالطلب

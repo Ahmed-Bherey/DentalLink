@@ -91,7 +91,7 @@ class PackageController extends Controller
             $package = $this->packageService->show($package_id, request()->user());
 
             return $this->successResponse(new PackageResource($package));
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ أثناء جلب بيانات الباقة',
                 422
