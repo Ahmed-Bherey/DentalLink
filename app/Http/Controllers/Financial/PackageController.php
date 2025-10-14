@@ -166,7 +166,8 @@ class PackageController extends Controller
                 $updated->is_active
                     ? 'تم تفعيل الباقة بنجاح'
                     : 'تم إلغاء تفعيل الباقة بنجاح',
-                ['active' => $updated->active]
+                ['active' => $updated->active],
+                200
             );
         } catch (Exception $e) {
             return $this->errorResponse(
