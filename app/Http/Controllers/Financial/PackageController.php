@@ -23,6 +23,27 @@ class PackageController extends Controller
         $this->packageService = $packageService;
     }
 
+    public function index(Request $request)
+{
+    try {
+        $supplier = $request->user();
+        $perPage = $request->get('per_page', 10);
+        $search = $request->query('search');
+
+        $packages = $this->packageService->getAllPackages($supplier, $perPage, $search);
+
+        return $this->paginatedResponse(
+            PackageResource::collection($packages),
+            $packages
+        );
+    } catch (\Exception $e) {
+        return $this->errorResponse(
+            'عذراً، حدث خطأ أثناء جلب بيانات العروض',
+            422
+        );
+    }
+}
+
     // انشاء عرض من المورد
     public function createPackage(PackageStoreRequest $request)
     {

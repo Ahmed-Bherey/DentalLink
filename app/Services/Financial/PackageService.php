@@ -9,6 +9,19 @@ use Illuminate\Support\Facades\DB;
 
 class PackageService
 {
+    public function getAllPackages($supplier, $perPage = 10, $search = null)
+    {
+        return Package::with([
+            'packageItems.product.category',
+        ])
+            ->where('supplier_id', $supplier->id)
+            ->when($search, function ($query) use ($search) {
+                $query->where('name', 'like', '%' . $search . '%');
+            })
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
+    }
+
     // انشاء عرض من المورد
     public function createPackage($supplier, $data)
     {

@@ -107,6 +107,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     // packages
     Route::controller(PackageController::class)->prefix('package')->group(function () {
+        Route::get('index', 'index');
         Route::post('store', 'createPackage');
         Route::post('buy/{packageId}', 'buyPackage');
         Route::get('show/{package_id}', 'show');
