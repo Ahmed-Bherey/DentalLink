@@ -114,7 +114,7 @@ class PackageService
             }
 
             // نعيد تحميل الباقة مع العلاقة الصحيحة ونعيد الـ model
-            return $package->fresh('packageItems.product');
+            return $package;
         });
     }
 
