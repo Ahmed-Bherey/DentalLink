@@ -114,6 +114,7 @@ class PackageService
             }
 
             // نعيد تحميل الباقة مع العلاقة الصحيحة ونعيد الـ model
+            $package->load('packageItems.product.category');
             return $package;
         });
     }
