@@ -143,15 +143,15 @@ class PackageController extends Controller
     // حذف باقة
     public function destroy(Package $package)
     {
-        //try {
+        try {
             //$this->authorize('delete', $package);
 
             $this->packageService->delete($package);
 
             return $this->successResponse('تم حذف العرض بنجاح');
-        // } catch (\Exception $e) {
-        //     return $this->errorResponse('تعذر حذف العرض', 422);
-        // }
+        } catch (\Exception $e) {
+            return $this->errorResponse('تعذر حذف العرض', 422);
+        }
     }
 
     // تفعيل/تعطيل باقة
