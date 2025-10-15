@@ -174,4 +174,25 @@ class PackageController extends Controller
             );
         }
     }
+
+    // عرض كل الباقات فى الشوبينج للطبيب
+    public function allPackages(Request $request)
+    {
+        try {
+            $perPage = $request->get('per_page', 10);
+            $search = $request->query('search');
+
+            $packages = $this->packageService->getAllShoppingPackages($perPage, $search);
+
+            return $this->paginatedResponse(
+                PackageResource::collection($packages),
+                $packages
+            );
+        } catch (\Exception $e) {
+            return $this->errorResponse(
+                'عذراً، حدث خطأ أثناء جلب بيانات العروض',
+                422
+            );
+        }
+    }
 }

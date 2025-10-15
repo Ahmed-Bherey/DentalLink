@@ -140,4 +140,17 @@ class PackageService
         // نعيد الكائن نفسه بعد الحفظ (وليس fresh)
         return $package;
     }
+
+    // عرض كل الباقات فى الشوبينج للطبيب
+    public function getAllShoppingPackages($perPage = 10, $search = null)
+    {
+        return Package::with([
+            'packageItems.product.category',
+        ])
+            ->when($search, function ($query) use ($search) {
+                $query->where('name', 'like', '%' . $search . '%');
+            })
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
+    }
 }

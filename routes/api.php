@@ -115,6 +115,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('update/{package}', 'update');
         Route::delete('delete/{package}', 'destroy');
         Route::get('toggle-status/{package}', 'toggleStatus');
+        Route::get('shopping-all', 'allPackages');
     });
     // reports
     Route::prefix('report')->group(function () {
