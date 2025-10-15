@@ -30,7 +30,7 @@ class OrderService
             });
         }
 
-        return $query->paginate($perPage);
+        return $query->orderBy('created_at', 'desc')->paginate($perPage);
     }
 
     // عرض قائمة الطلبات المسلمة للمورد والطبيب
