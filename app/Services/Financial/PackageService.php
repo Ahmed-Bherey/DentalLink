@@ -11,14 +11,19 @@ class PackageService
 {
     public function getAllPackages($supplier, $perPage = 10, $search = null)
     {
-        return Package::with([
+        $query = Package::with([
             'packageItems.product.category',
-        ])
-            ->where('supplier_id', $supplier->id)
-            ->when($search, function ($query) use ($search) {
-                $query->where('name', 'like', '%' . $search . '%');
-            })
-            ->orderBy('created_at', 'desc')
+        ]);
+
+        if ($supplier->department->code === 'supplier') {
+            $query->where('supplier_id', $supplier->id);
+        }
+
+        if ($search) {
+            $query->where('name', 'like', '%' . $search . '%');
+        }
+
+        return $query->orderBy('created_at', 'desc')
             ->paginate($perPage);
     }
 
