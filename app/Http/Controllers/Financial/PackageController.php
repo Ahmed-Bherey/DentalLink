@@ -31,8 +31,8 @@ class PackageController extends Controller
             $supplier = $request->user();
             $perPage = $request->get('per_page', 10);
             $search = $request->query('search');
-            $from = $request->query('from');
-            $to = $request->query('to');
+            $from = $request->query('from_date');
+            $to = $request->query('to_date');
 
             $packages = $this->packageService->getAllPackages($supplier, $perPage, $search, $from, $to);
 
