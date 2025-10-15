@@ -23,7 +23,7 @@ class PackageService
             $query->where('name', 'like', '%' . $search . '%');
         }
 
-        return $query->orderBy('created_at', 'desc')
+        return $query->where('active', '!=', 0)->orderBy('created_at', 'desc')
             ->paginate($perPage);
     }
 
