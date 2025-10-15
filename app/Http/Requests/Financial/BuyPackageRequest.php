@@ -27,7 +27,7 @@ class BuyPackageRequest extends FormRequest
     {
         return [
             'notes'               => 'nullable|string',
-            'payment_method'      => 'required|in:كاش,الكترونى,مدفوعات',
+            'payment_method'      => 'nullable|in:كاش,الكترونى,مدفوعات',
         ];
     }
 

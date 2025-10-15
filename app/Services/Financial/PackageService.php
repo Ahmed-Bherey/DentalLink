@@ -57,7 +57,7 @@ class PackageService
         $order = Order::create([
             'doctor_id'      => $doctor->id,
             'notes'          => $data['notes'],
-            'payment_method' => $data['payment_method'],
+            'payment_method' => $data['payment_method'] ?? 'مدفوعات',
         ]);
 
         // إدخال منتجات الباقة في order_items
