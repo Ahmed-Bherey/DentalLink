@@ -15,6 +15,7 @@ class Order extends Model
         'notes',
         'status',
         'payment_method',
+        'price',
     ];
 
     public function doctor()
