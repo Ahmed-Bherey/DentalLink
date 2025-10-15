@@ -56,7 +56,7 @@ class PackageService
         // إنشاء الطلب
         $order = Order::create([
             'doctor_id'      => $doctor->id,
-            'total_price'    => $package->price,
+            'price'          => $package->price,
             'notes'          => $data['notes'],
             'payment_method' => $data['payment_method'] ?? 'مدفوعات',
         ]);
