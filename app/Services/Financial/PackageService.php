@@ -2,6 +2,7 @@
 
 namespace App\Services\Financial;
 
+use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Financial\Order;
 use App\Models\Financial\Package;
@@ -9,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 
 class PackageService
 {
-    public function getAllPackages($supplier, $perPage = 10, $search = null)
+    public function getAllPackages($supplier, $perPage = 10, $search = null, $from = null, $to = null)
     {
         $query = Package::with([
             'packageItems.product.category',
@@ -22,6 +23,24 @@ class PackageService
         if ($search) {
             $query->where('name', 'like', '%' . $search . '%');
         }
+
+        if ($from) {
+        try {
+            $fromDate = Carbon::parse($from)->startOfDay();
+            $query->whereDate('created_at', '>=', $fromDate);
+        } catch (\Exception $e) {
+            // يمكن تسجيل الخطأ أو تجاهله حسب الحاجة
+        }
+    }
+
+    if ($to) {
+        try {
+            $toDate = Carbon::parse($to)->endOfDay();
+            $query->whereDate('created_at', '<=', $toDate);
+        } catch (\Exception $e) {
+            // يمكن تسجيل الخطأ أو تجاهله حسب الحاجة
+        }
+    }
 
         return $query->where('active', '!=', 0)->orderBy('created_at', 'desc')
             ->paginate($perPage);

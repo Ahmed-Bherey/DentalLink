@@ -31,8 +31,10 @@ class PackageController extends Controller
             $supplier = $request->user();
             $perPage = $request->get('per_page', 10);
             $search = $request->query('search');
+            $from = $request->query('from');
+            $to = $request->query('to');
 
-            $packages = $this->packageService->getAllPackages($supplier, $perPage, $search);
+            $packages = $this->packageService->getAllPackages($supplier, $perPage, $search, $from, $to);
 
             return $this->paginatedResponse(
                 PackageResource::collection($packages),
