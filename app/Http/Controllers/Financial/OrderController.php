@@ -122,7 +122,7 @@ class OrderController extends Controller
 
             $this->authorize('update', $order);
 
-            if ($order->status != 'pending') {
+            if ($order->status != 'pending' || $order->status != 'preparing') {
                 return $this->errorResponse('عفوا, لم يعد بالامكان تعديل بيانات الطلب.', 403);
             }
 
