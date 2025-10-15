@@ -113,7 +113,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('show/{package_id}', 'show');
         Route::get('remain-products/{packageId}', 'remainingProducts');
         Route::post('update/{package}', 'update');
-        Route::delete('delete/{id}', 'destroy');
+        Route::delete('delete/{package}', 'destroy');
         Route::get('toggle-status/{id}', 'toggleStatus');
     });
     // reports
