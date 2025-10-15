@@ -32,6 +32,7 @@ class OrderResource extends JsonResource
             'status_name'       => $this->status_name,
             'total_price'       => $this->price ?? $this->total_order_price,
             'checked'           => true,
+            'is_pacjage'        => $this->price !== null,
             'created_at'        => $this->created_at->format('Y-m-d'),
 
             // المنتجات الخاصة بالطلب
