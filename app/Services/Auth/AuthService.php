@@ -2,9 +2,10 @@
 
 namespace App\Services\Auth;
 
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use App\Models\User;
+use Illuminate\Support\Facades\Storage;
 
 class AuthService
 {
@@ -38,6 +39,11 @@ class AuthService
 
     public function register(array $data): User
     {
+        $imgPath = null;
+
+        if (isset($data['img']) && $data['img'] instanceof \Illuminate\Http\UploadedFile) {
+            $imgPath = $data['img']->store('users', 'public');
+        }
         return User::create([
             'name'     => $data['name'],
             'email'    => $data['email'],
@@ -47,18 +53,29 @@ class AuthService
             'city_id'    => $data['city_id'] ?? null,
             'department_id'    => $data['department_id'] ?? null,
             'password'       => Hash::make($data['password']),
+            'img'         => $imgPath,
         ]);
     }
 
     // تحديث بيانات الحساب
     public function updateProfile(User $user, array $data): User
     {
+        if (isset($data['img']) && $data['img'] instanceof \Illuminate\Http\UploadedFile) {
+            // حذف الصورة القديمة لو وُجدت
+            if ($user->img && Storage::disk('public')->exists($user->img)) {
+                Storage::disk('public')->delete($user->img);
+            }
+            // رفع الصورة الجديدة
+            $data['img'] = $data['img']->store('users', 'public');
+        }
+
         // 1️⃣ تحديث بيانات المستخدم
         $user->update([
             'name' => $data['name'] ?? $user->name,
             'email' => $data['email'] ?? $user->email,
             'phone' => $data['phone'] ?? $user->phone,
             'address' => $data['address'] ?? $user->address,
+            'img' => $data['img'] ?? $user->img,
         ]);
 
         // 2️⃣ تحديث المواعيد اليومية

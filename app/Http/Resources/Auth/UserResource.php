@@ -22,6 +22,9 @@ class UserResource extends JsonResource
             'phone2' => $this->phone2,
             'address' => $this->address,
             'role' => $this->department?->code,
+            'img' => $this->img
+                ? asset('storage/' . $this->img)
+                : null,
             'created_at' => $this->created_at->format('Y-m-d'),
             'schedule' => $this->schedules->map(function ($day) {
                 return [

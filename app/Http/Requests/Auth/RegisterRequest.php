@@ -21,14 +21,15 @@ class RegisterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email',
-            'city_id'    => 'required|exists:cities,id|integer',
-            'phone'    => 'required|string|unique:users,phone',
-            'phone2'    => 'nullable|string',
-            'address' => 'required|string',
+            'name'          => 'required|string|max:255',
+            'email'         => 'required|email|unique:users,email',
+            'city_id'       => 'required|exists:cities,id|integer',
+            'phone'         => 'required|string|unique:users,phone',
+            'phone2'        => 'nullable|string',
+            'address'       => 'required|string',
             'department_id' => 'exists:departments,id',
-            'password' => 'required|string|min:6',
+            'password'      => 'required|string|min:6',
+            'image'         => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ];
     }
 

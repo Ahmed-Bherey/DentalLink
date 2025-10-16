@@ -78,9 +78,7 @@ class UserAuthController extends Controller
     {
         try {
             $user = $this->authService->register($request->validated());
-
             $token = $user->createToken('API Token')->plainTextToken;
-
             return $this->createSuccessResponse('تم انشاء حسابك بنجاح', new UserResource($user), 201);
         } catch (Exception $e) {
             return $this->errorResponse('عذرا حدث خطأ ما, برجاء المحاولة مرة اخرى', 422);
