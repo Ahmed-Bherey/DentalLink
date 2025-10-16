@@ -119,4 +119,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(FavoriteProduct::class, 'doctor_id');
     }
+
+    public function schedules()
+    {
+        return $this->hasMany(DoctorSchedule::class, 'doctor_id');
+    }
 }

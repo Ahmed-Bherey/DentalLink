@@ -38,6 +38,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::controller(DepartmentController::class)->prefix('department')->group(function () {
         Route::post('store', 'store');
     });
+    // profile
+    Route::controller(UserAuthController::class)->prefix('profile')->group(function () {
+        Route::post('update', 'updateProfile');
+    });
     // Category
     Route::controller(CategoryController::class)->prefix('category')->group(function () {
         Route::get('index', 'index');

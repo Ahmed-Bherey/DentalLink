@@ -9,6 +9,7 @@ use App\Services\Auth\AuthService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\AuthRequest;
 use App\Http\Requests\Auth\RegisterRequest;
+use App\Http\Requests\Auth\UpdateProfileRequest;
 use App\Http\Resources\Auth\UserResource;
 
 class UserAuthController extends Controller
@@ -72,5 +73,19 @@ class UserAuthController extends Controller
         } catch (Exception $e) {
             return $this->errorResponse('عذرا حدث خطأ ما, برجاء المحاولة مرة اخرى', 422);
         }
+    }
+
+    // تحديث بيانات الحساب
+    public function updateProfile(UpdateProfileRequest $request)
+    {
+        $user = auth()->user();
+
+        $updated = $this->authService->updateProfile($user, $request->validated());
+
+        return response()->json([
+            'status' => true,
+            'message' => 'تم تحديث الملف الشخصي بنجاح',
+            'data' => $updated
+        ]);
     }
 }
