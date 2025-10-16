@@ -17,7 +17,7 @@ class AuthService
             'city:id,name',
             'department:id,name,code',
             'schedules' => function ($q) {
-                $q->orderByRaw("FIELD(day_name, 
+                $q->orderByRaw("FIELD(day_name,
                     'Saturday','Sunday','Monday','Tuesday','Wednesday','Thursday','Friday')");
             }
         ]);
@@ -67,7 +67,7 @@ class AuthService
                 $user->schedules()->updateOrCreate(
                     ['day_name' => $day['name']],
                     [
-                        'active' => $day['active'],
+                        'active' => filter_var($day['active'], FILTER_VALIDATE_BOOLEAN),
                         'from' => $day['from'] ? date('H:i:s', strtotime($day['from'])) : null,
                         'to' => $day['to'] ? date('H:i:s', strtotime($day['to'])) : null,
                     ]
