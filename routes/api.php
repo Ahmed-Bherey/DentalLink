@@ -40,8 +40,8 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     // profile
     Route::controller(UserAuthController::class)->prefix('profile')->group(function () {
-        Route::get('update', 'updateProfile');
-        Route::post('show', 'showProfile');
+        Route::get('show', 'showProfile');
+        Route::post('update', 'updateProfile');
     });
     // Category
     Route::controller(CategoryController::class)->prefix('category')->group(function () {
