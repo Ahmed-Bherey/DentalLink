@@ -15,7 +15,7 @@ class AuthService
     {
         return $user->load([
             'city:id,name',
-            'department:id,name',
+            'department:id,name,code',
             'schedules' => function ($q) {
                 $q->orderByRaw("FIELD(day_name, 
                     'Saturday','Sunday','Monday','Tuesday','Wednesday','Thursday','Friday')");
