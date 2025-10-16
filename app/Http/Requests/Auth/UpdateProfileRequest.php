@@ -32,7 +32,7 @@ class UpdateProfileRequest extends FormRequest
             'address' => 'nullable|string|max:255',
             'schedule' => 'nullable|array',
             'schedule.*.name' => 'required_with:schedule|string',
-            'schedule.*.active' => 'required_with:schedule|boolean',
+            'schedule.*.active' => 'required_with:schedule',
             'schedule.*.from' => 'nullable|string',
             'schedule.*.to' => 'nullable|string',
         ];
