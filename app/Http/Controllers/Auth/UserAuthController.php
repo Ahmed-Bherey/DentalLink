@@ -22,6 +22,18 @@ class UserAuthController extends Controller
         $this->authService = $authService;
     }
 
+    /**
+     * عرض بروفايل المستخدم الحالى
+     */
+    public function showProfile(Request $request)
+    {
+        $user = $request->user();
+
+        $profile = $this->authService->getProfile($user);
+
+        return $this->successResponse(new UserResource($profile), 200);
+    }
+
     // تسجيل الدخول
     public function login(AuthRequest $request)
     {

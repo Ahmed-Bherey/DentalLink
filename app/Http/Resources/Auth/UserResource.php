@@ -23,6 +23,14 @@ class UserResource extends JsonResource
             'address' => $this->address,
             'role' => $this->department?->code,
             'created_at' => $this->created_at->format('Y-m-d'),
+            'schedule' => $this->schedules->map(function ($day) {
+                return [
+                    'name'   => $day->day_name,
+                    'active' => (bool) $day->active,
+                    'from'   => $day->from ? date('h:i A', strtotime($day->from)) : null,
+                    'to'     => $day->to ? date('h:i A', strtotime($day->to)) : null,
+                ];
+            }),
         ];
     }
 }

@@ -8,6 +8,21 @@ use App\Models\User;
 
 class AuthService
 {
+    /**
+     * عرض بروفايل المستخدم الحالى
+     */
+    public function getProfile(User $user): User
+    {
+        return $user->load([
+            'city:id,name',
+            'department:id,name',
+            'schedules' => function ($q) {
+                $q->orderByRaw("FIELD(day_name, 
+                    'Saturday','Sunday','Monday','Tuesday','Wednesday','Thursday','Friday')");
+            }
+        ]);
+    }
+
     public function login(string $login, string $password): ?User
     {
         $user = User::where('email', $login)
