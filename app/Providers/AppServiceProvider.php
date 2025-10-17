@@ -27,7 +27,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        Relation::enforceMorphMap([
+        Relation::morphMap([
         'order' => Order::class,
         'payment' => Payment::class,
         'favoriteProduct' => FavoriteProduct::class,
