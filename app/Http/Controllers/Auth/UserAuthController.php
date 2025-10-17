@@ -37,7 +37,7 @@ class UserAuthController extends Controller
     // تسجيل الدخول
     public function login(AuthRequest $request)
     {
-        try {
+        //try {
             $user = $this->authService->login(
                 $request->login,
                 $request->password
@@ -68,9 +68,9 @@ class UserAuthController extends Controller
             ];
 
             return $this->successResponse($user, 200);
-        } catch (Exception $e) {
-            return $this->errorResponse('عذرا حدث خطأ ما, برجاء المحاولة مرة اخرى', 422);
-        }
+        // } catch (Exception $e) {
+        //     return $this->errorResponse('عذرا حدث خطأ ما, برجاء المحاولة مرة اخرى', 422);
+        // }
     }
 
     // انشاء حساب
