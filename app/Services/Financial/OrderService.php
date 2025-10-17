@@ -108,7 +108,7 @@ class OrderService
             $order->notificationsCenters()->create([
                 'user_id'  => $supplierId, // 👈 المورد
                 'title'    => 'طلب جديد',
-                'message'  => 'تم إنشاء طلب جديد برقم #' . $order->id . ' بواسطة الطبيب ' . $user->name,
+                'message'  => 'الطبيب "' . $user->name . '" أنشأ طلبًا جديدًا برقم #' . $order->id,
                 'type'     => 'order',
                 'color'     => 'yellow',
             ]);
