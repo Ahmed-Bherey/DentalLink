@@ -109,8 +109,8 @@ class OrderService
                 'user_id'  => $supplierId, // 👈 المورد
                 'title'    => 'طلب جديد',
                 'message'  => 'تم إنشاء طلب جديد برقم #' . $order->id . ' بواسطة الطبيب ' . $user->name,
-                'type'     => 'order',
-                'color'    => 'yellow',
+                'type'     => 'inbox',
+                'color'    => 'blue',
             ]);
         }
 
@@ -152,7 +152,7 @@ class OrderService
             'user_id'  => $order->doctor_id, // 👈 إشعار للطبيب
             'title'    => 'تحديث حالة الطلب',
             'message'  => 'قام المورد ' . $user->name . ' بتحديث حالة الطلب #' . $order->id . ' إلى "' . $order->status_name . '"',
-            'type'     => 'order',
+            'type'     => 'inbox',
             'color'    => 'blue',
         ]);
 
@@ -195,8 +195,8 @@ class OrderService
                     'user_id' => $supplierId,
                     'title'   => 'تحديث على الطلب',
                     'message' => 'قام الطبيب ' . $order->doctor->name . ' بتحديث الطلب رقم #' . $order->id,
-                    'type'    => 'order',
-                    'color'   => 'blue',
+                    'type'     => 'inbox',
+                'color'    => 'blue',
                 ]);
             }
 
