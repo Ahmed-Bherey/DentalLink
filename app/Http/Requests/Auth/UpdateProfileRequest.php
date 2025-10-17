@@ -26,15 +26,16 @@ class UpdateProfileRequest extends FormRequest
     public function rules()
     {
         return [
-            'name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|email|max:255',
-            'phone' => 'sometimes|string|max:20',
-            'address' => 'nullable|string|max:255',
-            'schedule' => 'nullable|array',
-            'schedule.*.name' => 'required_with:schedule|string',
+            'name'              => 'sometimes|string|max:255',
+            'email'             => 'sometimes|email|max:255',
+            'phone'             => 'sometimes|string|max:20',
+            'address'           => 'nullable|string|max:255',
+            'img'               => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'schedule'          => 'nullable|array',
+            'schedule.*.name'   => 'required_with:schedule|string',
             'schedule.*.active' => 'required_with:schedule',
-            'schedule.*.from' => 'nullable|string',
-            'schedule.*.to' => 'nullable|string',
+            'schedule.*.from'   => 'nullable|string',
+            'schedule.*.to'     => 'nullable|string',
         ];
     }
 
