@@ -38,36 +38,36 @@ class UserAuthController extends Controller
     public function login(AuthRequest $request)
     {
         //try {
-            $user = $this->authService->login(
-                $request->login,
-                $request->password
-            );
+        $user = $this->authService->login(
+            $request->login,
+            $request->password
+        );
 
-            if (!$user) {
-                return $this->errorResponse('Invalid credentials', 401);
-            }
+        if (!$user) {
+            return $this->errorResponse('Invalid credentials', 401);
+        }
 
-            // ✅ تحقق من أن الحساب مفعل
-            if ($user->active != 1) {
-                throw new \Exception('حسابك لم يتم تفعيله بعد');
-            }
+        // ✅ تحقق من أن الحساب مفعل
+        if ($user->active != 1) {
+            throw new \Exception('حسابك لم يتم تفعيله بعد');
+        }
 
-            $token = $user->createToken('API Token')->plainTextToken;
+        $token = $user->createToken('API Token')->plainTextToken;
 
-            $user = [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'phone' => $user->phone,
-                'phone2' => $user->phone2,
-                'address' => $user->address,
-                'city_id' => $user->city_id,
-                'city_name' => $user->city?->name,
-                'role' => $user->department?->code,
-                'token' => $token,
-            ];
+        $user = [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'phone' => $user->phone,
+            'phone2' => $user->phone2,
+            'address' => $user->address,
+            'city_id' => $user->city_id,
+            'city_name' => $user->city?->name,
+            'role' => $user->department?->code,
+            'token' => $token,
+        ];
 
-            return $this->successResponse($user, 200);
+        return $this->successResponse($user, 200);
         // } catch (Exception $e) {
         //     return $this->errorResponse('عذرا حدث خطأ ما, برجاء المحاولة مرة اخرى', 422);
         // }
@@ -88,9 +88,15 @@ class UserAuthController extends Controller
     // تحديث بيانات الحساب
     public function updateProfile(UpdateProfileRequest $request)
     {
+        $data = $request->validated();
+
+        if ($request->hasFile('img')) {
+            $data['img'] = $request->file('img');
+        }
+
         $user = auth()->user();
 
-        $updated = $this->authService->updateProfile($user, $request->validated());
+        $updated = $this->authService->updateProfile($user, $data);
 
         return response()->json([
             'status' => true,
