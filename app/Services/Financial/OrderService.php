@@ -11,7 +11,9 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Financial\OrderItem;
 use App\Events\Order\NewOrderCreated;
 use App\Models\Financial\OrderExpense;
+use App\Models\General\NotificationsCenter;
 use Illuminate\Auth\Access\AuthorizationException;
+use App\Services\Notifaction\NotificationsCenterService;
 
 class OrderService
 {
@@ -94,6 +96,24 @@ class OrderService
 
         Cart::where('doctor_id', $order->doctor_id)->delete();
 
+        // 🔥 جلب الموردين المرتبطين بمنتجات الطلب
+        $supplierIds = $order->orderItems()
+            ->with('product:id,user_id')
+            ->get()
+            ->pluck('product.user_id')
+            ->unique();
+
+        // 🔥 إنشاء إشعار لكل مورد
+        foreach ($supplierIds as $supplierId) {
+            $order->notificationsCenters()->create([
+                'user_id'  => $supplierId, // 👈 المورد
+                'title'    => 'طلب جديد',
+                'message'  => 'تم إنشاء طلب جديد برقم #' . $order->id . ' بواسطة الطبيب ' . $user->name,
+                'type'     => 'order',
+                'color'     => 'yellow',
+            ]);
+        }
+
         return $order;
     }
 
@@ -128,6 +148,14 @@ class OrderService
             );
         }
 
+        $order->notificationsCenters()->create([
+            'user_id'  => $order->doctor_id, // 👈 إشعار للطبيب
+            'title'    => 'تحديث حالة الطلب',
+            'message'  => 'قام المورد ' . $user->name . ' بتحديث حالة الطلب #' . $order->id . ' إلى "' . $order->status_name . '"',
+            'type'     => 'order',
+            'color'    => 'blue',
+        ]);
+
         return $order;
     }
 
@@ -154,6 +182,22 @@ class OrderService
                         'quantity'   => $product['quantity'],
                     ]);
                 }
+            }
+
+            $supplierIds = $order->orderItems()
+                ->with('product:id,user_id')
+                ->get()
+                ->pluck('product.user_id')
+                ->unique();
+
+            foreach ($supplierIds as $supplierId) {
+                $order->notificationsCenters()->create([
+                    'user_id' => $supplierId,
+                    'title'   => 'تحديث على الطلب',
+                    'message' => 'قام الطبيب ' . $order->doctor->name . ' بتحديث الطلب رقم #' . $order->id,
+                    'type'    => 'order',
+                    'color'   => 'blue',
+                ]);
             }
 
             return $order;

@@ -39,6 +39,14 @@ class PaymentService
             'remaining' => $orderExpense->remaining - $payment->amount,
         ]);
 
+        $payment->notificationsCenters()->create([
+            'user_id'  => $payment->doctor_id,
+            'title'    => 'مدفوعة جديدة',
+            'message'  => 'تم إنشاء مدفوعة جديدة برقم #' . $payment->id,
+            'type'     => 'dollar',
+            'color'     => 'green',
+        ]);
+
         return $payment;
     }
 
@@ -50,6 +58,15 @@ class PaymentService
             'date' => $data['date'],
             'status' => 'pending',
         ]);
+
+        $paymentRecord->notificationsCenters()->create([
+            'user_id'  => $paymentRecord->doctor_id,
+            'title'    => 'تعديل على المدفوعة',
+            'message'  => 'قام المورد ' . $user->name . ' بتعديل المدفوعة رقم #' . $paymentRecord->id . '، والمبلغ المطلوب الآن هو ' . number_format($paymentRecord->requested_amount, 2),
+            'type'     => 'dollar',
+            'color'    => 'green',
+        ]);
+
         return $paymentRecord;
     }
 
@@ -174,6 +191,14 @@ class PaymentService
     {
         $paymentRecord->update([
             'status' => 'delete_pending',
+        ]);
+
+        $paymentRecord->notificationsCenters()->create([
+            'user_id'  => $paymentRecord->doctor_id,
+            'title'    => 'طلب حذف مدفوعة',
+            'message'  => 'قام المورد ' . $user->name . ' بطلب حذف المدفوعة رقم #' . $paymentRecord->id . '، وهي بانتظار تأكيدك.',
+            'type'     => 'dollar',
+            'color'    => 'green',
         ]);
 
         return $paymentRecord;

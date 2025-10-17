@@ -2,6 +2,7 @@
 
 namespace App\Models\Financial;
 
+use App\Models\General\NotificationsCenter;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -26,5 +27,10 @@ class Payment extends Model
     public function supplier()
     {
         return $this->belongsTo(User::class, 'supplier_id');
+    }
+
+    public function notificationsCenters()
+    {
+        return $this->morphMany(NotificationsCenter::class, 'related');
     }
 }

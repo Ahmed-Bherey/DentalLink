@@ -2,6 +2,7 @@
 
 namespace App\Models\Shopping;
 
+use App\Models\General\NotificationsCenter;
 use App\Models\User;
 use App\Models\Store\Product;
 use Illuminate\Database\Eloquent\Model;
@@ -23,5 +24,10 @@ class FavoriteProduct extends Model
     public function product()
     {
         return $this->belongsTo(Product::class, 'product_id');
+    }
+
+    public function notificationsCenters()
+    {
+        return $this->morphMany(NotificationsCenter::class, 'related');
     }
 }

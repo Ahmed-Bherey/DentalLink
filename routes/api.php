@@ -15,6 +15,7 @@ use App\Http\Controllers\Store\InventoryController;
 use App\Http\Controllers\System\CategoryController;
 use App\Http\Controllers\System\CityController;
 use App\Http\Controllers\System\DepartmentController;
+use App\Http\Controllers\System\NotificationsCenterController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -37,6 +38,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // departments
     Route::controller(DepartmentController::class)->prefix('department')->group(function () {
         Route::post('store', 'store');
+    });
+    // notification
+    Route::controller(NotificationsCenterController::class)->prefix('notification')->group(function () {
+        Route::get('user', 'getUserNotification');
     });
     // profile
     Route::controller(UserAuthController::class)->prefix('profile')->group(function () {

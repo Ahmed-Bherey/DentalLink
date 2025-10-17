@@ -5,6 +5,7 @@ namespace App\Models\Financial;
 use App\Models\User;
 use App\Models\Financial\OrderItem;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\General\NotificationsCenter;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Order extends Model
@@ -33,6 +34,11 @@ class Order extends Model
         return $this->orderItems->sum(function ($item) {
             return optional($item->product)->price * $item->quantity;
         });
+    }
+
+    public function notificationsCenters()
+    {
+        return $this->morphMany(NotificationsCenter::class, 'related');
     }
 
     public function getStatusNameAttribute()

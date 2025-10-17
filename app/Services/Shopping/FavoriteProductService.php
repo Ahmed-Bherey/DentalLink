@@ -19,13 +19,30 @@ class FavoriteProductService
     public function addToFavorite($doctor, $product_id, $perPage = 10)
     {
         $product = Product::findOrFail($product_id);
-        if (!$product) {
-            throw new \Exception('المنتج غير موجود');
+
+        // تحقق من عدم تكرار الإضافة
+        $exists = FavoriteProduct::where('doctor_id', $doctor->id)
+            ->where('product_id', $product->id)
+            ->exists();
+
+        if ($exists) {
+            throw new \Exception('المنتج مضاف مسبقًا إلى المفضلة.');
         }
+
         $favoriteProducts = FavoriteProduct::create([
             'doctor_id' => $doctor->id,
             'product_id' => $product->id,
         ]);
+
+        // إرسال إشعار للمورد أن الطبيب أضاف منتجه إلى المفضلة
+        $favoriteProducts->notificationsCenters()->create([
+            'user_id'  => $product->user_id, // المورد
+            'title'    => 'إضافة إلى المفضلة',
+            'message'  => 'قام الطبيب ' . $doctor->name . ' بإضافة منتجك "' . $product->name . '" إلى المفضلة.',
+            'type'     => 'heart',
+            'color'    => 'red',
+        ]);
+
         return $favoriteProducts;
     }
 

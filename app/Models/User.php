@@ -12,6 +12,7 @@ use App\Models\Financial\Receipt;
 use App\Models\General\Category;
 use App\Models\General\City;
 use App\Models\General\Department;
+use App\Models\General\NotificationsCenter;
 use App\Models\Shopping\FavoriteProduct;
 use App\Models\Store\Inventory;
 use App\Models\Store\Product;
