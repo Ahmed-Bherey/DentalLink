@@ -23,13 +23,10 @@ class NotificationsCenterController extends Controller
     {
         try {
             $user = request()->user();
-            $perPage = request()->get('per_page', 10);
-            $notificationsCenter = $this->notificationsCenterService->getAllNotification($user, $perPage);
-            return $this->paginatedResponse(
-                NotificationsCenterResource::collection($notificationsCenter),
-                $notificationsCenter,
-            );
-        } catch (Exception $e) {
+            $notifications = $this->notificationsCenterService->getAllNotification($user);
+
+            return $this->createSuccessResponse('تم جلب الإشعارات بنجاح', $notifications);
+        } catch (\Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
                 422

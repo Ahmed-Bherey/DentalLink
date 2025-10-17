@@ -17,8 +17,8 @@ class NotificationsCenterResource extends JsonResource
         return [
             'id' => $this->id,
             'title' => $this->title,
-            'message' => $this->message,
-            'type' => $this->type,
+            'content' => $this->message,
+            'icon' => $this->type,
             'color' => $this->color,
             'created_at' => $this->created_at->format('Y-m-d'),
         ];
