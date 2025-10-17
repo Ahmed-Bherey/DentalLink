@@ -110,7 +110,7 @@ class OrderService
                 'title'    => 'طلب جديد',
                 'message'  => 'تم إنشاء طلب جديد برقم #' . $order->id . ' بواسطة الطبيب ' . $user->name,
                 'type'     => 'order',
-                'color'     => 'yellow',
+                'color'    => 'yellow',
             ]);
         }
 
