@@ -8,6 +8,7 @@ use App\Http\Controllers\Financial\OrderController;
 use App\Http\Controllers\Financial\PackageController;
 use App\Http\Controllers\Financial\PaymentController;
 use App\Http\Controllers\Financial\ReceiptController;
+use App\Http\Controllers\Index\StatisticController;
 use App\Http\Controllers\Report\DoctorController;
 use App\Http\Controllers\Report\SupplierController;
 use App\Http\Controllers\Shopping\FavoriteProductController;
@@ -38,6 +39,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // departments
     Route::controller(DepartmentController::class)->prefix('department')->group(function () {
         Route::post('store', 'store');
+    });
+    // statistic
+    Route::controller(StatisticController::class)->prefix('statistic')->group(function () {
+        Route::get('/', 'dashboardStats');
     });
     // notification
     Route::controller(NotificationsCenterController::class)->prefix('notification')->group(function () {
