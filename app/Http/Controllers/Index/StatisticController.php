@@ -24,8 +24,7 @@ class StatisticController extends Controller
             $user = request()->user();
             $stats = $this->statisticService->getDashboardStats($user);
 
-            return $this->createSuccessResponse(
-                'تم جلب الإحصائيات بنجاح',
+            return $this->successResponse(
                 $stats
             );
         } catch (Exception $e) {
