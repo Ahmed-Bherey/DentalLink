@@ -103,11 +103,14 @@ class StatisticService
                 ->orderByDesc('total_sold');
         }
 
-        // 🔹 إجمالي الكمية المباعة (لإحتساب النسبة)
-        $totalQuantitySold = (clone $topProductsQuery)->sum('total_sold');
+        // ✅ اجلب النتائج فعلاً قبل الحساب
+        $topProductsResults = (clone $topProductsQuery)->get();
+
+        // 🔹 إجمالي الكمية المباعة (من النتائج نفسها)
+        $totalQuantitySold = $topProductsResults->sum('total_sold');
 
         // 🔹 جلب أعلى 5 منتجات + النسبة المئوية
-        $topProducts = $topProductsQuery->limit(5)->get()->map(function ($product) use ($totalQuantitySold) {
+        $topProducts = $topProductsResults->take(5)->map(function ($product) use ($totalQuantitySold) {
             $percentage = $totalQuantitySold > 0
                 ? round(($product->total_sold / $totalQuantitySold) * 100, 2)
                 : 0;
