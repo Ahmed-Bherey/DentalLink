@@ -52,6 +52,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::controller(UserAuthController::class)->prefix('profile')->group(function () {
         Route::get('show', 'showProfile');
         Route::post('update', 'updateProfile');
+        Route::post('update-fcmToken', 'updateToken');
     });
     // Category
     Route::controller(CategoryController::class)->prefix('category')->group(function () {

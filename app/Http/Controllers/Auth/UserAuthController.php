@@ -3,14 +3,16 @@
 namespace App\Http\Controllers\Auth;
 
 use Exception;
+use App\Models\FcmToken;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use App\Services\Auth\AuthService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\AuthRequest;
+use App\Http\Resources\Auth\UserResource;
+use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\UpdateProfileRequest;
-use App\Http\Resources\Auth\UserResource;
 
 class UserAuthController extends Controller
 {
@@ -103,5 +105,41 @@ class UserAuthController extends Controller
             'message' => 'تم تحديث الملف الشخصي بنجاح',
             'data' => $updated
         ]);
+    }
+
+    public function updateToken(Request $request)
+    {
+        $vaild = Validator::make($request->all(), [
+            'fcm_token' => 'required|string',
+            'device' => 'required|in:mob,web',
+            'device_id' => 'required_if:device,mob',
+        ]);
+
+        if ($vaild->fails()) {
+            return response()->json($vaild->errors(), 422);
+        }
+
+        $user = $request->user();
+
+        $query = [
+            'user_id' => $user->id,
+            'device' => $request->device,
+        ];
+        if ($request->device == 'mob') {
+            $query['device_id'] = $request->device_id;
+        }
+
+        $data = array_merge($query, [
+            'fcm_token' => $request->fcm_token,
+        ]);
+
+        $token = FcmToken::where($query)->first();
+        if ($token) {
+            $token->update(['fcm_token' => $request->fcm_token]);
+        } else {
+            FcmToken::create($data);
+        }
+
+        return response()->json(['success' => true]);
     }
 }

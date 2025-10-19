@@ -20,18 +20,18 @@ class StatisticController extends Controller
 
     public function dashboardStats()
     {
-        //try {
+        try {
             $user = request()->user();
             $stats = $this->statisticService->getDashboardStats($user);
 
             return $this->successResponse(
                 $stats
             );
-        // } catch (Exception $e) {
-        //     return $this->errorResponse(
-        //         'عذراً، حدث خطأ أثناء جلب الإحصائيات. برجاء المحاولة لاحقاً',
-        //         422
-        //     );
-        // }
+        } catch (Exception $e) {
+            return $this->errorResponse(
+                'عذراً، حدث خطأ أثناء جلب الإحصائيات. برجاء المحاولة لاحقاً',
+                422
+            );
+        }
     }
 }

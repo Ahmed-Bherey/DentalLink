@@ -1,56 +1,46 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Notifaction;
 
-use Google\Client;
-use GuzzleHttp\Client as HttpClient;
+use Google_Client;
+use Illuminate\Support\Facades\Http;
 
 class FirebaseService
 {
-    protected $projectId;
     protected $client;
-    protected $httpClient;
+    protected $messagingUrl = 'https://fcm.googleapis.com/v1/projects/YOUR_FIREBASE_PROJECT/messages:send';
 
     public function __construct()
     {
-        $this->projectId = 'denthub-e6b7a';
-        $this->client = new Client();
+        $this->client = new Google_Client();
         $this->client->setAuthConfig(base_path('public/firebase/denthub-e6b7a-firebase-adminsdk-fbsvc-c84a0b9631.json'));
         $this->client->addScope('https://www.googleapis.com/auth/firebase.messaging');
-
-        $this->httpClient = new HttpClient();
     }
 
     protected function getAccessToken()
     {
-        $token = $this->client->fetchAccessTokenWithAssertion();
-        return $token['access_token'];
+        if ($this->client->isAccessTokenExpired()) {
+            $this->client->fetchAccessTokenWithAssertion();
+        }
+        return $this->client->getAccessToken()['access_token'];
     }
 
-    public function sendNotification($deviceToken, $title, $body, $data = [])
+    public function sendNotification($fcmToken, $title, $body)
     {
-        $url = "https://fcm.googleapis.com/v1/projects/{$this->projectId}/messages:send";
         $accessToken = $this->getAccessToken();
 
         $message = [
             "message" => [
-                "token" => $deviceToken,
+                "token" => $fcmToken,
                 "notification" => [
                     "title" => $title,
-                    "body" => $body,
-                ],
-                "data" => $data,
+                    "body" => $body
+                ]
             ]
         ];
 
-        $response = $this->httpClient->post($url, [
-            'headers' => [
-                'Authorization' => "Bearer {$accessToken}",
-                'Content-Type' => 'application/json',
-            ],
-            'json' => $message,
-        ]);
-
-        return json_decode($response->getBody(), true);
+        return Http::withToken($accessToken)
+            ->post($this->messagingUrl, $message)
+            ->json();
     }
 }
