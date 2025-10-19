@@ -20,7 +20,8 @@ class FirebaseService
     protected function getAccessToken()
     {
         if ($this->client->isAccessTokenExpired()) {
-            $this->client->fetchAccessTokenWithAssertion();
+            $accessToken = $this->client->fetchAccessTokenWithAssertion();
+            dd($accessToken);
         }
         return $this->client->getAccessToken()['access_token'];
     }
