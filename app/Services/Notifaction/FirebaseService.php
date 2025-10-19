@@ -13,7 +13,7 @@ class FirebaseService
     public function __construct()
     {
         $this->client = new Google_Client();
-        $this->client->setAuthConfig(base_path('public/firebase/denthub-e6b7a-firebase-adminsdk-fbsvc-c84a0b9631.json'));
+        $this->client->setAuthConfig(base_path('public/firebase/denthub-e6b7a-firebase-adminsdk-fbsvc-102ebc5703.json'));
         $this->client->addScope('https://www.googleapis.com/auth/firebase.messaging');
     }
 
