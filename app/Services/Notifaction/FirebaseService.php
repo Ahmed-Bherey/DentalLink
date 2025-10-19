@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Http;
 class FirebaseService
 {
     protected $client;
-    protected $messagingUrl = 'https://fcm.googleapis.com/v1/projects/YOUR_FIREBASE_PROJECT/messages:send';
+    protected $messagingUrl = 'https://fcm.googleapis.com/v1/projects/denthub-e6b7a/messages:send';
 
     public function __construct()
     {
