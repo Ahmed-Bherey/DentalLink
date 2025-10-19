@@ -51,6 +51,7 @@ class PaymentService
         ]);
 
         $tokens = FcmToken::where('user_id', $payment->doctor_id)->pluck('fcm_token');
+        dd($tokens);
         $firebase = new FirebaseService();
         foreach ($tokens as $token) {
             $firebase->sendNotification(
