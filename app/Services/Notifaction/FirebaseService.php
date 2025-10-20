@@ -8,12 +8,12 @@ use Illuminate\Support\Facades\Http;
 class FirebaseService
 {
     protected $client;
-    protected $messagingUrl = 'https://fcm.googleapis.com/v1/projects/denthub-e6b7a/messages:send';
+    protected $messagingUrl = 'https://fcm.googleapis.com/v1/projects/denthub-d6def/messages:send';
 
     public function __construct()
     {
         $this->client = new Google_Client();
-        $this->client->setAuthConfig(base_path('public/firebase/denthub-e6b7a-firebase-adminsdk-fbsvc-79b671dee5.json'));
+        $this->client->setAuthConfig(base_path('public/firebase/denthub-d6def-firebase-adminsdk-fbsvc-f4af9caf93.json'));
         $this->client->addScope('https://www.googleapis.com/auth/firebase.messaging');
     }
 
