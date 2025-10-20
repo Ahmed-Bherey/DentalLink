@@ -61,16 +61,6 @@ class PaymentService
             );
         }
 
-        // $doctor = User::find($payment->doctor_id);
-        // if ($doctor && $doctor->fcm_token) {
-        //     $firebase = new FirebaseService();
-        //     $firebase->send(
-        //         'مدفوعة جديدة 💰',
-        //         'تم إنشاء مدفوعة جديدة برقم #' . $payment->id,
-        //         $doctor->fcm_token
-        //     );
-        // }
-
         return $payment;
     }
 
