@@ -6,7 +6,7 @@ use App\Models\User;
 use App\Models\FcmToken;
 use App\Models\Financial\Payment;
 use App\Models\Financial\OrderExpense;
-use App\Services\Notification\FirebaseService;
+use App\Services\Notifaction\FirebaseService;
 use App\Services\Notifaction\NotificationService;
 
 class PaymentService

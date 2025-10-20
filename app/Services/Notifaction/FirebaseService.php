@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Notification;
+namespace App\Services\Notifaction;
 
 use Google\Client;
 use GuzzleHttp\Client as HttpClient;
