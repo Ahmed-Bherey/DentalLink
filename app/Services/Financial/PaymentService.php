@@ -51,15 +51,25 @@ class PaymentService
             'color'     => 'green',
         ]);
 
-        $doctor = User::find($payment->doctor_id);
-    if ($doctor && $doctor->fcm_token) {
+        $tokens = FcmToken::where('user_id', $payment->doctor_id)->pluck('fcm_token');
         $firebase = new FirebaseService();
-        $firebase->send(
-            'مدفوعة جديدة 💰',
-            'تم إنشاء مدفوعة جديدة برقم #' . $payment->id,
-            $doctor->fcm_token
-        );
-    }
+        foreach ($tokens as $token) {
+            $firebase->sendNotification(
+                'مدفوعة جديدة 💰',
+                'تم إنشاء مدفوعة جديدة برقم #' . $payment->id,
+                $token
+            );
+        }
+
+        // $doctor = User::find($payment->doctor_id);
+        // if ($doctor && $doctor->fcm_token) {
+        //     $firebase = new FirebaseService();
+        //     $firebase->send(
+        //         'مدفوعة جديدة 💰',
+        //         'تم إنشاء مدفوعة جديدة برقم #' . $payment->id,
+        //         $doctor->fcm_token
+        //     );
+        // }
 
         return $payment;
     }
