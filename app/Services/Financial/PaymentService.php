@@ -7,6 +7,7 @@ use App\Models\FcmToken;
 use App\Models\Financial\Payment;
 use App\Models\Financial\OrderExpense;
 use App\Services\Notification\FirebaseService;
+use App\Services\Notifaction\NotificationService;
 
 class PaymentService
 {
@@ -50,15 +51,15 @@ class PaymentService
             'color'     => 'green',
         ]);
 
-        $tokens = FcmToken::where('user_id', $payment->doctor_id)->pluck('fcm_token');
+        $doctor = User::find($payment->doctor_id);
+    if ($doctor && $doctor->fcm_token) {
         $firebase = new FirebaseService();
-        foreach ($tokens as $token) {
-            $firebase->send(
-                'مدفوعة جديدة 💰',
-                'تم إنشاء مدفوعة جديدة برقم #' . $payment->id,
-                $token
-            );
-        }
+        $firebase->send(
+            'مدفوعة جديدة 💰',
+            'تم إنشاء مدفوعة جديدة برقم #' . $payment->id,
+            $doctor->fcm_token
+        );
+    }
 
         return $payment;
     }
@@ -83,10 +84,10 @@ class PaymentService
         $tokens = FcmToken::where('user_id', $paymentRecord->doctor_id)->pluck('fcm_token');
         $firebase = new FirebaseService();
         foreach ($tokens as $token) {
-            $firebase->send(
+            $firebase->sendNotification(
+                $token,
                 'تعديل على المدفوعة',
                 'قام المورد ' . $user->name . ' بتعديل المدفوعة رقم #' . $paymentRecord->id . '، والمبلغ المطلوب الآن هو ' . number_format($paymentRecord->requested_amount, 2),
-                $token
             );
         }
 
@@ -227,10 +228,10 @@ class PaymentService
         $tokens = FcmToken::where('user_id', $paymentRecord->doctor_id)->pluck('fcm_token');
         $firebase = new FirebaseService();
         foreach ($tokens as $token) {
-            $firebase->send(
+            $firebase->sendNotification(
+                $token,
                 'طلب حذف مدفوعة',
                 'قام المورد ' . $user->name . ' بطلب حذف المدفوعة رقم #' . $paymentRecord->id . '، وهي بانتظار تأكيدك.',
-                $token
             );
         }
 
