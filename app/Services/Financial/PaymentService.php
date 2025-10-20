@@ -54,7 +54,7 @@ class PaymentService
         $tokens = FcmToken::where('user_id', $payment->doctor_id)->pluck('fcm_token');
         $firebase = new FirebaseService();
         foreach ($tokens as $token) {
-            $firebase->sendNotification(
+            $firebase->send(
                 'مدفوعة جديدة 💰',
                 'تم إنشاء مدفوعة جديدة برقم #' . $payment->id,
                 $token
@@ -91,15 +91,15 @@ class PaymentService
             'color'    => 'green',
         ]);
 
-        $tokens = FcmToken::where('user_id', $paymentRecord->doctor_id)->pluck('fcm_token');
-        $firebase = new FirebaseService();
-        foreach ($tokens as $token) {
-            $firebase->sendNotification(
-                $token,
-                'تعديل على المدفوعة',
-                'قام المورد ' . $user->name . ' بتعديل المدفوعة رقم #' . $paymentRecord->id . '، والمبلغ المطلوب الآن هو ' . number_format($paymentRecord->requested_amount, 2),
-            );
-        }
+        // $tokens = FcmToken::where('user_id', $paymentRecord->doctor_id)->pluck('fcm_token');
+        // $firebase = new FirebaseService();
+        // foreach ($tokens as $token) {
+        //     $firebase->sendNotification(
+        //         $token,
+        //         'تعديل على المدفوعة',
+        //         'قام المورد ' . $user->name . ' بتعديل المدفوعة رقم #' . $paymentRecord->id . '، والمبلغ المطلوب الآن هو ' . number_format($paymentRecord->requested_amount, 2),
+        //     );
+        // }
 
         return $paymentRecord;
     }
@@ -235,15 +235,15 @@ class PaymentService
             'color'    => 'green',
         ]);
 
-        $tokens = FcmToken::where('user_id', $paymentRecord->doctor_id)->pluck('fcm_token');
-        $firebase = new FirebaseService();
-        foreach ($tokens as $token) {
-            $firebase->sendNotification(
-                $token,
-                'طلب حذف مدفوعة',
-                'قام المورد ' . $user->name . ' بطلب حذف المدفوعة رقم #' . $paymentRecord->id . '، وهي بانتظار تأكيدك.',
-            );
-        }
+        // $tokens = FcmToken::where('user_id', $paymentRecord->doctor_id)->pluck('fcm_token');
+        // $firebase = new FirebaseService();
+        // foreach ($tokens as $token) {
+        //     $firebase->sendNotification(
+        //         $token,
+        //         'طلب حذف مدفوعة',
+        //         'قام المورد ' . $user->name . ' بطلب حذف المدفوعة رقم #' . $paymentRecord->id . '، وهي بانتظار تأكيدك.',
+        //     );
+        // }
 
         return $paymentRecord;
     }
