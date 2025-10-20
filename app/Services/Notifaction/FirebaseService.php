@@ -39,8 +39,13 @@ class FirebaseService
             ]
         ];
 
-        return Http::withToken($accessToken)
-            ->post($this->messagingUrl, $message)
-            ->json();
+        $response = Http::withToken($accessToken)
+            ->post($this->messagingUrl, $message);
+
+        if ($response->failed()) {
+            dd($response->body()); // لمعرفة الرد التفصيلي من FCM
+        }
+
+        return $response->json();
     }
 }
