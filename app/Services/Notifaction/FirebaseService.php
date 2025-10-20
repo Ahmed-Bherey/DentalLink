@@ -13,15 +13,14 @@ class FirebaseService
     public function __construct()
     {
         $this->client = new Google_Client();
-        $this->client->setAuthConfig(base_path('public/firebase/denthub-e6b7a-firebase-adminsdk-fbsvc-102ebc5703.json'));
+        $this->client->setAuthConfig(base_path('public/firebase/denthub-e6b7a-firebase-adminsdk-fbsvc-79b671dee5.json'));
         $this->client->addScope('https://www.googleapis.com/auth/firebase.messaging');
     }
 
     protected function getAccessToken()
     {
         if ($this->client->isAccessTokenExpired()) {
-            $accessToken = $this->client->fetchAccessTokenWithAssertion();
-            dd($accessToken);
+            $this->client->fetchAccessTokenWithAssertion();
         }
         return $this->client->getAccessToken()['access_token'];
     }
