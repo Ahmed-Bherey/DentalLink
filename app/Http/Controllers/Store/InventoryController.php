@@ -192,17 +192,14 @@ class InventoryController extends Controller
     }
 
     public function fcmtokende(Request $request)
-    {
-        //try {
-            $user = $request->user();
-            $fcmToken = FcmToken::where('user_id',$user->id)->get();
-            $fcmToken->delete();
+{
+    $user = $request->user();
+    // جلب كل توكنات FCM للمستخدم
+    $fcmTokens = FcmToken::where('user_id', $user->id)->get();
 
-        // } catch (\Exception $e) {
-        //     return $this->errorResponse(
-        //         'عذراً، حدث خطأ أثناء تحميل البيانات. برجاء المحاولة لاحقاً',
-        //         422
-        //     );
-        // }
+    // حذف كل توكن من الـ FCM
+    foreach ($fcmTokens as $token) {
+        $token->delete();
     }
+}
 }
