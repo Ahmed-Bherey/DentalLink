@@ -46,15 +46,15 @@ class FavoriteProductService
             'color'    => 'red',
         ]);
 
-        $tokens = FcmToken::where('user_id', $product->user_id)->pluck('fcm_token');
-        $firebase = new FirebaseService();
-        foreach ($tokens as $token) {
-            $firebase->sendNotification(
-                $token,
-                'إضافة إلى المفضلة',
-                'قام الطبيب ' . $doctor->name . ' بإضافة منتجك "' . $product->name . '" إلى المفضلة.',
-            );
-        }
+        // $tokens = FcmToken::where('user_id', $product->user_id)->pluck('fcm_token');
+        // $firebase = new FirebaseService();
+        // foreach ($tokens as $token) {
+        //     $firebase->sendNotification(
+        //         $token,
+        //         'إضافة إلى المفضلة',
+        //         'قام الطبيب ' . $doctor->name . ' بإضافة منتجك "' . $product->name . '" إلى المفضلة.',
+        //     );
+        // }
 
         return $favoriteProducts;
     }

@@ -48,19 +48,19 @@ class PaymentController extends Controller
     // انشاء مدفوعة
     public function store(PaymentRequest $request)
     {
-        //try {
+        try {
             $user = request()->user();
             $payment = $this->paymentService->store($user, $request->validated());
             return $this->createSuccessResponse(
                 'تم انشاء المدفوعة بنجاح',
                 new PaymentResource($payment),
             );
-        // } catch (Exception $e) {
-        //     return $this->errorResponse(
-        //         'عذراً، حدث خطأ ما. برجاء المحاولة لاحقاً',
-        //         422
-        //     );
-        // }
+        } catch (Exception $e) {
+            return $this->errorResponse(
+                'عذراً، حدث خطأ ما. برجاء المحاولة لاحقاً',
+                422
+            );
+        }
     }
 
     // تحديث مدفوعة
