@@ -11,7 +11,7 @@ class FirebaseService
     {
         // ضبط الاتصال بخدمة Firebase
         $client = new Client();
-        $client->setAuthConfig(storage_path('app/firebase/denthub-d6def-a8693eac6097.json'));
+        $client->setAuthConfig(storage_path('app/firebase/denthub-d6def-firebase-adminsdk-fbsvc-baf382e3a6.json'));
         $client->addScope('https://www.googleapis.com/auth/firebase.messaging');
 
         // جلب access token
