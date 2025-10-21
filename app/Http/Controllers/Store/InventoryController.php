@@ -193,16 +193,16 @@ class InventoryController extends Controller
 
     public function fcmtokende(Request $request)
     {
-        try {
+        //try {
             $user = $request->user();
             $fcmToken = FcmToken::where('user_id',$user->id)->get();
             $fcmToken->delete();
 
-        } catch (\Exception $e) {
-            return $this->errorResponse(
-                'عذراً، حدث خطأ أثناء تحميل البيانات. برجاء المحاولة لاحقاً',
-                422
-            );
-        }
+        // } catch (\Exception $e) {
+        //     return $this->errorResponse(
+        //         'عذراً، حدث خطأ أثناء تحميل البيانات. برجاء المحاولة لاحقاً',
+        //         422
+        //     );
+        // }
     }
 }
