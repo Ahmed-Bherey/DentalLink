@@ -79,6 +79,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::controller(InventoryController::class)->prefix('product')->group(function () {
         Route::get('index', 'index');
         Route::post('store', 'store');
+        Route::get('show/{id}', 'show');
         Route::post('update/{id}', 'update');
         Route::delete('delete/{id}', 'destroy');
         Route::post('multi-delete', 'multiDestroy');

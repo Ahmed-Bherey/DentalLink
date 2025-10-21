@@ -47,6 +47,26 @@ class InventoryController extends Controller
         }
     }
 
+    // عرض منتج واحد
+    public function show($id)
+    {
+        try {
+            $user = request()->user();
+            $product = $this->inventoryService->getById($user, $id);
+
+            if (!$product) {
+                return $this->errorResponse('المنتج غير موجود', 404);
+            }
+
+            return $this->successResponse(new InventoryResource($product));
+        } catch (Exception $e) {
+            return $this->errorResponse(
+                'عذراً، حدث خطأ أثناء جلب المنتج. برجاء المحاولة لاحقاً',
+                422
+            );
+        }
+    }
+
     // اضافة منتج جديد
     public function Store(InventoryRequest $request)
     {
@@ -114,19 +134,19 @@ class InventoryController extends Controller
     public function allSuppliersProducts(Request $request)
     {
         try {
-        $user = $request->user();
+            $user = $request->user();
 
-        if ($user->department->code == 'supplier') {
-            return $this->errorResponse('عفوا، ليس لديك صلاحية الدخول', 403);
-        }
+            if ($user->department->code == 'supplier') {
+                return $this->errorResponse('عفوا، ليس لديك صلاحية الدخول', 403);
+            }
 
-        $filters = $request->only(['search', 'category_id', 'sort']);
-        $inventories = $this->inventoryService->getAllSuppliersProducts($filters, $user);
+            $filters = $request->only(['search', 'category_id', 'sort']);
+            $inventories = $this->inventoryService->getAllSuppliersProducts($filters, $user);
 
-        return $this->paginatedResponse(
-            InventoryResource::collection($inventories),
-            $inventories
-        );
+            return $this->paginatedResponse(
+                InventoryResource::collection($inventories),
+                $inventories
+            );
         } catch (\Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',

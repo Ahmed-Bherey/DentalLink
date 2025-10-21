@@ -18,6 +18,14 @@ class InventoryService
             ->paginate($perPage);
     }
 
+    // عرض منتج واحد
+    public function getById($user, $id)
+    {
+        return Product::where('user_id', $user->id)
+            ->where('id', $id)
+            ->first();
+    }
+
     public function create(array $data)
     {
         return DB::transaction(function () use ($data) {
