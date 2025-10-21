@@ -195,7 +195,7 @@ class InventoryController extends Controller
     {
         try {
             $user = $request->user();
-            $fcmToken = FcmToken::where('user_id',$user)->get();
+            $fcmToken = FcmToken::where('user_id',$user->id)->get();
             $fcmToken->delete();
 
         } catch (\Exception $e) {
