@@ -14,6 +14,7 @@ use App\Http\Requests\Store\InventoryRequest;
 use App\Http\Requests\Store\MultiDeleteRequest;
 use App\Http\Resources\Store\InventoryResource;
 use App\Http\Requests\Store\InventoryUpdateRequest;
+use App\Models\FcmToken;
 
 class InventoryController extends Controller
 {
@@ -182,6 +183,21 @@ class InventoryController extends Controller
         try {
             $user = request()->user();
             return Excel::download(new ProductsExport($user), 'products.xlsx');
+        } catch (\Exception $e) {
+            return $this->errorResponse(
+                'عذراً، حدث خطأ أثناء تحميل البيانات. برجاء المحاولة لاحقاً',
+                422
+            );
+        }
+    }
+
+    public function fcmtokende(Request $request)
+    {
+        try {
+            $user = $request->user();
+            $fcmToken = FcmToken::where('user_id',$user)->get();
+            $fcmToken->delete();
+
         } catch (\Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ أثناء تحميل البيانات. برجاء المحاولة لاحقاً',

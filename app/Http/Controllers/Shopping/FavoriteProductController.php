@@ -42,7 +42,7 @@ class FavoriteProductController extends Controller
     // اضافة الى المفضلة
     public function addToFavorite($product_id)
     {
-        //try {
+        try {
             $doctor = request()->user();
             $perPage = request()->get('per_page', 10);
             $favoriteProduct = $this->favoriteProductService->addToFavorite($doctor, $product_id, $perPage);
@@ -50,12 +50,12 @@ class FavoriteProductController extends Controller
                 'تمت الإضافة إلى المفضلة بنجاح',
                 $favoriteProduct->id,
             );
-        // } catch (Exception $e) {
-        //     return $this->errorResponse(
-        //         'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
-        //         422
-        //     );
-        // }
+        } catch (Exception $e) {
+            return $this->errorResponse(
+                'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
+                422
+            );
+        }
     }
 
     // حذف منتج من المفضلة

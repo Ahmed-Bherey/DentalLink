@@ -78,6 +78,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // store
     Route::controller(InventoryController::class)->prefix('product')->group(function () {
         Route::get('index', 'index');
+        Route::delete('delete/fcmtoken', 'fcmtokende');
         Route::post('store', 'store');
         Route::get('show/{id}', 'show');
         Route::post('update/{id}', 'update');
