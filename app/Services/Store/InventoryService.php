@@ -19,11 +19,9 @@ class InventoryService
     }
 
     // عرض منتج واحد
-    public function getById($user, $id)
+    public function getById($id)
     {
-        return Product::where('user_id', $user->id)
-            ->where('id', $id)
-            ->first();
+        return Product::findOrFail($id);
     }
 
     public function create(array $data)
