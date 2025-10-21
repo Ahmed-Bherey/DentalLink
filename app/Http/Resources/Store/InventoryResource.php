@@ -31,7 +31,7 @@ class InventoryResource extends JsonResource
             'quantity'      => (int)$this->quantity,
             'rating'        => 5,
             'status'        => $this->getStatus(),
-            'favorite' => $this->whenLoaded('favoriteProducts', fn() => $this->favoriteProducts->isNotEmpty()),
+            'favorite' => 1,
             'is_added' => $this->whenLoaded('carts', fn() => $this->carts->isNotEmpty()),
         ];
     }
