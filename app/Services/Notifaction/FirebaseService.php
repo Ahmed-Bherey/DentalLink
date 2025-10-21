@@ -9,13 +9,16 @@ class FirebaseService
 {
     public function send($title, $body, $token)
     {
+        // ضبط الاتصال بخدمة Firebase
         $client = new Client();
         $client->setAuthConfig(base_path('public/firebase/denthub-d6def-firebase-adminsdk-fbsvc-f4af9caf93.json'));
         $client->addScope('https://www.googleapis.com/auth/firebase.messaging');
 
-        $http = new HttpClient();
+        // جلب access token
         $accessToken = $client->fetchAccessTokenWithAssertion()['access_token'];
 
+        // إعداد Guzzle لإرسال الإشعار
+        $http = new HttpClient();
         $response = $http->post(
             'https://fcm.googleapis.com/v1/projects/denthub-d6def/messages:send',
             [
