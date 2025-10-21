@@ -13,6 +13,7 @@ class FirebaseService
         $client = new Client();
         $client->setAuthConfig(base_path('public/firebase/denthub-d6def-firebase-adminsdk-fbsvc-f4af9caf93.json'));
         $client->addScope('https://www.googleapis.com/auth/firebase.messaging');
+        dd($client->fetchAccessTokenWithAssertion());
 
         // جلب access token
         $accessToken = $client->fetchAccessTokenWithAssertion()['access_token'];
