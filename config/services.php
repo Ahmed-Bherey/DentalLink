@@ -31,4 +31,9 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'firebase' => [
+    'project_id' => 'denthub-d6def',
+    'service_account_key_path' => storage_path('app/firebase/denthub-d6def-firebase-adminsdk-fbsvc-baf382e3a6.json'),
+],
+
 ];
