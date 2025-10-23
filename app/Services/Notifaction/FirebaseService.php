@@ -10,14 +10,14 @@ class FirebaseService
     public function send($title, $body, $token)
     {
         $client = new Client();
-        $client->setAuthConfig(storage_path('app/firebase/test-16990-firebase-adminsdk-1fn80-eb97c42188.json'));
+        $client->setAuthConfig(storage_path('app/firebase/denthub-52578-firebase-adminsdk-fbsvc-eb760c9c00.json'));
         $client->addScope('https://www.googleapis.com/auth/firebase.messaging');
 
         $accessToken = $client->fetchAccessTokenWithAssertion()['access_token'];
 
         $http = new HttpClient();
         $response = $http->post(
-            'https://fcm.googleapis.com/v1/projects/test-16990/messages:send',
+            'https://fcm.googleapis.com/v1/projects/denthub-52578/messages:send',
             [
                 'headers' => [
                     'Authorization' => 'Bearer ' . $accessToken,
