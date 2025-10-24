@@ -3,15 +3,16 @@
 namespace App\Services\Financial;
 
 use App\Models\User;
+use App\Models\FcmToken;
 use App\Models\Store\Product;
 use App\Models\Financial\Cart;
 use App\Models\Financial\Order;
-use App\Services\FirebaseService;
 use Illuminate\Support\Facades\DB;
 use App\Models\Financial\OrderItem;
 use App\Events\Order\NewOrderCreated;
 use App\Models\Financial\OrderExpense;
 use App\Models\General\NotificationsCenter;
+use App\Services\Notifaction\FirebaseService;
 use Illuminate\Auth\Access\AuthorizationException;
 use App\Services\Notifaction\NotificationsCenterService;
 
@@ -103,6 +104,7 @@ class OrderService
             ->pluck('product.user_id')
             ->unique();
 
+        $firebase = new FirebaseService();
         // 🔥 إنشاء إشعار لكل مورد
         foreach ($supplierIds as $supplierId) {
             $order->notificationsCenters()->create([
@@ -112,6 +114,16 @@ class OrderService
                 'type'     => 'inbox',
                 'color'    => 'blue',
             ]);
+
+            $tokens = FcmToken::where('user_id', $supplierId)->pluck('fcm_token');
+            foreach ($tokens as $token) {
+                $firebase->send(
+                    'طلب جديد 📦',
+                    'تم إنشاء طلب جديد برقم #' . $order->id . ' بواسطة الطبيب ' . $user->name,
+                    $token,
+                    '/operations/current-orders'
+                );
+            }
         }
 
         return $order;
@@ -156,6 +168,17 @@ class OrderService
             'color'    => 'blue',
         ]);
 
+        $tokens = FcmToken::where('user_id', $order->doctor_id)->pluck('fcm_token');
+        $firebase = new FirebaseService();
+        foreach ($tokens as $token) {
+            $firebase->send(
+                'تحديث حالة الطلب',
+                'قام المورد ' . $user->name . ' بتحديث حالة الطلب #' . $order->id . ' إلى "' . $order->status_name . '"',
+                $token,
+                '/operations/current-orders'
+            );
+        }
+
         return $order;
     }
 
@@ -190,14 +213,25 @@ class OrderService
                 ->pluck('product.user_id')
                 ->unique();
 
+            $firebase = new FirebaseService();
             foreach ($supplierIds as $supplierId) {
                 $order->notificationsCenters()->create([
                     'user_id' => $supplierId,
                     'title'   => 'تحديث على الطلب',
                     'message' => 'قام الطبيب ' . $order->doctor->name . ' بتحديث الطلب رقم #' . $order->id,
                     'type'     => 'inbox',
-                'color'    => 'blue',
+                    'color'    => 'blue',
                 ]);
+
+                $tokens = FcmToken::where('user_id', $supplierId)->pluck('fcm_token');
+                foreach ($tokens as $token) {
+                    $firebase->send(
+                        'تحديث على الطلب',
+                        'قام الطبيب ' . $order->doctor->name . ' بتحديث الطلب رقم #' . $order->id,
+                        $token,
+                        '/operations/current-orders'
+                    );
+                }
             }
 
             return $order;

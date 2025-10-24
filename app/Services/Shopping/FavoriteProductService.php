@@ -50,9 +50,10 @@ class FavoriteProductService
         $firebase = new FirebaseService();
         foreach ($tokens as $token) {
             $firebase->send(
-                $token,
                 'إضافة إلى المفضلة',
                 'قام الطبيب ' . $doctor->name . ' بإضافة منتجك "' . $product->name . '" إلى المفضلة.',
+                $token,
+                '/operations/favorites'
             );
         }
 
