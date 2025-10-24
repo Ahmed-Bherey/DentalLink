@@ -8,6 +8,7 @@ use App\Models\Financial\Payment;
 use App\Models\Financial\OrderExpense;
 use App\Services\Notifaction\FirebaseService;
 use App\Services\Notifaction\NotificationService;
+use App\Services\Notifaction\FirebaseRealtimeService;
 
 class PaymentService
 {
@@ -60,6 +61,17 @@ class PaymentService
                 $token
             );
         }
+
+        // ✅ إرسال إلى Firebase Realtime عبر الخدمة الجديدة
+        $realtime = new FirebaseRealtimeService();
+        $realtime->send('payments/' . $payment->id, [
+            'id' => $payment->id,
+            'doctor_id' => $payment->doctor_id,
+            'supplier_id' => $payment->supplier_id,
+            'amount' => $payment->amount,
+            'date' => $payment->date,
+            'created_at' => now()->toDateTimeString(),
+        ]);
 
         return $payment;
     }
