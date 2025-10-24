@@ -58,20 +58,10 @@ class PaymentService
             $firebase->send(
                 'مدفوعة جديدة 💰',
                 'تم إنشاء مدفوعة جديدة برقم #' . $payment->id,
-                $token
+                $token,
+                'payment'
             );
         }
-
-        // ✅ إرسال إلى Firebase Realtime عبر الخدمة الجديدة
-        $realtime = new FirebaseRealtimeService();
-        $realtime->send('payments/' . $payment->id, [
-            'id' => $payment->id,
-            'doctor_id' => $payment->doctor_id,
-            'supplier_id' => $payment->supplier_id,
-            'amount' => $payment->amount,
-            'date' => $payment->date,
-            'created_at' => now()->toDateTimeString(),
-        ]);
 
         return $payment;
     }

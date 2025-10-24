@@ -7,7 +7,7 @@ use GuzzleHttp\Client as HttpClient;
 
 class FirebaseService
 {
-    public function send($title, $body, $token)
+    public function send($title, $body, $token, $type)
     {
         $client = new Client();
         $client->setAuthConfig(storage_path('app/firebase/denthub-52578-firebase-adminsdk-fbsvc-eb760c9c00.json'));
@@ -29,6 +29,9 @@ class FirebaseService
                         'notification' => [
                             'title' => $title,
                             'body'  => $body,
+                        ],
+                        'data' => [
+                            'type' => $type,
                         ],
                     ],
                 ],
