@@ -14,7 +14,7 @@ class FirebaseRealtimeService
 
     public function __construct()
     {
-        $this->projectUrl = 'https://denthub-52578-default-rtdb.firebaseio.com/';
+        $this->projectUrl = 'https://denthub-52578-default-rtdb.firebaseio.com';
         $this->credentialsPath = storage_path('app/firebase/denthub-52578-firebase-adminsdk-fbsvc-eb760c9c00.json');
     }
 
