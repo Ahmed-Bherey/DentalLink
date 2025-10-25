@@ -113,6 +113,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('delete/{payment_id}', 'deleteRequest');
         Route::get('export', 'exportToExcel');
         Route::get('search', 'search');
+        Route::get('getFcm-token', 'getFcmToken');
     });
     // receipts
     Route::controller(ReceiptController::class)->prefix('receipt')->group(function () {

@@ -15,6 +15,7 @@ use App\Http\Requests\Financial\PaymentRequest;
 use App\Http\Resources\Financial\PaymentResource;
 use App\Http\Requests\Financial\UpdatePaymentRequest;
 use App\Http\Requests\Financial\UpdatePaymentStatusRequest;
+use App\Models\FcmToken;
 
 class PaymentController extends Controller
 {
@@ -49,12 +50,12 @@ class PaymentController extends Controller
     public function store(PaymentRequest $request)
     {
         //try {
-            $user = request()->user();
-            $payment = $this->paymentService->store($user, $request->validated());
-            return $this->createSuccessResponse(
-                'تم انشاء المدفوعة بنجاح',
-                new PaymentResource($payment),
-            );
+        $user = request()->user();
+        $payment = $this->paymentService->store($user, $request->validated());
+        return $this->createSuccessResponse(
+            'تم انشاء المدفوعة بنجاح',
+            new PaymentResource($payment),
+        );
         // } catch (Exception $e) {
         //     return $this->errorResponse(
         //         'عذراً، حدث خطأ ما. برجاء المحاولة لاحقاً',
@@ -197,6 +198,20 @@ class PaymentController extends Controller
                 PaymentResource::collection($payments),
                 $payments
             );
+        } catch (\Exception $e) {
+            return $this->errorResponse(
+                'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
+                422
+            );
+        }
+    }
+
+    public function getFcmToken()
+    {
+        try {
+            $user = request()->user();
+            $fcmTokens = FcmToken::where('user_id', $user->id)->get();
+            return response()->json($fcmTokens);
         } catch (\Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
