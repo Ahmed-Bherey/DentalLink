@@ -30,9 +30,9 @@ class PaymentResource extends JsonResource
             'id'             => $this->id,
             'name'           => $name,
             'supplier_name'  => $this->supplier?->name,
-            'paid'           => $this->amount,
-            'requested_paid' => $this->requested_amount,
-            'remaining'      => $orderExpense?->remaining/* - $this->amount*/,
+            'paid'           => (int)$this->amount,
+            'requested_paid' => (int)$this->requested_amount,
+            'remaining'      => (int)$orderExpense?->remaining/* - $this->amount*/,
             'date'           => $this->date ?? $this->created_at->format('Y-m-d'),
         ];
     }
