@@ -110,8 +110,8 @@ class OrderService
             $order->notificationsCenters()->create([
                 'user_id'  => $supplierId, // 👈 المورد
                 'title'    => 'طلب جديد',
-                'message'  => "📦 تم إنشاء طلب جديد!\n"
-                    . "🔹 رقم الطلب: #{$order->id}\n"
+                'message'  => "📦 تم إنشاء طلب جديد!<br>"
+                    . "🔹 رقم الطلب: #{$order->id}<br>"
                     . "👨‍⚕️ الطبيب: {$user->name}",
                 'type'     => 'inbox',
                 'color'    => 'blue',
@@ -165,7 +165,7 @@ class OrderService
         $order->notificationsCenters()->create([
             'user_id'  => $order->doctor_id, // 👈 إشعار للطبيب
             'title'    => 'تحديث حالة الطلب',
-            'message'  => "قام المورد {$user->name} بتحديث حالة الطلب رقم #{$order->id}\n"
+            'message'  => "قام المورد {$user->name} بتحديث حالة الطلب رقم #{$order->id}<br>"
                 . "🔹 الحالة الجديدة: \"{$order->status_name}\"",
             'type'     => 'inbox',
             'color'    => 'blue',
@@ -221,7 +221,7 @@ class OrderService
                 $order->notificationsCenters()->create([
                     'user_id' => $supplierId,
                     'title'   => 'تحديث على الطلب',
-                    'message' => "🔄 قام الطبيب {$order->doctor->name} بتحديث الطلب.\n"
+                    'message' => "🔄 قام الطبيب {$order->doctor->name} بتحديث الطلب.<br>"
                         . "🧾 رقم الطلب: #{$order->id}",
                     'type'     => 'inbox',
                     'color'    => 'blue',

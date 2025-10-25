@@ -47,7 +47,7 @@ class PaymentService
         $payment->notificationsCenters()->create([
             'user_id'  => $payment->doctor_id,
             'title'    => 'مدفوعة جديدة',
-            'message'  => "💰 تم إنشاء مدفوعة جديدة!\n"
+            'message'  => "💰 تم إنشاء مدفوعة جديدة!<br>"
                 . "🔹 رقم المدفوعة: #{$payment->id}",
             'type'     => 'dollar',
             'color'     => 'green',
@@ -79,8 +79,8 @@ class PaymentService
         $paymentRecord->notificationsCenters()->create([
             'user_id'  => $paymentRecord->doctor_id,
             'title'    => 'تعديل على المدفوعة',
-            'message'  => "✏️ قام المورد {$user->name} بتعديل المدفوعة.\n"
-                . "🧾 رقم المدفوعة: #{$paymentRecord->id}\n"
+            'message'  => "✏️ قام المورد {$user->name} بتعديل المدفوعة.<br>"
+                . "🧾 رقم المدفوعة: #{$paymentRecord->id}<br>"
                 . "💵 المبلغ المطلوب الآن: " . number_format($paymentRecord->requested_amount, 2),
             'type'     => 'dollar',
             'color'    => 'green',
