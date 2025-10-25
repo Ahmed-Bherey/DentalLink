@@ -70,7 +70,7 @@ class OrderController extends Controller
 
     // انشاء طلب
     public function store(OrderRequest $request)
-    {
+    //{
         try {
             $this->authorize('create', Order::class);
             $user = request()->user();
@@ -79,17 +79,17 @@ class OrderController extends Controller
                 'تم إضافة المنتج بنجاح',
                 new OrderResource($order),
             );
-        } catch (AuthorizationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'عفوا، ليس لديك صلاحية لإنشاء الطلب.',
-            ], 403);
-        } catch (Exception $e) {
-            return $this->errorResponse(
-                'عذراً، حدث خطأ ما. برجاء المحاولة مرة أخرى',
-                422
-            );
-        }
+        // } catch (AuthorizationException $e) {
+        //     return response()->json([
+        //         'success' => false,
+        //         'message' => 'عفوا، ليس لديك صلاحية لإنشاء الطلب.',
+        //     ], 403);
+        // } catch (Exception $e) {
+        //     return $this->errorResponse(
+        //         'عذراً، حدث خطأ ما. برجاء المحاولة مرة أخرى',
+        //         422
+        //     );
+        // }
     }
 
     // تحديث حالة الطلب
