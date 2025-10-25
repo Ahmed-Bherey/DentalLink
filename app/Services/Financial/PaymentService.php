@@ -81,8 +81,8 @@ class PaymentService
             'title'    => 'تعديل على المدفوعة',
             'message'  => "✏️ قام المورد {$user->name} بتعديل المدفوعة.<br>"
                 . "🧾 رقم المدفوعة: #{$paymentRecord->id}<br>"
-                . "💰 المبلغ السابق: " . number_format($paymentRecord->amount, 2) . "<br>"
-                . "💵 المبلغ المطلوب الآن: " . number_format($paymentRecord->requested_amount, 2),
+                . "💰 المبلغ السابق: " . number_format((int)$paymentRecord->amount, 2) . "<br>"
+                . "💵 المبلغ المطلوب الآن: " . number_format((int)$paymentRecord->requested_amount, 2),
             'type'     => 'dollar',
             'color'    => 'green',
         ]);
