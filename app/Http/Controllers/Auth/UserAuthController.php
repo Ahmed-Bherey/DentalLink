@@ -108,38 +108,38 @@ class UserAuthController extends Controller
     }
 
     public function updateToken(Request $request)
-    {
-        $vaild = Validator::make($request->all(), [
-            'fcm_token' => 'required|string',
-            'device' => 'required|in:mob,web',
-            'device_id' => 'required_if:device,mob',
-        ]);
+{
+    $validator = Validator::make($request->all(), [
+        'fcm_token' => 'required|string',
+        'device' => 'required|in:mob,web,desktop',
+        'device_id' => 'nullable|string',
+    ]);
 
-        if ($vaild->fails()) {
-            return response()->json($vaild->errors(), 422);
-        }
+    if ($validator->fails()) {
+        return response()->json($validator->errors(), 422);
+    }
 
-        $user = $request->user();
+    $user = $request->user();
 
-        $query = [
+    if (!$user) {
+        return response()->json(['error' => 'Unauthenticated'], 401);
+    }
+
+    // تحقق إن التوكن غير موجود مسبقًا لنفس المستخدم
+    $exists = FcmToken::where('user_id', $user->id)
+        ->where('fcm_token', $request->fcm_token)
+        ->exists();
+
+    if (!$exists) {
+        FcmToken::create([
             'user_id' => $user->id,
             'device' => $request->device,
-        ];
-        if ($request->device == 'mob') {
-            $query['device_id'] = $request->device_id;
-        }
-
-        $data = array_merge($query, [
+            'device_id' => $request->device_id,
             'fcm_token' => $request->fcm_token,
         ]);
-
-        $token = FcmToken::where($query)->first();
-        if ($token) {
-            $token->update(['fcm_token' => $request->fcm_token]);
-        } else {
-            FcmToken::create($data);
-        }
-
-        return response()->json(['success' => true]);
     }
+
+    return response()->json(['success' => true]);
+}
+
 }
