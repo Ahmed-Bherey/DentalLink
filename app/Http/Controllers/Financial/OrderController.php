@@ -72,13 +72,13 @@ class OrderController extends Controller
     public function store(OrderRequest $request)
     {
         //try {
-            $this->authorize('create', Order::class);
-            $user = request()->user();
-            $order = $this->orderService->store($user, $request->validated());
-            return $this->createSuccessResponse(
-                'تم إضافة المنتج بنجاح',
-                new OrderResource($order),
-            );
+        $this->authorize('create', Order::class);
+        $user = request()->user();
+        $order = $this->orderService->store($user, $request->validated());
+        return $this->createSuccessResponse(
+            'تم إضافة المنتج بنجاح',
+            new OrderResource($order),
+        );
         // } catch (AuthorizationException $e) {
         //     return response()->json([
         //         'success' => false,
@@ -188,11 +188,10 @@ class OrderController extends Controller
 
             $this->orderService->delete($order);
             return $this->successResponse('تم حذف الطلب بنجاح');
-        // } catch (AuthorizationException $e) {
-        //     return response()->json([
-        //         'success' => false,
-        //         'message' => 'عفوا، ليس لديك صلاحية لحذف هذا الطلب.',
-        //     ], 403);
+        } catch (\InvalidArgumentException $e) {
+            return $this->errorResponse($e->getMessage(), 400);
+        } catch (ModelNotFoundException $e) {
+            return $this->errorResponse('الطلب غير موجود.', 404);
         } catch (Exception $e) {
             return $this->errorResponse('حدث خطأ أثناء الحذف.', 422);
         }
