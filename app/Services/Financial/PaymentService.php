@@ -226,7 +226,9 @@ class PaymentService
         $paymentRecord->notificationsCenters()->create([
             'user_id'  => $paymentRecord->doctor_id,
             'title'    => 'طلب حذف مدفوعة',
-            'message'  => 'قام المورد ' . $user->name . ' بطلب حذف المدفوعة رقم #' . $paymentRecord->id . '، وهي بانتظار تأكيدك.',
+            'message'  => "⚠️ قام المورد {$user->name} بطلب حذف المدفوعة.<br>"
+                . "🧾 رقم المدفوعة: #{$paymentRecord->id}<br>"
+                . "⏳ الحالة: بانتظار تأكيدك",
             'type'     => 'dollar',
             'color'    => 'green',
         ]);

@@ -270,23 +270,29 @@ class OrderService
             }
             $order->load('orderItems.product');
 
-            // $totalToRefund = $order->total_order_price;
+            $doctorId = $order->doctor_id;
 
-            // // الحصول على المورد من أول منتج
-            // $firstItem = $order->orderItems->first();
-            // $supplierId = $firstItem?->product?->user_id;
+            // لكل عنصر في الطلب
+            foreach ($order->orderItems as $item) {
+                $product     = $item->product;
+                $supplierId  = $product->user_id;
+                $unitPrice   = $product->price;
+                $refundValue = $unitPrice * $item->quantity;
 
-            // if ($supplierId) {
-            //     $expense = OrderExpense::where('doctor_id', $order->doctor_id)
-            //         ->where('supplier_id', $supplierId)
-            //         ->first();
+                // 1️⃣ إعادة الكمية إلى المخزون
+                $product->increment('quantity', $item->quantity);
 
-            //     if ($expense) {
-            //         $expense->total     = max(0, $expense->total - $totalToRefund);
-            //         $expense->remaining = max(0, $expense->remaining - $totalToRefund);
-            //         $expense->save();
-            //     }
-            // }
+                // 2️⃣ تحديث حساب المورد (OrderExpense)
+                $expense = OrderExpense::where('doctor_id', $doctorId)
+                    ->where('supplier_id', $supplierId)
+                    ->first();
+
+                if ($expense) {
+                    $expense->total     = max(0, $expense->total - $refundValue);
+                    $expense->remaining = max(0, $expense->remaining - $refundValue);
+                    $expense->save();
+                }
+            }
 
             // حذف عناصر الطلب ثم الطلب نفسه
             $order->orderItems()->delete();
