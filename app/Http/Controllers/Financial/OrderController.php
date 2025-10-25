@@ -182,7 +182,7 @@ class OrderController extends Controller
     // حذف الطلب
     public function destroy($id)
     {
-        //try {
+        try {
             $order = Order::findOrFail($id);
             //$this->authorize('delete', $order);
 
@@ -193,9 +193,9 @@ class OrderController extends Controller
         //         'success' => false,
         //         'message' => 'عفوا، ليس لديك صلاحية لحذف هذا الطلب.',
         //     ], 403);
-        // } catch (Exception $e) {
-        //     return $this->errorResponse('حدث خطأ أثناء الحذف.', 422);
-        // }
+        } catch (Exception $e) {
+            return $this->errorResponse('حدث خطأ أثناء الحذف.', 422);
+        }
     }
 
     public function returnItem(Request $request, $orderItemId)
