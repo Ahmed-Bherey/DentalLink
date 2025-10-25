@@ -70,8 +70,8 @@ class OrderController extends Controller
 
     // انشاء طلب
     public function store(OrderRequest $request)
-    //{
-        try {
+    {
+        //try {
             $this->authorize('create', Order::class);
             $user = request()->user();
             $order = $this->orderService->store($user, $request->validated());
