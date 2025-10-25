@@ -84,7 +84,7 @@ class OrderService
         $order = Order::create([
             'doctor_id' => $user->id,
             'notes' => $data['notes'],
-            'status' => $data['status'],
+            //'status' => $data['status'],
             'payment_method' => $data['payment_method'] ?? 'مدفوعات',
         ]);
 
