@@ -85,7 +85,7 @@ class OrderService
             'doctor_id' => $user->id,
             'notes' => $data['notes'],
             'status' => $data['status'],
-            'payment_method' => $data['payment_method'],
+            'payment_method' => $data['payment_method'] ?? 'مدفوعات',
         ]);
 
         foreach ($data['products'] as $product) {

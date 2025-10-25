@@ -31,7 +31,7 @@ class OrderRequest extends FormRequest
             'products.*.quantity' => 'required|integer|min:1',
             'notes'               => 'nullable|string',
             'status'              => 'nullable|in:pending,preparing,delivered,rejected',
-            'payment_method'      => 'required|in:كاش,الكترونى,مدفوعات',
+            'payment_method'      => 'nullable|in:كاش,الكترونى,مدفوعات',
         ];
     }
 
