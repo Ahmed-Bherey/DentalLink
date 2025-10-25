@@ -43,7 +43,7 @@ class FavoriteProductService
             'title'    => 'إضافة إلى المفضلة',
             'message'  => 'قام الطبيب ' . $doctor->name . ' بإضافة منتجك "' . $product->name . '" إلى المفضلة.',
             'type'     => 'heart',
-            'color'    => 'red',
+            'color'    => 'pink',
         ]);
 
         // $tokens = FcmToken::where('user_id', $product->user_id)->pluck('fcm_token');
