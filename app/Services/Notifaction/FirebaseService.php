@@ -29,10 +29,11 @@ class FirebaseService
                         'notification' => [
                             'title' => $title,
                             'body'  => $body,
-                        ],
-                        'data' => [
                             'click_action' => $clickAction,
                         ],
+                        // 'data' => [
+                        //     'click_action' => $clickAction,
+                        // ],
                     ],
                 ],
             ]
