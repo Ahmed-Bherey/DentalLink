@@ -41,7 +41,8 @@ class FavoriteProductService
         $favoriteProducts->notificationsCenters()->create([
             'user_id'  => $product->user_id, // المورد
             'title'    => 'إضافة إلى المفضلة',
-            'message'  => 'قام الطبيب ' . $doctor->name . ' بإضافة منتجك "' . $product->name . '" إلى المفضلة.',
+            'message'  => "قام الطبيب {$doctor->name} بإضافة منتجك إلى المفضلة ❤️\n"
+                . "🔸 المنتج: \"{$product->name}\"",
             'type'     => 'heart',
             'color'    => 'pink',
         ]);

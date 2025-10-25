@@ -110,7 +110,9 @@ class OrderService
             $order->notificationsCenters()->create([
                 'user_id'  => $supplierId, // 👈 المورد
                 'title'    => 'طلب جديد',
-                'message'  => 'تم إنشاء طلب جديد برقم #' . $order->id . ' بواسطة الطبيب ' . $user->name,
+                'message'  => "📦 تم إنشاء طلب جديد!\n"
+                    . "🔹 رقم الطلب: #{$order->id}\n"
+                    . "👨‍⚕️ الطبيب: {$user->name}",
                 'type'     => 'inbox',
                 'color'    => 'blue',
             ]);
@@ -219,7 +221,8 @@ class OrderService
                 $order->notificationsCenters()->create([
                     'user_id' => $supplierId,
                     'title'   => 'تحديث على الطلب',
-                    'message' => 'قام الطبيب ' . $order->doctor->name . ' بتحديث الطلب رقم #' . $order->id,
+                    'message' => "🔄 قام الطبيب {$order->doctor->name} بتحديث الطلب.\n"
+                        . "🧾 رقم الطلب: #{$order->id}",
                     'type'     => 'inbox',
                     'color'    => 'blue',
                 ]);
