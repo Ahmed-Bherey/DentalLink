@@ -17,10 +17,10 @@ class SupplierResource extends JsonResource
     {
         $user = request()->user();
         if ($user->department->code == 'supplier') {
-            $orderExpense = OrderExpense::where(['doctor_id' => $user->id, 'supplier_id' => $this->id])
+            $orderExpense = OrderExpense::where(['doctor_id' => $this->id, 'supplier_id' => $user->id])
                 ->latest()->first();
         } elseif ($user->department->code == 'doctor') {
-            $orderExpense = OrderExpense::where(['supplier_id' => $user->id, 'doctor_id' => $this->id])
+            $orderExpense = OrderExpense::where(['supplier_id' => $this->id, 'doctor_id' => $user->id])
                 ->latest()->first();
         }
         return [
