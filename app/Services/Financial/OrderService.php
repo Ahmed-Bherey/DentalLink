@@ -163,7 +163,8 @@ class OrderService
         $order->notificationsCenters()->create([
             'user_id'  => $order->doctor_id, // 👈 إشعار للطبيب
             'title'    => 'تحديث حالة الطلب',
-            'message'  => 'قام المورد ' . $user->name . ' بتحديث حالة الطلب #' . $order->id . ' إلى "' . $order->status_name . '"',
+            'message'  => "قام المورد {$user->name} بتحديث حالة الطلب رقم #{$order->id}\n"
+                . "🔹 الحالة الجديدة: \"{$order->status_name}\"",
             'type'     => 'inbox',
             'color'    => 'blue',
         ]);
