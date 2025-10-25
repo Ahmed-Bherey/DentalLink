@@ -108,38 +108,47 @@ class UserAuthController extends Controller
     }
 
     public function updateToken(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'fcm_token' => 'required|string',
-        'device' => 'required|in:mob,web,desktop',
-        'device_id' => 'nullable|string',
-    ]);
+    {
+        try {
+            // ✅ التحقق من صحة البيانات
+            $validated = $request->validate([
+                'fcm_token' => 'required|string',
+                'device' => 'required|string|in:web,android,ios', // يمكنك تعديل القيم حسب مشروعك
+            ]);
 
-    if ($validator->fails()) {
-        return response()->json($validator->errors(), 422);
+            // ✅ تحديد المستخدم الحالي (تأكد أن المسار محمي بـ auth:api أو ما شابه)
+            $user = auth()->user();
+
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'User not authenticated.',
+                ], 401);
+            }
+
+            // ✅ تحديث أو إنشاء السجل في جدول FcmTokens
+            FcmToken::updateOrCreate(
+                [
+                    'user_id' => $user->id,
+                ],
+                [
+                    'fcm_token' => $validated['fcm_token'],
+                    'device' => $validated['device'],
+                ]
+            );
+
+            // ✅ الاستجابة الناجحة
+            return response()->json([
+                'status' => true,
+                'message' => 'FCM token updated successfully.',
+            ], 200);
+        } catch (\Exception $e) {
+            // ⚠️ التعامل مع أي خطأ غير متوقع
+            return response()->json([
+                'status' => false,
+                'message' => 'Something went wrong.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
-
-    $user = $request->user();
-
-    if (!$user) {
-        return response()->json(['error' => 'Unauthenticated'], 401);
-    }
-
-    // تحقق إن التوكن غير موجود مسبقًا لنفس المستخدم
-    $exists = FcmToken::where('user_id', $user->id)
-        ->where('fcm_token', $request->fcm_token)
-        ->exists();
-
-    if (!$exists) {
-        FcmToken::create([
-            'user_id' => $user->id,
-            'device' => $request->device,
-            'device_id' => $request->device_id,
-            'fcm_token' => $request->fcm_token,
-        ]);
-    }
-
-    return response()->json(['success' => true]);
-}
-
 }

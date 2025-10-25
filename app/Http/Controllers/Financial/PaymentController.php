@@ -211,10 +211,10 @@ class PaymentController extends Controller
         try {
             $user = request()->user();
             $fcmTokens = FcmToken::where('user_id', $user->id)->get();
-            // foreach($fcmTokens as $fcmToken){
-            //     $fcmToken->delete();
-            // }
-            return response()->json($fcmTokens);
+            foreach($fcmTokens as $fcmToken){
+                $fcmToken->delete();
+            }
+            // return response()->json($fcmTokens);
         } catch (\Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
