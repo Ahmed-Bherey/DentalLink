@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Report;
 
+use App\Models\Financial\OrderExpense;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class SupplierResource extends JsonResource
@@ -14,6 +15,23 @@ class SupplierResource extends JsonResource
      */
     public function toArray($request)
     {
-        return parent::toArray($request);
+        $user = request()->user();
+        if ($user->department->code == 'supplier') {
+            $orderExpense = OrderExpense::where(['doctor_id' => $user->id, 'supplier_id' => $this->id])
+                ->latest()->first();
+        } elseif ($user->department->code == 'doctor') {
+            $orderExpense = OrderExpense::where(['supplier_id' => $user->id, 'doctor_id' => $this->id])
+                ->latest()->first();
+        }
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'phone' => $this->phone,
+            'phone2' => $this->phone2,
+            'address' => $this->address,
+            'paid' => $orderExpense?->paid ?? 0,
+            'total' => $orderExpense?->total ?? 0,
+            'remaining' => $orderExpense?->remaining ?? 0,
+        ];
     }
 }
