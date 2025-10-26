@@ -219,4 +219,25 @@ class PaymentController extends Controller
             );
         }
     }
+
+    public function updateExpen($payment_id)
+    {
+        try {
+            $user = request()->user();
+            $payment = Payment::findOrFail($payment_id);
+            $orderExpense = OrderExpense::where('doctor_id', $payment->doctor_id)
+                ->where('supplier_id', $payment->supplier_id)
+                ->first();
+            $orderExpense->update([
+                'total' => 0,
+                'paid' => 0,
+                'remaining' => 0,
+            ]);
+        } catch (\Exception $e) {
+            return $this->errorResponse(
+                'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
+                422
+            );
+        }
+    }
 }
