@@ -82,11 +82,8 @@ class PaymentController extends Controller
                 'تم انشاء المدفوعة بنجاح',
                 $payment->id,
             );
-        } catch (Exception $e) {
-            return $this->errorResponse(
-                'عذراً، حدث خطأ ما. برجاء المحاولة لاحقاً',
-                422
-            );
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 422);
         }
     }
 

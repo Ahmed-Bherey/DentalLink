@@ -70,6 +70,19 @@ class PaymentService
     // تحديث مدفوعة
     public function update($user, $data, $paymentRecord)
     {
+        $orderExpense = OrderExpense::where('doctor_id', $paymentRecord->doctor_id)
+            ->where('supplier_id', $paymentRecord->supplier_id)
+            ->first();
+
+        if (!$orderExpense) {
+            throw new \Exception('لا يوجد سجل مصروفات مرتبط بهذا الطبيب والمورد.');
+        }
+
+        // تحقق أن المبلغ الجديد لا يتجاوز المتبقي
+        if ($data['paid'] > $orderExpense->remaining) {
+            throw new \Exception('المبلغ المطلوب لا يمكن أن يتجاوز المتبقي (' . number_format($orderExpense->remaining, 2) . ').');
+        }
+
         $paymentRecord->update([
             'requested_amount' => $data['paid'],
             'date' => $data['date'],
