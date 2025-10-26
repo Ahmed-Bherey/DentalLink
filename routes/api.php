@@ -114,7 +114,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('export', 'exportToExcel');
         Route::get('search', 'search');
         Route::get('getFcm-token', 'getFcmToken');
-        Route::get('updateExpen/{payment_id}', 'updateExpen');
+        Route::get('updateExpen', 'updateExpen');
     });
     // receipts
     Route::controller(ReceiptController::class)->prefix('receipt')->group(function () {

@@ -220,13 +220,11 @@ class PaymentController extends Controller
         }
     }
 
-    public function updateExpen($payment_id)
+    public function updateExpen()
     {
         try {
             $user = request()->user();
-            $payment = Payment::findOrFail($payment_id);
-            $orderExpense = OrderExpense::where('doctor_id', $payment->doctor_id)
-                ->where('supplier_id', $payment->supplier_id)
+            $orderExpense = OrderExpense::where('supplier_id', $user->id)
                 ->first();
             $orderExpense->update([
                 'total' => 0,
