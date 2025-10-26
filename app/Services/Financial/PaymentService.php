@@ -53,16 +53,16 @@ class PaymentService
             'color'     => 'green',
         ]);
 
-        $tokens = FcmToken::where('user_id', $payment->doctor_id)->pluck('fcm_token');
-        $firebase = new FirebaseService();
-        foreach ($tokens as $token) {
-            $firebase->send(
-                'مدفوعة جديدة 💰',
-                'تم إنشاء مدفوعة جديدة برقم #' . $payment->id,
-                $token,
-                '/operations/current-payments'
-            );
-        }
+        // $tokens = FcmToken::where('user_id', $payment->doctor_id)->pluck('fcm_token');
+        // $firebase = new FirebaseService();
+        // foreach ($tokens as $token) {
+        //     $firebase->send(
+        //         'مدفوعة جديدة 💰',
+        //         'تم إنشاء مدفوعة جديدة برقم #' . $payment->id,
+        //         $token,
+        //         '/operations/current-payments'
+        //     );
+        // }
 
         return $payment;
     }
