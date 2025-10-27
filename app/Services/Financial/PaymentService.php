@@ -79,8 +79,8 @@ class PaymentService
         }
 
         // تحقق أن المبلغ الجديد لا يتجاوز المتبقي
-        if ($data['paid'] > ($orderExpense->remaining + $paymentRecord->price)) {
-            throw new \Exception('المبلغ المطلوب لا يمكن أن يتجاوز المتبقي (' . number_format($orderExpense->remaining + $paymentRecord->price, 2) . ').');
+        if ($data['paid'] > ($orderExpense->remaining + $paymentRecord->amount)) {
+            throw new \Exception('المبلغ المطلوب لا يمكن أن يتجاوز المتبقي (' . number_format($orderExpense->remaining + $paymentRecord->amount, 2) . ').');
         }
 
         $paymentRecord->update([
