@@ -33,12 +33,12 @@ class PaymentService
             ->where('supplier_id', $user->supplier_id)
             ->first();
 
-        if (!$orderExpense) {
-            throw new \Exception('لا يوجد سجل مصروفات مرتبط بهذا الطبيب والمورد.');
-        }
+        // if (!$orderExpense) {
+        //     throw new \Exception('لا يوجد سجل مصروفات مرتبط بهذا الطبيب والمورد.');
+        // }
         // تحقق أن المبلغ الجديد لا يتجاوز المتبقي
-        if ($data['paid'] > ($orderExpense->remaining + $data['paid'])) {
-            throw new \Exception('المبلغ المطلوب لا يمكن أن يتجاوز المتبقي (' . number_format($orderExpense->remaining + $data['paid'], 2) . ').');
+        if ($data['paid'] > ($orderExpense?->remaining + $data['paid'])) {
+            throw new \Exception('المبلغ المطلوب لا يمكن أن يتجاوز المتبقي (' . number_format($orderExpense?->remaining + $data['paid'], 2) . ').');
         }
 
         $payment = Payment::create([
