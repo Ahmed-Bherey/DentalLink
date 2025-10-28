@@ -34,6 +34,15 @@ class SupplierResource extends JsonResource
             'paid'      => (int)$orderExpense?->paid ?? 0,
             'total'     => (int)$orderExpense?->total ?? 0,
             'remaining' => (int)$orderExpense?->paid - $orderExpense?->total /*(int)$orderExpense?->remaining*/ ?? 0,
+            'schedules' => $this->schedules?->where('active', 1)
+                ->map(function ($schedule) {
+                    return [
+                        'id'       => $schedule->id,
+                        'day_name' => $schedule->day_name,
+                        'from'     => $schedule->from,
+                        'to'       => $schedule->to,
+                    ];
+                }),
         ];
     }
 }
