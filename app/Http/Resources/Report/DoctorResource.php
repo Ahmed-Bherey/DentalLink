@@ -45,4 +45,14 @@ class DoctorResource extends JsonResource
                 }),
         ];
     }
+
+    private function formatTime(?string $time): ?string
+    {
+        if (!$time) {
+            return null;
+        }
+
+        // يحول الوقت من 24 ساعة إلى 12 ساعة مع am/pm
+        return date('h:i A', strtotime($time));
+    }
 }
