@@ -29,6 +29,18 @@ class PaymentService
     // انشاء مدفوعة
     public function store($user, $data)
     {
+        $orderExpense = OrderExpense::where('doctor_id', $data['doctor_id'])
+            ->where('supplier_id', $user->supplier_id)
+            ->first();
+
+        if (!$orderExpense) {
+            throw new \Exception('لا يوجد سجل مصروفات مرتبط بهذا الطبيب والمورد.');
+        }
+        // تحقق أن المبلغ الجديد لا يتجاوز المتبقي
+        if ($data['paid'] > ($orderExpense->remaining + $data['paid'])) {
+            throw new \Exception('المبلغ المطلوب لا يمكن أن يتجاوز المتبقي (' . number_format($orderExpense->remaining + $data['paid'], 2) . ').');
+        }
+
         $payment = Payment::create([
             'doctor_id' => $data['doctor_id'],
             'supplier_id' => $user->id,
