@@ -18,7 +18,7 @@ class PackageResource extends JsonResource
             'id'          => $this->id,
             'name'        => $this->name,
             'desc'        => $this->desc,
-            'total_price' => $this->price,
+            'total_price' => (int)$this->price,
             'checked'     => (bool)$this->active,
             'created_at'  => $this->created_at?->format('Y-m-d'),
             'products'    => $this->packageItems->map(function ($item) {
