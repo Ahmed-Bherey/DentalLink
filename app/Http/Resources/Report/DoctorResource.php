@@ -33,7 +33,7 @@ class DoctorResource extends JsonResource
             'address' => $this->address,
             'paid' => (int)$orderExpense?->paid ?? 0,
             'total' => (int)$orderExpense?->total ?? 0,
-            'remaining' => (int)$orderExpense?->remaining ?? 0,
+            'remaining' => (int)$orderExpense?->total - $orderExpense?->paid /*$orderExpense?->remaining*/ ?? 0,
         ];
     }
 }

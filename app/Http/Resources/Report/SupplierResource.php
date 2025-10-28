@@ -24,7 +24,7 @@ class SupplierResource extends JsonResource
                 ->latest()->first();
         }
         return [
-            'id' => $this->id,
+            'id'        => $this->id,
             'name'      => $this->name,
             'city_id'   => $this->city_id,
             'city_name' => $this->city?->name,
@@ -33,7 +33,7 @@ class SupplierResource extends JsonResource
             'address'   => $this->address,
             'paid'      => (int)$orderExpense?->paid ?? 0,
             'total'     => (int)$orderExpense?->total ?? 0,
-            'remaining' => (int)$orderExpense?->remaining ?? 0,
+            'remaining' => (int)$orderExpense?->paid - $orderExpense?->total /*(int)$orderExpense?->remaining*/ ?? 0,
         ];
     }
 }
