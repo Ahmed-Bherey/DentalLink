@@ -24,16 +24,25 @@ class DoctorResource extends JsonResource
                 ->latest()->first();
         }
         return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'city_id' => $this->city_id,
+            'id'        => $this->id,
+            'name'      => $this->name,
+            'city_id'   => $this->city_id,
             'city_name' => $this->city?->name,
-            'phone' => $this->phone,
-            'phone2' => $this->phone2,
-            'address' => $this->address,
-            'paid' => (int)$orderExpense?->paid ?? 0,
-            'total' => (int)$orderExpense?->total ?? 0,
+            'phone'     => $this->phone,
+            'phone2'    => $this->phone2,
+            'address'   => $this->address,
+            'paid'      => (int)$orderExpense?->paid ?? 0,
+            'total'     => (int)$orderExpense?->total ?? 0,
             'remaining' => (int)$orderExpense?->total - $orderExpense?->paid /*$orderExpense?->remaining*/ ?? 0,
+            'schedules' => $this->schedules?->where('active', 1)
+                ->map(function ($schedule) {
+                    return [
+                        'id'       => $schedule->id,
+                        'day_name' => $schedule->day_name,
+                        'from'     => $schedule->from,
+                        'to'       => $schedule->to,
+                    ];
+                }),
         ];
     }
 }
