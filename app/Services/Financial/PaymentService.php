@@ -157,7 +157,7 @@ class PaymentService
                     // تعديل الوضع المالي
                     $orderExpense->update([
                         'paid' => $orderExpense->paid - $paymentRecord->amount,
-                        'remaining' => $orderExpense->remaining + $paymentRecord->amount,
+                        'remaining' => $orderExpense->total + $orderExpense->paid,
                     ]);
                 }
 
@@ -189,7 +189,7 @@ class PaymentService
                     $total = $orderExpense->paid - $paymentRecord->amount;
                     $orderExpense->update([
                         'paid' => $orderExpense->paid - $total,
-                        'remaining' => $orderExpense->remaining + $total,
+                        'remaining' => $orderExpense->total + $orderExpense->paid,
                     ]);
                 }
 
