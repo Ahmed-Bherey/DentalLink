@@ -141,29 +141,28 @@ class OrderService
         if ($data['status'] == 'delivered') {
             $total = 0;
 
-            if ($order->price == null) {
-                foreach ($order->orderItems as $item) {
-                    $product = $item->product;
-                    if ($product) {
-                        $total += $product->price * $item->quantity;
-                    }
-                }
+            if (is_null($order->price)) {
+                // طلب عادي: مجموع المنتجات
+                $total = $order->orderItems->sum(function ($item) {
+                    return optional($item->product)->price * $item->quantity;
+                });
             } else {
-                $total += $order->price;
+                // باقة: السعر الثابت
+                $total = $order->price;
             }
 
-            $remaining = $total;
+            // 2️⃣ جلب السجل الحالي أو إنشاؤه إن لم يكن موجودًا
+            $orderExpense = OrderExpense::firstOrNew([
+                'doctor_id'   => $order->doctor_id,
+                'supplier_id' => $user->id,
+            ]);
 
-            OrderExpense::updateOrCreate(
-                [
-                    'doctor_id' => $order->doctor_id,
-                    'supplier_id' => $user->id,
-                ],
-                [
-                    'total'     => $total,
-                    'remaining' => $remaining,
-                ]
-            );
+            // 3️⃣ زيادة القيم وليس استبدالها
+            $orderExpense->total     = ($orderExpense->total ?? 0) + $total;
+            $orderExpense->remaining = ($orderExpense->remaining ?? 0) + $total;
+
+            // لا نلمس paid هنا — يحدث عند الدفع فقط
+            $orderExpense->save();
         }
 
         $order->notificationsCenters()->create([
