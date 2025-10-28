@@ -25,22 +25,22 @@ class PackageService
         }
 
         if ($from) {
-        try {
-            $fromDate = Carbon::parse($from)->startOfDay();
-            $query->whereDate('created_at', '>=', $fromDate);
-        } catch (\Exception $e) {
-            // يمكن تسجيل الخطأ أو تجاهله حسب الحاجة
+            try {
+                $fromDate = Carbon::parse($from)->startOfDay();
+                $query->whereDate('created_at', '>=', $fromDate);
+            } catch (\Exception $e) {
+                // يمكن تسجيل الخطأ أو تجاهله حسب الحاجة
+            }
         }
-    }
 
-    if ($to) {
-        try {
-            $toDate = Carbon::parse($to)->endOfDay();
-            $query->whereDate('created_at', '<=', $toDate);
-        } catch (\Exception $e) {
-            // يمكن تسجيل الخطأ أو تجاهله حسب الحاجة
+        if ($to) {
+            try {
+                $toDate = Carbon::parse($to)->endOfDay();
+                $query->whereDate('created_at', '<=', $toDate);
+            } catch (\Exception $e) {
+                // يمكن تسجيل الخطأ أو تجاهله حسب الحاجة
+            }
         }
-    }
 
         return $query->where('active', '!=', 0)->orderBy('created_at', 'desc')
             ->paginate($perPage);
@@ -76,7 +76,7 @@ class PackageService
         $order = Order::create([
             'doctor_id'      => $doctor->id,
             'price'          => $package->price,
-            'notes'          => $data['notes'],
+            'notes'          => $data['notes'] ?? null,
             'payment_method' => $data['payment_method'] ?? 'مدفوعات',
         ]);
 
