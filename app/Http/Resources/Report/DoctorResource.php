@@ -39,8 +39,8 @@ class DoctorResource extends JsonResource
                     return [
                         'id'       => $schedule->id,
                         'day_name' => $schedule->day_name,
-                        'from'     => $schedule->from,
-                        'to'       => $schedule->to,
+                        'from'     => $this->formatTime($schedule->from),
+                        'to'       => $this->formatTime($schedule->to),
                     ];
                 }),
         ];
