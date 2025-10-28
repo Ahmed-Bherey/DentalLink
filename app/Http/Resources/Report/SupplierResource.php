@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Report;
 
+use App\Traits\FormatsTime;
 use App\Models\Financial\OrderExpense;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -13,6 +14,7 @@ class SupplierResource extends JsonResource
      * @param  \Illuminate\Http\Request  $request
      * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
      */
+    use FormatsTime;
     public function toArray($request)
     {
         $user = request()->user();
@@ -44,15 +46,5 @@ class SupplierResource extends JsonResource
                     ];
                 }),
         ];
-    }
-
-    private function formatTime(?string $time): ?string
-    {
-        if (!$time) {
-            return null;
-        }
-
-        // يحول الوقت من 24 ساعة إلى 12 ساعة مع am/pm
-        return date('h:i A', strtotime($time));
     }
 }
