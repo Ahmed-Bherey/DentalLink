@@ -2,7 +2,7 @@
 
 namespace App\Http\Resources\Report;
 
-use App\Traits\FormatsTime;
+use App\Traits\HasSchedules;
 use App\Models\Financial\OrderExpense;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -14,7 +14,7 @@ class SupplierResource extends JsonResource
      * @param  \Illuminate\Http\Request  $request
      * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
      */
-    use FormatsTime;
+    use HasSchedules;
     public function toArray($request)
     {
         $user = request()->user();
@@ -36,15 +36,7 @@ class SupplierResource extends JsonResource
             'paid'      => (int)$orderExpense?->paid ?? 0,
             'total'     => (int)$orderExpense?->total ?? 0,
             'remaining' => (int)$orderExpense?->paid - $orderExpense?->total /*(int)$orderExpense?->remaining*/ ?? 0,
-            'schedules' => $this->schedules?->where('active', 1)
-                ->map(function ($schedule) {
-                    return [
-                        'id'       => $schedule->id,
-                        'day_name' => $schedule->day_name,
-                        'from'     => $this->formatTime($schedule->from),
-                        'to'       => $this->formatTime($schedule->to),
-                    ];
-                }),
+            'schedules' => $this->mapSchedules($this->schedules),
         ];
     }
 }
