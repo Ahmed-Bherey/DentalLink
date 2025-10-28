@@ -141,11 +141,15 @@ class OrderService
         if ($data['status'] == 'delivered') {
             $total = 0;
 
-            foreach ($order->orderItems as $item) {
-                $product = $item->product;
-                if ($product) {
-                    $total += $product->price * $item->quantity;
+            if ($order->price == null) {
+                foreach ($order->orderItems as $item) {
+                    $product = $item->product;
+                    if ($product) {
+                        $total += $product->price * $item->quantity;
+                    }
                 }
+            } else {
+                $total += $order->price;
             }
 
             $remaining = $total;
