@@ -187,13 +187,13 @@ class OrderService
             $orderExpense->save();
         }
 
-        if ($data['status'] === 'confirmed' && $order === 'delete_pending') {
+        if ($data['status'] === 'confirmed' && $order->status === 'delete_pending') {
             // حذف فعلي
             $this->delete($order);
             return 'تم حذف الطلب بنجاح';
         }
 
-        if ($data['status'] === 'rejected' && $order === 'delete_pending') {
+        if ($data['status'] === 'rejected' && $order->status === 'delete_pending') {
             $order->update(['status' => 'delivered']);
             return 'تم رفض طلب الحذف وإعادة الطلب إلى حالته السابقة';
         }
