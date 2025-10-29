@@ -141,7 +141,6 @@ class PackageController extends Controller
         }
     }
 
-
     // حذف باقة
     public function destroy(Package $package)
     {

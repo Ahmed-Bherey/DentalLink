@@ -24,6 +24,19 @@ class OrderResource extends JsonResource
             $name = $this->doctor->name;
         }
 
+        $desc = null;
+        if ($this->status === 'delete_pending') {
+            // تحقق إذا كان هناك منتج محدد تمت محاولة إرجاعه
+            $returnedProduct = $this->orderItems
+                ->firstWhere('return_status', 'pending'); // مثلًا، إذا عندك عمود return_status
+
+            if ($returnedProduct) {
+                $desc = "قام الطبيب {$this->doctor->name} بطلب إرجاع المنتج {$returnedProduct->product?->name} من الطلب رقم {$this->id}";
+            } else {
+                $desc = "قام الطبيب {$this->doctor->name} بطلب إرجاع الطلب رقم {$this->id}";
+            }
+        }
+
         return [
             'id'                => $this->id,
             'name'              => $name,
@@ -32,6 +45,7 @@ class OrderResource extends JsonResource
             'status_name'       => $this->status_name,
             'total_price'       => $this->price ?? $this->total_order_price,
             'checked'           => true,
+            'desc'              => $desc,
             'is_package'        => $this->price != null,
             'created_at'        => $this->created_at->format('Y-m-d'),
 
