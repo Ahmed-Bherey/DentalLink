@@ -298,56 +298,149 @@ class OrderService
         });
     }
 
-    public function updateItemStatus($data, OrderItem $orderItem)
+    // public function updateItemStatus($data, OrderItem $orderItem)
+    // {
+    //     $currentStatus = $orderItem->status;
+
+    //     // ✅ المورد وافق على الحذف
+    //     if ($data['status'] === 'confirmed' && $currentStatus === 'delete_pending') {
+    //         $order = $orderItem->order;
+    //         $doctorId = $order->doctor_id;
+    //         $supplierId = $orderItem->product->user_id;
+
+    //         $unitPrice = $orderItem->product->price;
+    //         $refundValue = $unitPrice * $orderItem->quantity;
+
+    //         // تحديث حساب المورد في جدول OrderExpense
+    //         $expense = OrderExpense::where('doctor_id', $doctorId)
+    //             ->where('supplier_id', $supplierId)
+    //             ->first();
+
+    //         if ($expense) {
+    //             $expense->total     = max(0, $expense->total - $refundValue);
+    //             $expense->remaining = max(0, $expense->remaining - $refundValue);
+    //             $expense->save();
+    //         }
+
+    //         // حذف المنتج فعلياً
+    //         $orderItem->delete();
+
+    //         return [
+    //             'message' => 'تم حذف المنتج بنجاح بعد موافقتك.',
+    //             'status' => 'confirmed'
+    //         ];
+    //     }
+
+    //     // ❌ المورد رفض الحذف
+    //     if ($data['status'] === 'rejected' && $currentStatus === 'delete_pending') {
+    //         $orderItem->update([
+    //             'status' => 'confirmed',
+    //         ]);
+
+    //         return [
+    //             'message' => 'تم رفض طلب حذف المنتج وتمت إعادته إلى حالته السابقة.',
+    //             'status' => 'rejected'
+    //         ];
+    //     }
+
+    //     return [
+    //         'message' => 'لا توجد عملية مناسبة لهذه الحالة.',
+    //         'status' => 'ignored'
+    //     ];
+    // }
+
+    public function updateItemStatus(array $data, OrderItem $orderItem)
     {
         $currentStatus = $orderItem->status;
 
-        // ✅ المورد وافق على الحذف
+        // ✅ المورد وافق على إرجاع المنتج
         if ($data['status'] === 'confirmed' && $currentStatus === 'delete_pending') {
-            $order = $orderItem->order;
-            $doctorId = $order->doctor_id;
-            $supplierId = $orderItem->product->user_id;
+            DB::transaction(function () use ($orderItem, $data) {
+                $order = $orderItem->order;
+                $doctorId = $order->doctor_id;
+                $supplierId = $orderItem->product->user_id;
 
-            $unitPrice = $orderItem->product->price;
-            $refundValue = $unitPrice * $orderItem->quantity;
+                // الكمية المطلوب حذفها (مرسلة من الطبيب وقت الطلب)
+                $quantityToReturn = $orderItem->return_quantity ?? 0;
 
-            // تحديث حساب المورد في جدول OrderExpense
-            $expense = OrderExpense::where('doctor_id', $doctorId)
-                ->where('supplier_id', $supplierId)
-                ->first();
+                if ($quantityToReturn <= 0 || $quantityToReturn > $orderItem->quantity) {
+                    throw new \InvalidArgumentException("الكمية المطلوبة غير صالحة.");
+                }
 
-            if ($expense) {
-                $expense->total     = max(0, $expense->total - $refundValue);
-                $expense->remaining = max(0, $expense->remaining - $refundValue);
-                $expense->save();
-            }
+                $unitPrice = $orderItem->product->price;
+                $refundValue = $unitPrice * $quantityToReturn;
 
-            // حذف المنتج فعلياً
-            $orderItem->delete();
+                // ✅ خصم الكمية من الطلب
+                $orderItem->quantity -= $quantityToReturn;
+                if ($orderItem->quantity <= 0) {
+                    $orderItem->delete();
+                } else {
+                    $orderItem->save();
+                }
+
+                // ✅ إعادة الكمية إلى المخزون
+                $orderItem->product->increment('quantity', $quantityToReturn);
+
+                // ✅ تحديث حساب المورد في OrderExpense
+                $expense = OrderExpense::where('doctor_id', $doctorId)
+                    ->where('supplier_id', $supplierId)
+                    ->first();
+
+                if ($expense) {
+                    $expense->total     = max(0, $expense->total - $refundValue);
+                    $expense->remaining = max(0, $expense->remaining - $refundValue);
+                    $expense->save();
+                }
+
+                // ✅ تحديث الحالة
+                $orderItem->status = 'confirmed';
+                $orderItem->return_quantity = null;
+                $orderItem->save();
+
+                // إرسال إشعار للطبيب بالموافقة
+                $orderItem->notificationsCenters()->create([
+                    'user_id' => $doctorId,
+                    'title'   => 'تمت الموافقة على إرجاع المنتج',
+                    'message' => "✅ وافق المورد على إرجاع المنتج {$orderItem->product->name} من الطلب رقم #{$orderItem->order_id}.",
+                    'type'    => 'cart',
+                    'color'   => 'green',
+                ]);
+            });
 
             return [
-                'message' => 'تم حذف المنتج بنجاح بعد موافقتك.',
-                'status' => 'confirmed'
+                'message' => 'تمت الموافقة على الإرجاع وتحديث الكمية والحسابات بنجاح.',
+                'status'  => 'confirmed'
             ];
         }
 
-        // ❌ المورد رفض الحذف
+        // ❌ المورد رفض الإرجاع
         if ($data['status'] === 'rejected' && $currentStatus === 'delete_pending') {
             $orderItem->update([
                 'status' => 'confirmed',
+                'return_quantity' => null,
+            ]);
+
+            // إشعار للطبيب بالرفض
+            $orderItem->notificationsCenters()->create([
+                'user_id' => $orderItem->order->doctor_id,
+                'title'   => 'تم رفض طلب الإرجاع',
+                'message' => "❌ تم رفض طلب إرجاع المنتج {$orderItem->product->name} من الطلب رقم #{$orderItem->order_id}.",
+                'type'    => 'cart',
+                'color'   => 'red',
             ]);
 
             return [
-                'message' => 'تم رفض طلب حذف المنتج وتمت إعادته إلى حالته السابقة.',
-                'status' => 'rejected'
+                'message' => 'تم رفض طلب إرجاع المنتج.',
+                'status'  => 'rejected'
             ];
         }
 
         return [
             'message' => 'لا توجد عملية مناسبة لهذه الحالة.',
-            'status' => 'ignored'
+            'status'  => 'ignored'
         ];
     }
+
 
     // حذف منتج من الطلب
     public function deleteItem(OrderItem $orderItem)
@@ -543,10 +636,11 @@ class OrderService
         return $order;
     }
 
-    public function requestDeleteItem($user, OrderItem $orderItem)
+    public function requestDeleteItem($quantity, $user, OrderItem $orderItem)
     {
         $orderItem->update([
             'status' => 'delete_pending',
+            'returned_quantity' => $quantity,
         ]);
 
         $supplierId = $orderItem->product->user_id;

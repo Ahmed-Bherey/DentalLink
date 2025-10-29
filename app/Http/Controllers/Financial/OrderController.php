@@ -113,23 +113,23 @@ class OrderController extends Controller
     // تحديث حالة الطلب
     public function updateStatus(UpdateStatusRequest $request, $order_id)
     {
-        //try {
+        try {
             $user = request()->user();
             $order = $this->orderService->updateStatus($user, $order_id, $request->validated());
             return $this->successResponseWithoutData(
                 'تم تحديث حالة الطلب بنجاح',
             );
-        // } catch (ModelNotFoundException $e) {
-        //     return $this->errorResponse(
-        //         'الطلب غير موجود.',
-        //         404
-        //     );
-        // } catch (Exception $e) {
-        //     return $this->errorResponse(
-        //         'عذراً، حدث خطأ ما. برجاء المحاولة مرة أخرى',
-        //         422
-        //     );
-        // }
+        } catch (ModelNotFoundException $e) {
+            return $this->errorResponse(
+                'الطلب غير موجود.',
+                404
+            );
+        } catch (Exception $e) {
+            return $this->errorResponse(
+                'عذراً، حدث خطأ ما. برجاء المحاولة مرة أخرى',
+                422
+            );
+        }
     }
 
     // تحديث بيانات الطلب
@@ -181,13 +181,16 @@ class OrderController extends Controller
 
 
     // حذف منتج من الطلب
-    public function deleteItem($orderItem_id)
+    public function deleteItem(Request $request, $orderItem_id)
     {
+        $request->validate([
+            'quantity' => ['required', 'integer', 'min:1'],
+        ]);
         try {
             $user = request()->user();
             $deleteItem = OrderItem::findOrFail($orderItem_id);
 
-            $this->orderService->requestDeleteItem($user, $deleteItem);
+            $this->orderService->requestDeleteItem($request->quantity, $user, $deleteItem);
             return $this->successResponse('تم حذف المنتج بنجاح');
         } catch (AuthorizationException $e) {
             return response()->json([
@@ -244,10 +247,10 @@ class OrderController extends Controller
         ]);
 
         try {
-            $this->orderService->returnOrderItem(
+            $this->orderService->requestDeleteItem(
+                $request->quantity,
                 $request->user(),
                 $orderItemId,
-                $request->quantity
             );
 
             return $this->successResponseWithoutData("تم استرجاع المنتج بنجاح");
