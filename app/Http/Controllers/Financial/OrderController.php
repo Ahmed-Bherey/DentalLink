@@ -51,7 +51,7 @@ class OrderController extends Controller
 
     public function refundOrder()
     {
-        try {
+        //try {
             $user = request()->user();
             $perPage = request()->get('per_page', 10);
             $supplierOrders = $this->orderService->getRefundOrder($user, $perPage);
@@ -59,12 +59,12 @@ class OrderController extends Controller
                 OrderResource::collection($supplierOrders),
                 $supplierOrders,
             );
-        } catch (Exception $e) {
-            return $this->errorResponse(
-                'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
-                422
-            );
-        }
+        // } catch (Exception $e) {
+        //     return $this->errorResponse(
+        //         'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
+        //         422
+        //     );
+        // }
     }
 
     // عرض قائمة الطلبات المسلمة للمورد والطبيب
