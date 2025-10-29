@@ -113,29 +113,29 @@ class OrderController extends Controller
     // تحديث حالة الطلب
     public function updateStatus(UpdateStatusRequest $request, $order_id)
     {
-        try {
+        //try {
             $user = request()->user();
             $order = $this->orderService->updateStatus($user, $order_id, $request->validated());
             return $this->successResponseWithoutData(
                 'تم تحديث حالة الطلب بنجاح',
             );
-        } catch (ModelNotFoundException $e) {
-            return $this->errorResponse(
-                'الطلب غير موجود.',
-                404
-            );
-        } catch (Exception $e) {
-            return $this->errorResponse(
-                'عذراً، حدث خطأ ما. برجاء المحاولة مرة أخرى',
-                422
-            );
-        }
+        // } catch (ModelNotFoundException $e) {
+        //     return $this->errorResponse(
+        //         'الطلب غير موجود.',
+        //         404
+        //     );
+        // } catch (Exception $e) {
+        //     return $this->errorResponse(
+        //         'عذراً، حدث خطأ ما. برجاء المحاولة مرة أخرى',
+        //         422
+        //     );
+        // }
     }
 
     // تحديث بيانات الطلب
     public function update(OrderUpdateRequest $request, $id)
     {
-        //try {
+        try {
             $order = Order::findOrFail($id);
 
             $this->authorize('update', $order);
@@ -150,14 +150,14 @@ class OrderController extends Controller
                 'تم تحديث الطلب بنجاح',
                 $order->id
             );
-        // } catch (AuthorizationException $e) {
-        //     return response()->json([
-        //         'success' => false,
-        //         'message' => 'عفوا، ليس لديك صلاحية لتحديث هذا الطلب.',
-        //     ], 403);
-        // } catch (Exception $e) {
-        //     return $this->errorResponse('حدث خطأ أثناء التحديث.', 422);
-        // }
+        } catch (AuthorizationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'عفوا، ليس لديك صلاحية لتحديث هذا الطلب.',
+            ], 403);
+        } catch (Exception $e) {
+            return $this->errorResponse('حدث خطأ أثناء التحديث.', 422);
+        }
     }
 
     public function updateItemStatus(Request $request, $orderItem_id)
