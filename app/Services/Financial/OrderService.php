@@ -40,13 +40,24 @@ class OrderService
     {
         $query = Order::query()
             ->with(['doctor', 'orderItems' => function ($q) {
-                // فقط المنتجات المطلوب إرجاعها
-                $q->where('status', 'delete_pending')->with('product');
+                // نجلب فقط المنتجات المطلوب إرجاعها أو كل المنتجات في حالة كان الطلب نفسه مطلوب للإرجاع
+                $q->where(function ($subQ) {
+                    $subQ->where('status', 'delete_pending')
+                        ->orWhereHas('order', function ($orderQ) {
+                            $orderQ->where('status', 'delete_pending');
+                        });
+                })->with('product');
             }])
-            ->where('status', 'delete_pending')
+            ->where(function ($q) {
+                // الطلب نفسه مطلوب إرجاعه أو يحتوي على منتج مطلوب إرجاعه
+                $q->where('status', 'delete_pending')
+                    ->orWhereHas('orderItems', function ($subQ) {
+                        $subQ->where('status', 'delete_pending');
+                    });
+            })
             ->orderBy('created_at', 'desc');
 
-        // فلترة حسب الطبيب
+        // فلترة حسب المستخدم (طبيب أو مورد)
         if ($user->department?->code == 'doctor') {
             $query->where('doctor_id', $user->id);
         } else {
@@ -57,6 +68,7 @@ class OrderService
 
         return $query->paginate($perPage);
     }
+
 
     // عرض قائمة الطلبات المسلمة للمورد والطبيب
     public function getDeliveredOrders($user, $perPage = 10)
