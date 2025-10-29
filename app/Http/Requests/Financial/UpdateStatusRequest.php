@@ -26,14 +26,14 @@ class UpdateStatusRequest extends FormRequest
     public function rules()
     {
         return [
-            'status' => 'required|in:pending,preparing,delivered,rejected',
+            'status' => 'required|in:pending,preparing,delivered,rejected,confirmed',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'status.in' => '.preparing، delivered، rejected :يجب أن تكون قيمة الحالة واحدة من القيم التالية',
+            'status.in' => '.preparing، delivered، rejected، confirmed :يجب أن تكون قيمة الحالة واحدة من القيم التالية',
         ];
     }
 

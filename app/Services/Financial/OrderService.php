@@ -36,6 +36,25 @@ class OrderService
         return $query->orderBy('created_at', 'desc')->paginate($perPage);
     }
 
+    public function getRefundOrder($user, $perPage = 10)
+    {
+        $query = Order::query()
+            ->with(['doctor', 'orderItems.product'])
+            ->where('status', 'delete_pending')
+            ->orderBy('created_at', 'desc');
+
+        // fillter by doctor
+        if ($user->department?->code == 'doctor') {
+            $query->where('doctor_id', $user->id);
+        } else {
+            $query->whereHas('orderItems.product', function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+            });
+        }
+
+        return $query->orderBy('created_at', 'desc')->paginate($perPage);
+    }
+
     // عرض قائمة الطلبات المسلمة للمورد والطبيب
     public function getDeliveredOrders($user, $perPage = 10)
     {
@@ -256,10 +275,79 @@ class OrderService
         });
     }
 
+    public function updateItemStatus($data, OrderItem $orderItem)
+    {
+        $currentStatus = $orderItem->status;
+
+        // ✅ المورد وافق على الحذف
+        if ($data['status'] === 'confirmed' && $currentStatus === 'delete_pending') {
+            $order = $orderItem->order;
+            $doctorId = $order->doctor_id;
+            $supplierId = $orderItem->product->user_id;
+
+            $unitPrice = $orderItem->product->price;
+            $refundValue = $unitPrice * $orderItem->quantity;
+
+            // تحديث حساب المورد في جدول OrderExpense
+            $expense = OrderExpense::where('doctor_id', $doctorId)
+                ->where('supplier_id', $supplierId)
+                ->first();
+
+            if ($expense) {
+                $expense->total     = max(0, $expense->total - $refundValue);
+                $expense->remaining = max(0, $expense->remaining - $refundValue);
+                $expense->save();
+            }
+
+            // حذف المنتج فعلياً
+            $orderItem->delete();
+
+            return [
+                'message' => 'تم حذف المنتج بنجاح بعد موافقتك.',
+                'status' => 'confirmed'
+            ];
+        }
+
+        // ❌ المورد رفض الحذف
+        if ($data['status'] === 'rejected' && $currentStatus === 'delete_pending') {
+            $orderItem->update([
+                'status' => 'confirmed',
+            ]);
+
+            return [
+                'message' => 'تم رفض طلب حذف المنتج وتمت إعادته إلى حالته السابقة.',
+                'status' => 'rejected'
+            ];
+        }
+
+        return [
+            'message' => 'لا توجد عملية مناسبة لهذه الحالة.',
+            'status' => 'ignored'
+        ];
+    }
+
     // حذف منتج من الطلب
     public function deleteItem(OrderItem $orderItem)
     {
         return DB::transaction(function () use ($orderItem) {
+            $order = $orderItem->order;
+            $doctorId = $order->doctor_id;
+            $supplierId = $orderItem->product->user_id;
+
+            $unitPrice = $orderItem->product->price;
+            $refundValue = $unitPrice * $orderItem->quantity;
+
+            // تحديث حساب المورد
+            $expense = OrderExpense::where('doctor_id', $doctorId)
+                ->where('supplier_id', $supplierId)
+                ->first();
+
+            if ($expense) {
+                $expense->total     = max(0, $expense->total - $refundValue);
+                $expense->remaining = max(0, $expense->remaining - $refundValue);
+                $expense->save();
+            }
+
             $orderItem->delete();
 
             return true;
@@ -430,5 +518,36 @@ class OrderService
         // }
 
         return $order;
+    }
+
+    public function requestDeleteItem($user, OrderItem $orderItem)
+    {
+        $orderItem->update([
+            'status' => 'delete_pending',
+        ]);
+
+        $supplierId = $orderItem->product->user_id;
+
+        $orderItem->notificationsCenters()->create([
+            'user_id' => $supplierId,
+            'title'   => 'طلب حذف منتج من الطلب',
+            'message' => "⚠️ قام الطبيب {$user->name} بطلب حذف المنتج {$orderItem->product->name} من الطلب رقم #{$orderItem->order_id}.<br>⏳ الحالة: بانتظار تأكيدك.",
+            'type'    => 'cart',
+            'color'   => 'orange',
+        ]);
+
+        // إشعار FCM (اختياري)
+        // $tokens = FcmToken::where('user_id', $supplierId)->pluck('fcm_token');
+        // $firebase = new FirebaseService();
+        // foreach ($tokens as $token) {
+        //     $firebase->send(
+        //         'طلب حذف منتج من الطلب',
+        //         'قام الطبيب ' . $user->name . ' بطلب حذف المنتج ' . $orderItem->product->name . ' من الطلب رقم #' . $orderItem->order_id,
+        //         $token,
+        //         '/orders/current-orders'
+        //     );
+        // }
+
+        return $orderItem;
     }
 }

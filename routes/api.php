@@ -101,6 +101,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('items/{orderItemId}/return', 'returnItem');
         Route::get('delivered/export', 'exportDeliveredOrders');
         Route::get('search', 'searchOrders');
+        Route::post('{orderItem_id}/update-status', 'updateItemStatus');
+        Route::get('refund', 'refundOrder');
         //Route::get('showexpen', 'showexpen');
     });
     // payments

@@ -49,6 +49,24 @@ class OrderController extends Controller
         }
     }
 
+    public function refundOrder()
+    {
+        try {
+            $user = request()->user();
+            $perPage = request()->get('per_page', 10);
+            $supplierOrders = $this->orderService->getRefundOrder($user, $perPage);
+            return $this->paginatedResponse(
+                OrderResource::collection($supplierOrders),
+                $supplierOrders,
+            );
+        } catch (Exception $e) {
+            return $this->errorResponse(
+                'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
+                422
+            );
+        }
+    }
+
     // عرض قائمة الطلبات المسلمة للمورد والطبيب
     public function deliveredOrders()
     {
@@ -142,13 +160,34 @@ class OrderController extends Controller
         }
     }
 
+    public function updateItemStatus(Request $request, $orderItem_id)
+    {
+        try {
+            $orderItem = OrderItem::findOrFail($orderItem_id);
+
+            $validated = $request->validate([
+                'status' => 'required|in:confirmed,rejected',
+            ]);
+
+            $result = $this->orderService->updateItemStatus($validated, $orderItem);
+
+            return $this->successResponse($result['message']);
+        } catch (ModelNotFoundException $e) {
+            return $this->errorResponse('المنتج غير موجود.', 404);
+        } catch (Exception $e) {
+            return $this->errorResponse('حدث خطأ أثناء تحديث الحالة.', 422);
+        }
+    }
+
+
     // حذف منتج من الطلب
     public function deleteItem($orderItem_id)
     {
         try {
+            $user = request()->user();
             $deleteItem = OrderItem::findOrFail($orderItem_id);
 
-            $this->orderService->deleteItem($deleteItem);
+            $this->orderService->requestDeleteItem($user, $deleteItem);
             return $this->successResponse('تم حذف المنتج بنجاح');
         } catch (AuthorizationException $e) {
             return response()->json([
