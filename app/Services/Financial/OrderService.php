@@ -165,6 +165,17 @@ class OrderService
             $orderExpense->save();
         }
 
+        if ($data['status'] === 'confirmed' && $order === 'delete_pending') {
+            // حذف فعلي
+            $this->delete($order);
+            return 'تم حذف الطلب بنجاح';
+        }
+
+        if ($data['status'] === 'rejected' && $order === 'delete_pending') {
+            $order->update(['status' => 'delivered']);
+            return 'تم رفض طلب الحذف وإعادة الطلب إلى حالته السابقة';
+        }
+
         $order->notificationsCenters()->create([
             'user_id'  => $order->doctor_id, // 👈 إشعار للطبيب
             'title'    => 'تحديث حالة الطلب',
@@ -386,5 +397,38 @@ class OrderService
         });
 
         return $query->orderBy('created_at', 'desc')->paginate($perPage);
+    }
+
+    public function requestDelete($user, Order $order)
+    {
+        $order->update([
+            'status' => 'delete_pending',
+        ]);
+
+        // الحصول على المورد (من أول منتج في الطلب)
+        // $supplierId = optional($order->orderItems->first()->product)->user_id;
+
+        // // إشعار المورد
+        // $order->notificationsCenters()->create([
+        //     'user_id' => $supplierId,
+        //     'title'   => 'طلب حذف طلب',
+        //     'message' => "⚠️ قام الطبيب {$user->name} بطلب حذف الطلب رقم #{$order->id}.<br>⏳ الحالة: بانتظار تأكيدك.",
+        //     'type'    => 'order',
+        //     'color'   => 'red',
+        // ]);
+
+        // إرسال إشعار FCM إن رغبت
+        // $tokens = FcmToken::where('user_id', $supplierId)->pluck('fcm_token');
+        // $firebase = new FirebaseService();
+        // foreach ($tokens as $token) {
+        //     $firebase->send(
+        //         'طلب حذف طلب',
+        //         'قام الطبيب ' . $user->name . ' بطلب حذف الطلب رقم #' . $order->id . ' وهو بانتظار تأكيدك.',
+        //         $token,
+        //         '/orders/current-orders'
+        //     );
+        // }
+
+        return $order;
     }
 }

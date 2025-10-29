@@ -183,10 +183,11 @@ class OrderController extends Controller
     public function destroy($id)
     {
         try {
+            $user = request()->user();
             $order = Order::findOrFail($id);
             //$this->authorize('delete', $order);
 
-            $this->orderService->delete($order);
+            $this->orderService->requestDelete($user, $order);
             return $this->successResponse('تم حذف الطلب بنجاح');
         } catch (\InvalidArgumentException $e) {
             return $this->errorResponse($e->getMessage(), 400);
