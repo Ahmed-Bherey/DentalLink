@@ -47,7 +47,7 @@ class OrderResource extends JsonResource
             'checked'           => true,
             'desc'              => $desc,
             'is_package'        => $this->price != null,
-            'is_order'          => $this->status != 'delete_pending',
+            'is_order'          => $this->status == 'delete_pending',
             'created_at'        => $this->created_at->format('Y-m-d'),
 
             // المنتجات الخاصة بالطلب
