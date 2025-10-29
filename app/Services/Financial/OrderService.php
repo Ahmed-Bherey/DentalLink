@@ -39,11 +39,14 @@ class OrderService
     public function getRefundOrder($user, $perPage = 10)
     {
         $query = Order::query()
-            ->with(['doctor', 'orderItems.product'])
+            ->with(['doctor', 'orderItems' => function ($q) {
+                // فقط المنتجات المطلوب إرجاعها
+                $q->where('status', 'delete_pending')->with('product');
+            }])
             ->where('status', 'delete_pending')
             ->orderBy('created_at', 'desc');
 
-        // fillter by doctor
+        // فلترة حسب الطبيب
         if ($user->department?->code == 'doctor') {
             $query->where('doctor_id', $user->id);
         } else {
@@ -52,7 +55,7 @@ class OrderService
             });
         }
 
-        return $query->orderBy('created_at', 'desc')->paginate($perPage);
+        return $query->paginate($perPage);
     }
 
     // عرض قائمة الطلبات المسلمة للمورد والطبيب
