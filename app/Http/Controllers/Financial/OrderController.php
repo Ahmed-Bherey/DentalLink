@@ -51,7 +51,7 @@ class OrderController extends Controller
 
     public function refundOrder()
     {
-        //try {
+        try {
             $user = request()->user();
             $perPage = request()->get('per_page', 10);
             $supplierOrders = $this->orderService->getRefundOrder($user, $perPage);
@@ -59,12 +59,12 @@ class OrderController extends Controller
                 OrderResource::collection($supplierOrders),
                 $supplierOrders,
             );
-        // } catch (Exception $e) {
-        //     return $this->errorResponse(
-        //         'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
-        //         422
-        //     );
-        // }
+        } catch (Exception $e) {
+            return $this->errorResponse(
+                'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
+                422
+            );
+        }
     }
 
     // عرض قائمة الطلبات المسلمة للمورد والطبيب
@@ -135,7 +135,7 @@ class OrderController extends Controller
     // تحديث بيانات الطلب
     public function update(OrderUpdateRequest $request, $id)
     {
-        try {
+        //try {
             $order = Order::findOrFail($id);
 
             $this->authorize('update', $order);
@@ -150,14 +150,14 @@ class OrderController extends Controller
                 'تم تحديث الطلب بنجاح',
                 $order->id
             );
-        } catch (AuthorizationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'عفوا، ليس لديك صلاحية لتحديث هذا الطلب.',
-            ], 403);
-        } catch (Exception $e) {
-            return $this->errorResponse('حدث خطأ أثناء التحديث.', 422);
-        }
+        // } catch (AuthorizationException $e) {
+        //     return response()->json([
+        //         'success' => false,
+        //         'message' => 'عفوا، ليس لديك صلاحية لتحديث هذا الطلب.',
+        //     ], 403);
+        // } catch (Exception $e) {
+        //     return $this->errorResponse('حدث خطأ أثناء التحديث.', 422);
+        // }
     }
 
     public function updateItemStatus(Request $request, $orderItem_id)
