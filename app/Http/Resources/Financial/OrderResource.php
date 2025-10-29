@@ -43,6 +43,7 @@ class OrderResource extends JsonResource
         return [
             'id'                => $this->id,
             'name'              => $name,
+            'img'               => asset($this->doctor->img),
             'notes'             => $this->notes,
             'status'            => $this->status,
             'status_name'       => $this->status_name,

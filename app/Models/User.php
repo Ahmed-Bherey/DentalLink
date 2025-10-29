@@ -38,6 +38,7 @@ class User extends Authenticatable
         'address',
         'city_id',
         'password',
+        'img',
         'department_id',
         'active',
     ];
