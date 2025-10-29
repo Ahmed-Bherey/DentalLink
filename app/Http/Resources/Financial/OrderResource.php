@@ -26,14 +26,17 @@ class OrderResource extends JsonResource
 
         $desc = null;
         if ($this->status === 'delete_pending') {
-            // تحقق إذا كان هناك منتج محدد تمت محاولة إرجاعه
             $returnedProduct = $this->orderItems
-                ->firstWhere('return_status', 'pending'); // مثلًا، إذا عندك عمود return_status
+                ->firstWhere('return_status', 'pending');
+
+            $doctorName = $this->doctor?->name ?? 'غير معروف';
+            $orderId = $this->id;
 
             if ($returnedProduct) {
-                $desc = "قام الطبيب {$this->doctor->name} بطلب إرجاع المنتج {$returnedProduct->product?->name} من الطلب رقم {$this->id}";
+                $productName = $returnedProduct->product?->name ?? 'منتج غير محدد';
+                $desc = "قام الطبيب \"{$doctorName}\" بطلب إرجاع المنتج \"{$productName}\" من الطلب رقم ({$orderId}).";
             } else {
-                $desc = "قام الطبيب {$this->doctor->name} بطلب إرجاع الطلب رقم {$this->id}";
+                $desc = "قام الطبيب \"{$doctorName}\" بطلب إرجاع الطلب رقم ({$orderId}).";
             }
         }
 
