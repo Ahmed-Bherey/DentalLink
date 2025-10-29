@@ -169,9 +169,13 @@ class OrderService
     public function updateStatus($user, int $orderId, array $data)
     {
         $order = Order::findOrFail($orderId);
+        $oldStatus = $order->status; // 👈 حفظ الحالة القديمة قبل التغيير
+
+        // تحديث الحالة الجديدة
         $order->status = $data['status'];
         $order->save();
 
+        // 🟢 في حالة التوصيل (delivered)
         if ($data['status'] == 'delivered') {
             $total = 0;
 
@@ -199,19 +203,21 @@ class OrderService
             $orderExpense->save();
         }
 
-        if ($data['status'] === 'confirmed' && $order->status === 'delete_pending') {
-            // حذف فعلي
+        // 🟡 في حالة تأكيد الحذف (الموافقة على الإرجاع)
+        if ($data['status'] === 'confirmed' && $oldStatus === 'delete_pending') {
             $this->delete($order);
             return 'تم حذف الطلب بنجاح';
         }
 
-        if ($data['status'] === 'rejected' && $order->status === 'delete_pending') {
+        // 🔴 في حالة رفض الإرجاع (رفض الحذف)
+        if ($data['status'] === 'rejected' && $oldStatus === 'delete_pending') {
             $order->update(['status' => 'delivered']);
             return 'تم رفض طلب الحذف وإعادة الطلب إلى حالته السابقة';
         }
 
+        // 🔔 إرسال إشعار للطبيب
         $order->notificationsCenters()->create([
-            'user_id'  => $order->doctor_id, // 👈 إشعار للطبيب
+            'user_id'  => $order->doctor_id,
             'title'    => 'تحديث حالة الطلب',
             'message'  => "قام المورد {$user->name} بتحديث حالة الطلب رقم #{$order->id}<br>"
                 . "🔹 الحالة الجديدة: \"{$order->status_name}\"",
@@ -219,6 +225,7 @@ class OrderService
             'color'    => 'blue',
         ]);
 
+        // 🔥 إشعارات FCM (اختياري)
         // $tokens = FcmToken::where('user_id', $order->doctor_id)->pluck('fcm_token');
         // $firebase = new FirebaseService();
         // foreach ($tokens as $token) {
@@ -232,6 +239,7 @@ class OrderService
 
         return $order;
     }
+
 
     // تحديث بيانات الطلب
     public function update(Order $order, array $data)
