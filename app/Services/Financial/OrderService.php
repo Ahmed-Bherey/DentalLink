@@ -43,12 +43,7 @@ class OrderService
                 // فقط المنتجات المطلوب إرجاعها
                 $q->where('status', 'delete_pending')->with('product');
             }])
-            ->where(function ($q) {
-                $q->where('status', 'delete_pending')
-                    ->orWhereHas('orderItems', function ($q2) {
-                        $q2->where('status', 'delete_pending');
-                    });
-            })
+            ->where('status', 'delete_pending')
             ->orderBy('created_at', 'desc');
 
         // فلترة حسب الطبيب
