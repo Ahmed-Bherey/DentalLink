@@ -654,16 +654,16 @@ class OrderService
         ]);
 
         // إشعار FCM (اختياري)
-        // $tokens = FcmToken::where('user_id', $supplierId)->pluck('fcm_token');
-        // $firebase = new FirebaseService();
-        // foreach ($tokens as $token) {
-        //     $firebase->send(
-        //         'طلب حذف منتج من الطلب',
-        //         'قام الطبيب ' . $user->name . ' بطلب حذف المنتج ' . $orderItem->product->name . ' من الطلب رقم #' . $orderItem->order_id,
-        //         $token,
-        //         '/orders/current-orders'
-        //     );
-        // }
+        $tokens = FcmToken::where('user_id', $supplierId)->pluck('fcm_token');
+        $firebase = new FirebaseService();
+        foreach ($tokens as $token) {
+            $firebase->send(
+                'طلب حذف منتج من الطلب',
+                'قام الطبيب ' . $user->name . ' بطلب حذف المنتج ' . $orderItem->product->name . ' من الطلب رقم #' . $orderItem->order_id,
+                $token,
+                '/orders/current-orders'
+            );
+        }
 
         return $orderItem;
     }
