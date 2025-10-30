@@ -162,7 +162,7 @@ class OrderController extends Controller
 
     public function updateItemStatus(Request $request, $orderItem_id)
     {
-        try {
+        //try {
             $orderItem = OrderItem::findOrFail($orderItem_id);
 
             $validated = $request->validate([
@@ -172,11 +172,11 @@ class OrderController extends Controller
             $result = $this->orderService->updateItemStatus($validated, $orderItem);
 
             return $this->successResponse($result['message']);
-        } catch (ModelNotFoundException $e) {
-            return $this->errorResponse('المنتج غير موجود.', 404);
-        } catch (Exception $e) {
-            return $this->errorResponse('حدث خطأ أثناء تحديث الحالة.', 422);
-        }
+        // } catch (ModelNotFoundException $e) {
+        //     return $this->errorResponse('المنتج غير موجود.', 404);
+        // } catch (Exception $e) {
+        //     return $this->errorResponse('حدث خطأ أثناء تحديث الحالة.', 422);
+        // }
     }
 
 
