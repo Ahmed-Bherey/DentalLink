@@ -640,7 +640,7 @@ class OrderService
     {
         $orderItem->update([
             'status' => 'delete_pending',
-            'returned_quantity' => $quantity,
+            'returned_quantity' =>($orderItem->returned_quantity ?? 0) + $quantity,
         ]);
 
         $supplierId = $orderItem->product->user_id;
