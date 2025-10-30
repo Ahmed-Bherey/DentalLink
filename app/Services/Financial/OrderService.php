@@ -361,7 +361,7 @@ class OrderService
                 $supplierId = $orderItem->product->user_id;
 
                 // الكمية المطلوب حذفها (مرسلة من الطبيب وقت الطلب)
-                $quantityToReturn = $orderItem->return_quantity ?? 0;
+                $quantityToReturn = $orderItem->returned_quantity ?? 0;
 
                 if ($quantityToReturn <= 0 || $quantityToReturn > $orderItem->quantity) {
                     throw new \InvalidArgumentException("الكمية المطلوبة غير صالحة.");
@@ -394,7 +394,7 @@ class OrderService
 
                 // ✅ تحديث الحالة
                 $orderItem->status = 'confirmed';
-                $orderItem->return_quantity = null;
+                $orderItem->returned_quantity = null;
                 $orderItem->save();
 
                 // إرسال إشعار للطبيب بالموافقة
@@ -417,7 +417,7 @@ class OrderService
         if ($data['status'] === 'rejected' && $currentStatus === 'delete_pending') {
             $orderItem->update([
                 'status' => 'confirmed',
-                'return_quantity' => null,
+                'returned_quantity' => null,
             ]);
 
             // إشعار للطبيب بالرفض
