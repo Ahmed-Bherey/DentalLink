@@ -33,12 +33,13 @@ class OrderResource extends JsonResource
             $orderId = $this->id;
 
             if ($returnedProduct) {
-                $productName = $returnedProduct->product?->name ?? 'منتج غير محدد';
-                $returnedQty = (int) $returnedProduct->returned_quantity;
-                $desc = "قام الطبيب \"{$doctorName}\" بطلب إرجاع {$returnedQty} من المنتج \"{$productName}\" من الطلب رقم ({$orderId}).";
-            } else {
-                $desc = "قام الطبيب \"{$doctorName}\" بطلب إرجاع الطلب رقم ({$orderId}).";
-            }
+    $productName = $returnedProduct->product?->name ?? 'منتج غير محدد';
+    $returnedQty = (int) $returnedProduct->returned_quantity;
+
+    $desc = "قام الطبيب: {$doctorName} بطلب إرجاع عدد ({$returnedQty}) من المنتج: {$productName}، من الطلب رقم ({$orderId}).";
+} else {
+    $desc = "قام الطبيب: {$doctorName} بطلب إرجاع الطلب رقم ({$orderId}).";
+}
         }
 
         return [
