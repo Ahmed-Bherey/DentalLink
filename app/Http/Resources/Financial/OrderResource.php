@@ -27,7 +27,7 @@ class OrderResource extends JsonResource
         $desc = null;
         if ($this->status === 'delete_pending') {
             $returnedProduct = $this->orderItems
-                ->firstWhere('return_status', 'pending');
+                ->firstWhere('return_status', 'delete_pending');
 
             $doctorName = $this->doctor?->name ?? 'غير معروف';
             $orderId = $this->id;

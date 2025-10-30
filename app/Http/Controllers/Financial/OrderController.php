@@ -246,7 +246,7 @@ class OrderController extends Controller
             'quantity' => ['required', 'integer', 'min:1'],
         ]);
 
-        //try {
+        try {
             $orderItem = OrderItem::findOrFail($orderItemId);
 
             $this->orderService->requestDeleteItem(
@@ -256,15 +256,15 @@ class OrderController extends Controller
             );
 
             return $this->successResponseWithoutData("تم استرجاع المنتج بنجاح");
-        // } catch (ModelNotFoundException $e) {
-        //     return $this->errorResponse("العنصر غير موجود", 404);
-        // } catch (AuthorizationException $e) {
-        //     return $this->errorResponse("لا تملك صلاحية استرجاع هذا العنصر", 403);
-        // } catch (\InvalidArgumentException $e) {
-        //     return $this->errorResponse($e->getMessage(), 422);
-        // } catch (\Exception $e) {
-        //     return $this->errorResponse("حدث خطأ أثناء الاسترجاع", 500);
-        // }
+        } catch (ModelNotFoundException $e) {
+            return $this->errorResponse("العنصر غير موجود", 404);
+        } catch (AuthorizationException $e) {
+            return $this->errorResponse("لا تملك صلاحية استرجاع هذا العنصر", 403);
+        } catch (\InvalidArgumentException $e) {
+            return $this->errorResponse($e->getMessage(), 422);
+        } catch (\Exception $e) {
+            return $this->errorResponse("حدث خطأ أثناء الاسترجاع", 500);
+        }
     }
 
     public function exportDeliveredOrders()
