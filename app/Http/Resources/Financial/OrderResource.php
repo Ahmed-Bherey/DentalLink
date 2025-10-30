@@ -34,7 +34,8 @@ class OrderResource extends JsonResource
 
             if ($returnedProduct) {
                 $productName = $returnedProduct->product?->name ?? 'منتج غير محدد';
-                $desc = "قام الطبيب \"{$doctorName}\" بطلب إرجاع المنتج \"{$productName}\" من الطلب رقم ({$orderId}).";
+                $returnedQty = (int) $returnedProduct->returned_quantity;
+                $desc = "قام الطبيب \"{$doctorName}\" بطلب إرجاع {$returnedQty} من المنتج \"{$productName}\" من الطلب رقم ({$orderId}).";
             } else {
                 $desc = "قام الطبيب \"{$doctorName}\" بطلب إرجاع الطلب رقم ({$orderId}).";
             }
