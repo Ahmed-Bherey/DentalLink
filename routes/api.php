@@ -53,6 +53,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('show', 'showProfile');
         Route::post('update', 'updateProfile');
         Route::post('update-fcmToken', 'updateToken');
+        Route::get('delete-fcmToken', 'deleteToken');
     });
     // Category
     Route::controller(CategoryController::class)->prefix('category')->group(function () {

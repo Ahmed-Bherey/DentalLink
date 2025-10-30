@@ -113,42 +113,58 @@ class UserAuthController extends Controller
             // ✅ التحقق من صحة البيانات
             $validated = $request->validate([
                 'fcm_token' => 'required|string',
-                'device' => 'required|string|in:web,android,ios', // يمكنك تعديل القيم حسب مشروعك
+                'device'    => 'required|string|in:web,android,ios',
             ]);
 
-            // ✅ تحديد المستخدم الحالي (تأكد أن المسار محمي بـ auth:api أو ما شابه)
+            // ✅ المستخدم الحالي
             $user = auth()->user();
 
             if (!$user) {
                 return response()->json([
-                    'status' => false,
+                    'status'  => false,
                     'message' => 'User not authenticated.',
                 ], 401);
             }
 
-            // ✅ تحديث أو إنشاء السجل في جدول FcmTokens
-            FcmToken::updateOrCreate(
-                [
-                    'user_id' => $user->id,
-                ],
-                [
+            // ✅ تحقق أولاً إذا كان هذا الـ token موجود مسبقًا للمستخدم
+            $existingToken = FcmToken::where('user_id', $user->id)
+                ->where('fcm_token', $validated['fcm_token'])
+                ->first();
+
+            if (!$existingToken) {
+                // ➕ إنشاء سجل جديد للمستخدم
+                FcmToken::create([
+                    'user_id'   => $user->id,
                     'fcm_token' => $validated['fcm_token'],
-                    'device' => $validated['device'],
-                ]
-            );
+                    'device'    => $validated['device'],
+                ]);
+            }
 
             // ✅ الاستجابة الناجحة
             return response()->json([
-                'status' => true,
-                'message' => 'FCM token updated successfully.',
+                'status'  => true,
+                'message' => 'FCM token saved successfully.',
             ], 200);
         } catch (\Exception $e) {
             // ⚠️ التعامل مع أي خطأ غير متوقع
             return response()->json([
-                'status' => false,
+                'status'  => false,
                 'message' => 'Something went wrong.',
-                'error' => $e->getMessage(),
+                'error'   => $e->getMessage(),
             ], 500);
+        }
+    }
+
+    public function deleteToken(Request $request)
+    {
+
+        // ✅ المستخدم الحالي
+        $user = request()->user();
+
+        $fcmTokens = FcmToken::where('user_id', $user->id)->get();
+
+        foreach ($fcmTokens as $fcmToken) {
+            $fcmToken->delete();
         }
     }
 }
