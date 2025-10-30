@@ -247,10 +247,12 @@ class OrderController extends Controller
         ]);
 
         try {
+            $orderItem = OrderItem::findOrFail($orderItemId);
+
             $this->orderService->requestDeleteItem(
                 $request->quantity,
                 $request->user(),
-                $orderItemId,
+                $orderItem,
             );
 
             return $this->successResponseWithoutData("تم استرجاع المنتج بنجاح");
