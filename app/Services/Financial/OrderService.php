@@ -205,7 +205,7 @@ class OrderService
                         'quantity'  => $quantity,
                         'unit'      => $product->unit,
                         'category_id' => $product->category_id,
-                        'img'  => $product->img,
+                        'img'  => $product->getRawOriginal('img'),
                         'desc' => $product->desc,
                     ]);
                 }
