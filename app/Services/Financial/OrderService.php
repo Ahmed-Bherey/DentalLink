@@ -196,11 +196,6 @@ class OrderService
                 if ($doctorProduct) {
                     $doctorProduct->increment('quantity', $quantity);
                 } else {
-                    $imgPath = null;
-                    if (!empty($product->img)) {
-                        $img = $product->img;
-                        $imgPath = $img->store('products', 'public');
-                    }
 
                     // لو الطبيب ماعندهش المنتج أصلاً، نعمل نسخة بسيطة منه
                     Product::create([
@@ -210,7 +205,7 @@ class OrderService
                         'quantity'  => $quantity,
                         'unit'      => $product->unit,
                         'category_id' => $product->category_id,
-                        'img'  => $imgPath,
+                        'img'  => $product->img,
                         'desc' => $product->desc,
                     ]);
                 }
