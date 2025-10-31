@@ -192,14 +192,14 @@ class InventoryController extends Controller
     }
 
     public function fcmtokende(Request $request)
-{
-    $user = $request->user();
-    // جلب كل توكنات FCM للمستخدم
-    $fcmTokens = FcmToken::where('user_id', $user->id)->get();
+    {
+        $user = $request->user();
+        // جلب كل توكنات FCM للمستخدم
+        $fcmTokens = FcmToken::where('user_id', $user->id)->get();
 
-    // حذف كل توكن من الـ FCM
-    foreach ($fcmTokens as $token) {
-        $token->delete();
+        // حذف كل توكن من الـ FCM
+        foreach ($fcmTokens as $token) {
+            $token->delete();
+        }
     }
-}
 }

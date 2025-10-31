@@ -179,6 +179,36 @@ class OrderService
         if ($data['status'] == 'delivered') {
             $total = 0;
 
+            foreach ($order->orderItems as $item) {
+                $product = $item->product;
+                $quantity = $item->quantity;
+
+                // 🔹 تقليل الكمية من المورد
+                if ($product && $product->user_id == $user->id) {
+                    $product->decrement('quantity', $quantity);
+                }
+
+                // 🔹 زيادة الكمية عند الطبيب
+                $doctorProduct = Product::where('user_id', $order->doctor_id)
+                    ->where('name', $product->name)
+                    ->first();
+
+                if ($doctorProduct) {
+                    $doctorProduct->increment('quantity', $quantity);
+                } else {
+                    // لو الطبيب ماعندهش المنتج أصلاً، نعمل نسخة بسيطة منه
+                    Product::create([
+                        'user_id'   => $order->doctor_id,
+                        'name'      => $product->name,
+                        'price'     => $product->price,
+                        'quantity'  => $quantity,
+                        'unit'      => $product->unit,
+                        'category_id' => $product->category_id,
+                        'description' => $product->description,
+                    ]);
+                }
+            }
+
             if (is_null($order->price)) {
                 // طلب عادي: مجموع المنتجات
                 $total = $order->orderItems->sum(function ($item) {
@@ -205,8 +235,28 @@ class OrderService
 
         // 🟡 في حالة تأكيد الحذف (الموافقة على الإرجاع)
         if ($data['status'] === 'confirmed' && $oldStatus === 'delete_pending') {
+
+            foreach ($order->orderItems as $item) {
+                $product = $item->product;
+                $returnedQty = $item->returned_quantity ?? 0;
+                if ($returnedQty <= 0) continue;
+
+                // 🔹 تقليل الكمية من الطبيب
+                $doctorProduct = Product::where('user_id', $order->doctor_id)
+                    ->where('name', $product->name)
+                    ->first();
+                if ($doctorProduct) {
+                    $doctorProduct->decrement('quantity', $returnedQty);
+                }
+
+                // 🔹 زيادة الكمية عند المورد
+                if ($product) {
+                    $product->increment('quantity', $returnedQty);
+                }
+            }
+
             $this->delete($order);
-            return 'تم حذف الطلب بنجاح';
+            return 'تم حذف الطلب بنجاح وتم تحديث المخزون';
         }
 
         // 🔴 في حالة رفض الإرجاع (رفض الحذف)
@@ -369,6 +419,21 @@ class OrderService
 
                 $unitPrice = $orderItem->product->price;
                 $refundValue = $unitPrice * $quantityToReturn;
+
+                /** ✅ تحديث كميات المنتج **/
+                $product = $orderItem->product;
+
+                // 🔹 تقليل الكمية من الطبيب (إن وجدت)
+                $doctorProduct = Product::where('user_id', $doctorId)
+                    ->where('name', $product->name)
+                    ->first();
+
+                if ($doctorProduct) {
+                    $doctorProduct->decrement('quantity', $quantityToReturn);
+                }
+
+                // 🔹 زيادة الكمية عند المورد
+                $product->increment('quantity', $quantityToReturn);
 
                 // ✅ خصم الكمية من الطلب
                 $orderItem->quantity -= $quantityToReturn;
@@ -640,7 +705,7 @@ class OrderService
     {
         $orderItem->update([
             'status' => 'delete_pending',
-            'returned_quantity' =>($orderItem->returned_quantity ?? 0) + $quantity,
+            'returned_quantity' => ($orderItem->returned_quantity ?? 0) + $quantity,
         ]);
 
         $supplierId = $orderItem->product->user_id;
