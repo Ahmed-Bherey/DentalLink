@@ -27,10 +27,10 @@ class OrderService
         if ($user->department?->code == 'doctor') {
             $query->where('status', '!=', 'delivered')->where('doctor_id', $user->id);
         } else {
-            $query->whereHas('orderItems.product', function ($q) use ($user) {
-                $q->whereNotIn('status', ['delivered', 'rejected'])
-                    ->where('user_id', $user->id);
-            });
+            $query->whereNotIn('status', ['delivered', 'rejected'])
+                ->whereHas('orderItems.product', function ($q) use ($user) {
+                    $q->where('user_id', $user->id);
+                });
         }
 
         return $query->orderBy('created_at', 'desc')->paginate($perPage);
