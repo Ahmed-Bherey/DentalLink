@@ -554,7 +554,7 @@ class OrderService
                 $refundValue = $unitPrice * $item->quantity;
 
                 // 1️⃣ إعادة الكمية إلى المخزون
-                $product->increment('quantity', $item->quantity);
+                //$product->increment('quantity', $item->quantity);
 
                 // 2️⃣ تحديث حساب المورد (OrderExpense)
                 $expense = OrderExpense::where('doctor_id', $doctorId)
