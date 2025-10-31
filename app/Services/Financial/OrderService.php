@@ -425,7 +425,7 @@ class OrderService
                 /** ✅ تحديث كميات المنتج **/
                 $product = $orderItem->product;
 
-                // 🔹 تقليل الكمية من الطبيب (إن وجدت)
+                // 🔹 تقليل الكمية من الطبيب
                 $doctorProduct = Product::where('user_id', $doctorId)
                     ->where('name', $product->name)
                     ->first();
@@ -436,17 +436,6 @@ class OrderService
 
                 // 🔹 زيادة الكمية عند المورد
                 $product->increment('quantity', $quantityToReturn);
-
-                // ✅ خصم الكمية من الطلب
-                $orderItem->quantity -= $quantityToReturn;
-                if ($orderItem->quantity <= 0) {
-                    $orderItem->delete();
-                } else {
-                    $orderItem->save();
-                }
-
-                // ✅ إعادة الكمية إلى المخزون
-                $orderItem->product->increment('quantity', $quantityToReturn);
 
                 // ✅ تحديث حساب المورد في OrderExpense
                 $expense = OrderExpense::where('doctor_id', $doctorId)
