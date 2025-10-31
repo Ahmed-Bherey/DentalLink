@@ -35,7 +35,7 @@ class SupplierResource extends JsonResource
             'address'   => $this->address,
             'paid'      => (int)$orderExpense?->paid ?? 0,
             'total'     => (int)$orderExpense?->total ?? 0,
-            'remaining' => (int)$orderExpense?->paid - $orderExpense?->total /*(int)$orderExpense?->remaining*/ ?? 0,
+            'remaining' => (int)$orderExpense?->total - $orderExpense?->paid /*(int)$orderExpense?->remaining*/ ?? 0,
             'schedules' => $this->mapSchedules($this->schedules),
         ];
     }
