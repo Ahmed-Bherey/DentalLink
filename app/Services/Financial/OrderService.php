@@ -240,8 +240,8 @@ class OrderService
 
             foreach ($order->orderItems as $item) {
                 $product = $item->product;
-                $returnedQty = $item->returned_quantity ?? 0;
-                if ($returnedQty <= 0) continue;
+                // $returnedQty = $item->returned_quantity ?? 0;
+                // if ($returnedQty <= 0) continue;
 
                 // 🔹 تقليل الكمية من الطبيب
                 $doctorProduct = Product::where('user_id', $order->doctor_id)
