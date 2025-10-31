@@ -240,13 +240,13 @@ class OrderService
 
             foreach ($order->orderItems as $item) {
                 $product = $item->product;
-                $returnedQty = $item->quantity ?? 0;
-                if ($returnedQty <= 0) continue;
+                $returnedQty = $item->quantity; // ✅ إرجاع كامل الكمية
 
                 // 🔹 تقليل الكمية من الطبيب
                 $doctorProduct = Product::where('user_id', $order->doctor_id)
                     ->where('name', $product->name)
                     ->first();
+
                 if ($doctorProduct) {
                     $doctorProduct->decrement('quantity', $returnedQty);
                 }
