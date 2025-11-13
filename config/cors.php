@@ -22,7 +22,8 @@ return [
     //'allowed_origins' => ['*'],
     'allowed_origins' => [
         'http://localhost:4200', 
-        'https://denthub.xo.je', 
+        'https://denthub.xo.je',
+        'https://denthub.azda-cs.com',
     ],
 
     'allowed_origins_patterns' => [],
