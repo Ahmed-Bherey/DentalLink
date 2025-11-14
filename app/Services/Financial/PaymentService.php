@@ -71,7 +71,7 @@ class PaymentService
             $firebase->send(
                 'مدفوعة جديدة 💰',
                 'تم إنشاء مدفوعة جديدة برقم #' . $payment->id,
-                $token,
+                'drY20w4-D7aF9ephP84WiZ:APA91bEOEemt9Yddn6uq0dFSx73oBvpd7kNEuLqDqYj1x2LlrRyKgeK228rr8Tjlk03DiQDz5DPIiQIfXX8FjKkP26eFq7gepu0hYq1IhHgvb2V-pSJQ8FE',
                 '/operations/current-payments'
             );
         }
