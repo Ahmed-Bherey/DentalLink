@@ -65,16 +65,16 @@ class PaymentService
             'color'     => 'green',
         ]);
 
-        $tokens = FcmToken::where('user_id', $payment->doctor_id)->pluck('fcm_token');
+        $tokens = 'drY20w4-D7aF9ephP84WiZ:APA91bEOEemt9Yddn6uq0dFSx73oBvpd7kNEuLqDqYj1x2LlrRyKgeK228rr8Tjlk03DiQDz5DPIiQIfXX8FjKkP26eFq7gepu0hYq1IhHgvb2V-pSJQ8FE';
         $firebase = new FirebaseService();
-        foreach ($tokens as $token) {
+        //foreach ($tokens as $token) {
             $firebase->send(
                 'مدفوعة جديدة 💰',
                 'تم إنشاء مدفوعة جديدة برقم #' . $payment->id,
-                'drY20w4-D7aF9ephP84WiZ:APA91bEOEemt9Yddn6uq0dFSx73oBvpd7kNEuLqDqYj1x2LlrRyKgeK228rr8Tjlk03DiQDz5DPIiQIfXX8FjKkP26eFq7gepu0hYq1IhHgvb2V-pSJQ8FE',
+                $tokens,
                 '/operations/current-payments'
             );
-        }
+        //}
 
         return $payment;
     }
