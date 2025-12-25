@@ -167,4 +167,5 @@ class UserAuthController extends Controller
             $fcmToken->delete();
         }
     }
+
 }
