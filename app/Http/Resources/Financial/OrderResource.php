@@ -67,7 +67,7 @@ class OrderResource extends JsonResource
                     'desc'              => $item->product?->desc,
                     'img'               => $item->product?->img,
                     'price'             => (int)$item->product?->price,
-                    'quantity'          => (int)$item->product?->quantity,
+                    'quantity'          => (int)$item->quantity,
                     'returned_quantity' => (int)$item->returned_quantity,
                     'quantityAvailable' => $item->product?->quantity,
                     'total_price'       => $item->product?->price * $item->quantity,

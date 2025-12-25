@@ -434,6 +434,7 @@ class OrderService
 
                 if ($doctorProduct) {
                     $doctorProduct->decrement('quantity', $quantityToReturn);
+                    $orderItem->decrement('quantity', $quantityToReturn);
                 }
 
                 // 🔹 زيادة الكمية عند المورد
