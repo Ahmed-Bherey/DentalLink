@@ -19,13 +19,12 @@ class ProductSeeder extends Seeder
 
         // تصنيف
         $categoryMap = [
-            'Dental Instruments'   => 9,
-            'Dental Materials'     => 10,
-            'Orthodontics'         => 11,
-            'Endodontics'          => 12,
-            'Infection Control'    => 13,
-            'Dental Equipment'     => 14,
-            'Infection Control'    => 15,
+            'Dental Instruments'   => 2,
+            'Dental Materials'     => 3,
+            'Orthodontics'         => 4,
+            'Endodontics'          => 5,
+            'Infection Control'    => 6,
+            'Dental Equipment'     => 7,
         ];
         // أسماء منتجات حقيقية (25 منتج)
         $products = [
