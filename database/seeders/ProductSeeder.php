@@ -18,8 +18,14 @@ class ProductSeeder extends Seeder
         })->first()->id ?? 1;
 
         // تصنيف
-        $categoryId = Category::first()->id ?? 1;
-
+        $categoryMap = [
+            'Dental Instruments'   => 1,
+            'Dental Materials'     => 2,
+            'Orthodontics'         => 3,
+            'Endodontics'          => 4,
+            'Infection Control'    => 5,
+            'Dental Equipment'     => 6,
+        ];
         // أسماء منتجات حقيقية (25 منتج)
         $products = [
             'Dental Composite Resin',
@@ -52,7 +58,7 @@ class ProductSeeder extends Seeder
         foreach ($products as $name) {
             Product::create([
                 'user_id'     => $supplierId,
-                'category_id' => $categoryId,
+                'category_id' => array_rand($categoryMap),
                 'name'        => $name,
                 'desc'        => 'High quality dental product for professional use.',
                 'price'       => rand(100, 2500),
