@@ -88,8 +88,10 @@ class OrderService
         }
 
         // 🔹 فلترة إضافية حسب الطبيب (إذا أراد المورد مشاهدة طلبات طبيب محدد)
-        if ($doctorId = request()->get('doctor_id')) {
-            $query->where('doctor_id', $doctorId);
+        if ($doctorName = request()->get('search')) {
+            $query->whereHas('doctor', function ($q) use ($doctorName) {
+                $q->where('name', 'like', '%' . $doctorName . '%');
+            });
         }
 
         // 🔹 فلترة إضافية حسب الطبيب (إذا أراد المورد مشاهدة طلبات طبيب محدد)
