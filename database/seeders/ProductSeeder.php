@@ -13,7 +13,9 @@ class ProductSeeder extends Seeder
     public function run()
     {
         // مورد (Supplier) – عدّل لو عندك طريقة مختلفة
-        $supplierId = User::where('role', 'supplier')->first()->id ?? 1;
+        $supplierId = User::whereHas('department', function ($q) {
+            $q->where('code', 'supplier');
+        })->first()->id ?? 1;
 
         // تصنيف
         $categoryId = Category::first()->id ?? 1;
