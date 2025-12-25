@@ -58,12 +58,12 @@ class ProductSeeder extends Seeder
         foreach ($products as $name) {
             Product::create([
                 'user_id'     => $supplierId,
-                'category_id' => array_rand($categoryMap),
+                'category_id' => $categoryMap[array_rand($categoryMap)],
                 'name'        => $name,
                 'desc'        => 'High quality dental product for professional use.',
                 'price'       => rand(100, 2500),
                 'quantity'    => rand(20, 150),
-                'img'         => 'products/default.png', // صورة ثابتة
+                'img'         => 'products/default.png',
             ]);
         }
     }
