@@ -199,13 +199,13 @@ class InventoryController extends Controller
             'file' => 'required|mimes:xlsx,xls',
         ]);
 
-        Excel::import(
+        Excel::queueImport(
             new ProductsImport($request->user()->id),
             $request->file('file')
         );
 
         return response()->json([
-            'message' => 'تم استيراد المنتجات بنجاح'
+            'message' => 'تم بدء استيراد المنتجات في الخلفية'
         ]);
     }
 

@@ -5,11 +5,17 @@ namespace App\Imports;
 use App\Models\Store\Product;
 use App\Models\General\Category;
 use Illuminate\Support\Collection;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 
-class ProductsImport implements ToCollection, WithHeadingRow
+class ProductsImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChunkReading
 {
+    public function chunkSize(): int
+    {
+        return 500;
+    }
     protected int $userId;
 
     public function __construct(int $userId)
@@ -39,7 +45,7 @@ class ProductsImport implements ToCollection, WithHeadingRow
                     'user_id' => $this->userId,
                     'name'    => $categoryName,
                     'desc'    => 'Imported from Excel',
-                    'img'     => 'categories/default.png',
+                    'img'     => 'products/default.jpg',
                 ]);
             }
 
@@ -61,7 +67,6 @@ class ProductsImport implements ToCollection, WithHeadingRow
 
             if ($product) {
                 // 🔄 تحديث كامل (مش زيادة)
-                $data['img'] = 'products/default.jpg';
                 $product->update($data);
             } else {
                 // ➕ إنشاء جديد
