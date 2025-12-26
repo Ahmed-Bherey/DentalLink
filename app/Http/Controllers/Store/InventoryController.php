@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Store;
 
 use Exception;
 use App\Models\User;
+use App\Models\FcmToken;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use App\Exports\ProductsExport;
+use App\Imports\ProductsImport;
 use App\Http\Controllers\Controller;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Services\Store\InventoryService;
@@ -14,7 +16,6 @@ use App\Http\Requests\Store\InventoryRequest;
 use App\Http\Requests\Store\MultiDeleteRequest;
 use App\Http\Resources\Store\InventoryResource;
 use App\Http\Requests\Store\InventoryUpdateRequest;
-use App\Models\FcmToken;
 
 class InventoryController extends Controller
 {
@@ -189,6 +190,23 @@ class InventoryController extends Controller
                 422
             );
         }
+    }
+
+    // استيراد ملف اكسيل لرفع منتجات
+    public function importProducts(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls',
+        ]);
+
+        Excel::import(
+            new ProductsImport($request->user()->id),
+            $request->file('file')
+        );
+
+        return response()->json([
+            'message' => 'تم استيراد المنتجات بنجاح'
+        ]);
     }
 
     public function fcmtokende(Request $request)

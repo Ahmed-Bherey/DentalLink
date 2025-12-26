@@ -88,6 +88,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('all', 'allSuppliersProducts');
         Route::get('search', 'search');
         Route::get('export', 'exportExcel');
+        Route::post('import', 'importProducts');
     });
     // Orders
     Route::controller(OrderController::class)->prefix('order')->group(function () {
