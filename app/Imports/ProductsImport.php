@@ -7,13 +7,12 @@ use App\Models\General\Category;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Illuminate\Support\Str;
 
 class ProductsImport implements ToCollection, WithHeadingRow
 {
-    protected $userId;
+    protected int $userId;
 
-    public function __construct($userId)
+    public function __construct(int $userId)
     {
         $this->userId = $userId;
     }
@@ -22,41 +21,52 @@ class ProductsImport implements ToCollection, WithHeadingRow
     {
         foreach ($rows as $row) {
 
-            // تجاهل الصفوف الفاضية
-            if (empty($row['name'])) {
+            // تجاهل الصفوف غير الصالحة
+            if (empty($row['name']) || empty($row['category'])) {
                 continue;
             }
 
-            // تنظيف اسم التصنيف
-            $categoryName = trim($row['category'] ?? '');
+            $productName  = trim($row['name']);
+            $categoryName = trim($row['category']);
 
-            if (!$categoryName) {
-                continue;
-            }
+            /** =============================
+             *  📂 التصنيف
+             *  ============================= */
+            $category = Category::where('name', 'LIKE', "%{$categoryName}%")->first();
 
-            // 🔍 البحث عن تصنيف باسم مشابه
-            $category = Category::where('name', 'LIKE', '%' . $categoryName . '%')->first();
-
-            // ➕ لو مش موجود → نعمل Create
             if (!$category) {
                 $category = Category::create([
-                    'user_id' => $this->userId, // أو null لو التصنيفات عامة
+                    'user_id' => $this->userId,
                     'name'    => $categoryName,
                     'desc'    => 'Imported from Excel',
                     'img'     => 'categories/default.png',
                 ]);
             }
 
-            // إنشاء المنتج
-            Product::create([
+            /** =============================
+             *  🦷 المنتج
+             *  ============================= */
+            $product = Product::where('user_id', $this->userId)
+                ->where('name', 'LIKE', "%{$productName}%")
+                ->first();
+
+            $data = [
                 'user_id'     => $this->userId,
                 'category_id' => $category->id,
-                'name'        => trim($row['name']),
+                'name'        => $productName,
                 'desc'        => $row['desc'] ?? null,
                 'price'       => (float) ($row['price'] ?? 0),
                 'quantity'    => (int) ($row['quantity'] ?? 0),
-                'img'         => 'products/default.png',
-            ]);
+            ];
+
+            if ($product) {
+                // 🔄 تحديث كامل (مش زيادة)
+                $product->update($data);
+            } else {
+                // ➕ إنشاء جديد
+                $data['img'] = 'products/default.png';
+                Product::create($data);
+            }
         }
     }
 }
