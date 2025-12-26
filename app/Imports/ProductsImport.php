@@ -61,6 +61,7 @@ class ProductsImport implements ToCollection, WithHeadingRow
 
             if ($product) {
                 // 🔄 تحديث كامل (مش زيادة)
+                $data['img'] = 'products/default.jpg';
                 $product->update($data);
             } else {
                 // ➕ إنشاء جديد
