@@ -64,7 +64,7 @@ class ProductsImport implements ToCollection, WithHeadingRow
                 $product->update($data);
             } else {
                 // ➕ إنشاء جديد
-                $data['img'] = 'products/default.png';
+                $data['img'] = 'products/default.jpg';
                 Product::create($data);
             }
         }
