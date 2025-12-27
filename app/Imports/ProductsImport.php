@@ -2,9 +2,11 @@
 
 namespace App\Imports;
 
+use Illuminate\Support\Str;
 use App\Models\Store\Product;
 use App\Models\General\Category;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
@@ -70,9 +72,21 @@ class ProductsImport implements ToCollection, WithHeadingRow, ShouldQueue, WithC
                 $product->update($data);
             } else {
                 // ➕ إنشاء جديد
-                $data['img'] = 'products/default.jpg';
+                $data['img'] = $this->uploadDefaultImage();
                 Product::create($data);
             }
         }
+    }
+
+    private function uploadDefaultImage(): string
+    {
+        $newImagePath = 'products/' . Str::uuid() . '.jpg';
+
+        Storage::disk('public')->copy(
+            'products/default.jpg',
+            $newImagePath
+        );
+
+        return $newImagePath;
     }
 }
