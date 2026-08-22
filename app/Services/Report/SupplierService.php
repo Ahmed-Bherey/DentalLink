@@ -33,9 +33,24 @@ class SupplierService
         return $query->paginate($perPage);
     }
 
+    /**
+     * Security (Stage 1): the target must actually be a doctor.
+     *
+     * This previously did a bare User::findOrFail($id), so any authenticated caller
+     * could read ANY user record — other suppliers, and any future privileged
+     * account — by walking ids. The resource exposes name, phone, phone2, address
+     * and city, so it was a full directory disclosure.
+     *
+     * Narrowing further (to counterparties the caller has actually transacted with)
+     * needs the role/relationship model from Stage 3/4; this containment stops
+     * arbitrary cross-role enumeration now.
+     */
     public function getDoctorDetails($supplier, $doctorId)
     {
-        $doctor = User::findOrFail($doctorId);
+        $doctor = User::whereHas('department', function ($q) {
+            $q->where('code', 'doctor');
+        })->findOrFail($doctorId);
+
         return [
             'doctor'   => $doctor,
         ];

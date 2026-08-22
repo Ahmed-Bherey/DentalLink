@@ -16,3 +16,15 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+
+# SECURITY: credential material must never be committed.
+# Six Firebase service-account private keys were previously committed under
+# public/firebase/ and remain in this repository's history. These patterns stop
+# that class of file from being reintroduced.
+/public/firebase
+/storage/app/firebase
+*-firebase-adminsdk-*.json
+*service-account*.json
+*.pem
+*.p12
+*.pfx

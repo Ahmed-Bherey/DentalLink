@@ -70,7 +70,7 @@ class CartController extends Controller
     public function update(CartUpdateRequest $request, $id)
     {
         try {
-            $cart = $this->cartService->update($id, $request->validated());
+            $cart = $this->cartService->update($request->user(), $id, $request->validated());
 
             return $this->successResponseWithId(
                 'تم تحديث المنتج في السلة بنجاح',
@@ -95,7 +95,7 @@ class CartController extends Controller
     public function destroy($id)
     {
         try {
-            $this->cartService->destroy($id);
+            $this->cartService->destroy(request()->user(), $id);
 
             return $this->successResponse('تم حذف المنتج من السلة بنجاح');
         } catch (ModelNotFoundException $e) {

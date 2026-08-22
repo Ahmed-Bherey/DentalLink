@@ -108,4 +108,21 @@ return [
 
     'password_timeout' => 10800,
 
+    /*
+    |--------------------------------------------------------------------------
+    | Self-Assignable Department Codes
+    |--------------------------------------------------------------------------
+    |
+    | Departments double as the application's role model. Public registration
+    | lets the caller pick a department_id, so the set of codes a self-registering
+    | user may claim MUST be restricted to non-privileged ones. Any department
+    | whose code is not listed here can only be assigned out-of-band.
+    |
+    | This is an interim Stage 1 containment control. A first-class role model
+    | replaces it in Stage 3.
+    |
+    */
+
+    'self_assignable_department_codes' => ['doctor', 'supplier'],
+
 ];

@@ -27,9 +27,11 @@ class CartService
     }
 
     // تحديث عنصر في السلة
-    public function update($id, $data)
+    // Security (Stage 1): owner-scoped. Previously any authenticated user could
+    // change the quantity on another user's cart line by id.
+    public function update($doctor, $id, $data)
     {
-        $cart = Cart::findOrfail($id);
+        $cart = Cart::where('doctor_id', $doctor->id)->findOrFail($id);
 
         $cart->update([
             'quantity'   => $data['quantity'],
@@ -39,9 +41,11 @@ class CartService
     }
 
     // حذف عنصر من السلة
-    public function destroy($id)
+    // Security (Stage 1): owner-scoped. Previously any authenticated user could
+    // delete another user's cart line by id.
+    public function destroy($doctor, $id)
     {
-        $cart = Cart::findOrfail($id);
+        $cart = Cart::where('doctor_id', $doctor->id)->findOrFail($id);
 
         $cart->delete();
 

@@ -39,8 +39,14 @@ class User extends Authenticatable
         'city_id',
         'password',
         'img',
+        // NOTE: `department_id` is the de-facto role. It stays fillable because
+        // AuthService::register() must set it, but the value is constrained
+        // server-side by RegisterRequest against config('auth.self_assignable_department_codes').
+        // It is NOT accepted by any profile-update path.
         'department_id',
-        'active',
+        // `active` is deliberately NOT fillable. It gates account activation and
+        // must only be changed by privileged, out-of-band operations. With a
+        // non-empty $fillable, omitting it here blocks every mass-assignment path.
     ];
 
     /**

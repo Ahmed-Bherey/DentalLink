@@ -1,0 +1,2510 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DentalLink — خارطة طريق التنفيذ</title>
+<style>
+/* ============================================================
+   المتغيرات (Design Tokens)
+   ============================================================ */
+:root{
+  --ground:#F7F8F8; --surface:#FFFFFF; --surface-2:#F0F2F1; --surface-3:#E8ECEB;
+  --ink:#16211F; --ink-2:#3A4846; --muted:#5A6866; --line:#DCE1E0;
+  --accent:#0E6E62; --accent-2:#0B564C; --accent-soft:#E2EFEC;
+
+  --critical:#B3261E; --critical-bg:#FBEAE8;
+  --high:#A85D00;     --high-bg:#FBF1E2;
+  --medium:#3F6493;   --medium-bg:#E9EFF6;
+  --low:#6A7876;      --low-bg:#EDF0EF;
+
+  --done:#1F6B4A;     --done-bg:#E4F0EA;
+  --progress:#A85D00; --progress-bg:#FBF1E2;
+  --blocked:#B3261E;  --blocked-bg:#FBEAE8;
+  --notstarted:#6A7876; --notstarted-bg:#EDF0EF;
+
+  --ar:"Segoe UI","Noto Sans Arabic","Dubai","Geeza Pro",Tahoma,"Arial",sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+
+  --sidebar-w:272px;
+  --radius:6px;
+  --shadow:0 1px 2px rgba(22,33,31,.05), 0 2px 8px rgba(22,33,31,.04);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#0F1514; --surface:#161F1E; --surface-2:#1D2827; --surface-3:#243130;
+    --ink:#E5EBE9; --ink-2:#C2CECB; --muted:#8FA09D; --line:#2A3735;
+    --accent:#57B8A9; --accent-2:#7FCFC2; --accent-soft:#17302C;
+    --critical:#F08279; --critical-bg:#2E1614;
+    --high:#DCA149;     --high-bg:#2C2113;
+    --medium:#8FB2DC;   --medium-bg:#16232F;
+    --low:#8FA09D;      --low-bg:#1D2827;
+    --done:#6FC49A;     --done-bg:#13291F;
+    --progress:#DCA149; --progress-bg:#2C2113;
+    --blocked:#F08279;  --blocked-bg:#2E1614;
+    --notstarted:#8FA09D; --notstarted-bg:#1D2827;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 2px 8px rgba(0,0,0,.2);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0F1514; --surface:#161F1E; --surface-2:#1D2827; --surface-3:#243130;
+  --ink:#E5EBE9; --ink-2:#C2CECB; --muted:#8FA09D; --line:#2A3735;
+  --accent:#57B8A9; --accent-2:#7FCFC2; --accent-soft:#17302C;
+  --critical:#F08279; --critical-bg:#2E1614;
+  --high:#DCA149;     --high-bg:#2C2113;
+  --medium:#8FB2DC;   --medium-bg:#16232F;
+  --low:#8FA09D;      --low-bg:#1D2827;
+  --done:#6FC49A;     --done-bg:#13291F;
+  --progress:#DCA149; --progress-bg:#2C2113;
+  --blocked:#F08279;  --blocked-bg:#2E1614;
+  --notstarted:#8FA09D; --notstarted-bg:#1D2827;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 2px 8px rgba(0,0,0,.2);
+}
+
+/* ============================================================
+   الأساسيات
+   ============================================================ */
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:var(--ar); font-size:15.5px; line-height:1.75;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{margin:0; line-height:1.4; text-wrap:balance; font-weight:700}
+h1{font-size:1.55rem} h2{font-size:1.2rem} h3{font-size:1.03rem} h4{font-size:.9rem}
+p{margin:0}
+ul,ol{margin:0; padding-right:1.2em; padding-left:0}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:3px}
+
+/* عزل ثنائي الاتجاه: المسارات وأسماء الجداول والأكواد تبقى LTR داخل نص عربي */
+code, bdi.ltr{
+  direction:ltr; unicode-bidi:isolate; text-align:left;
+  font-family:var(--mono); font-size:.82em;
+}
+code{background:var(--surface-2); padding:.12em .38em; border-radius:3px; color:var(--ink-2); word-break:break-word}
+bdi.ltr{display:inline-block}
+
+.eyebrow{font-family:var(--mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); direction:ltr; unicode-bidi:isolate}
+.eyebrow.ar{font-family:var(--ar); letter-spacing:0; text-transform:none; font-size:.75rem; direction:rtl}
+
+/* ============================================================
+   التخطيط
+   ============================================================ */
+.layout{display:flex; min-height:100vh}
+
+.sidebar{
+  width:var(--sidebar-w); flex:0 0 var(--sidebar-w);
+  background:var(--surface); border-left:1px solid var(--line);
+  position:sticky; top:0; height:100vh; overflow-y:auto;
+  padding:22px 0; display:flex; flex-direction:column; gap:6px;
+}
+.sidebar .brand{padding:0 20px 16px; border-bottom:1px solid var(--line); margin-bottom:10px}
+.sidebar .brand strong{display:block; font-size:1rem}
+.sidebar nav{display:flex; flex-direction:column; padding:0 10px}
+.sidebar nav a{
+  display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:5px;
+  text-decoration:none; color:var(--ink-2); font-size:.86rem; line-height:1.5;
+}
+.sidebar nav a:hover{background:var(--surface-2); color:var(--ink)}
+.sidebar nav a .pnum{
+  font-family:var(--mono); font-size:.7rem; color:var(--muted);
+  min-width:22px; text-align:center; flex:0 0 22px; direction:ltr;
+}
+.sidebar nav a .dot{width:7px; height:7px; border-radius:50%; flex:0 0 7px; background:var(--notstarted)}
+.sidebar nav a .dot.done{background:var(--done)}
+.sidebar nav a .dot.progress{background:var(--progress)}
+.sidebar nav a .dot.blocked{background:var(--blocked)}
+.sidebar .navgroup{padding:14px 20px 5px; font-size:.7rem; letter-spacing:.02em; color:var(--muted); font-weight:600}
+
+.main{flex:1; min-width:0; display:flex; flex-direction:column}
+
+.topbar{
+  position:sticky; top:0; z-index:50;
+  background:color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line);
+  padding:12px 28px; display:flex; flex-wrap:wrap; gap:12px; align-items:center;
+}
+.topbar .tb-title{font-weight:700; font-size:.95rem; margin-left:auto}
+.topbar .mini-bar{width:150px; height:6px; background:var(--surface-3); border-radius:4px; overflow:hidden}
+.topbar .mini-bar i{display:block; height:100%; background:var(--accent); border-radius:4px; transition:width .25s ease}
+.topbar .mini-pct{font-family:var(--mono); font-size:.8rem; font-variant-numeric:tabular-nums; min-width:44px; text-align:center; direction:ltr}
+
+.content{padding:28px; display:flex; flex-direction:column; gap:34px; max-width:1180px; width:100%}
+
+section{scroll-margin-top:74px; display:flex; flex-direction:column; gap:16px}
+.sec-head{display:flex; flex-direction:column; gap:6px}
+.sec-head h2{display:flex; align-items:baseline; gap:10px}
+.sec-head .snum{font-family:var(--mono); font-size:.74rem; color:var(--accent); direction:ltr}
+.sec-head p{color:var(--ink-2); font-size:.93rem; max-width:80ch}
+
+/* ============================================================
+   الترويسة
+   ============================================================ */
+.hero{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  padding:26px 28px; display:flex; flex-direction:column; gap:12px; box-shadow:var(--shadow);
+}
+.hero h1{font-size:1.8rem}
+.hero .sub{color:var(--ink-2); max-width:82ch; font-size:.98rem}
+.hero .facts{display:flex; flex-wrap:wrap; gap:8px 24px; font-size:.78rem; color:var(--muted); padding-top:8px; border-top:1px solid var(--line); margin-top:4px}
+
+/* ============================================================
+   بطاقات الإحصاء
+   ============================================================ */
+.stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(162px,1fr)); gap:12px}
+.stat{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  padding:15px 17px; display:flex; flex-direction:column; gap:3px; box-shadow:var(--shadow);
+}
+.stat .lbl{font-size:.76rem; color:var(--muted)}
+.stat .val{font-size:1.7rem; font-weight:700; font-variant-numeric:tabular-nums; line-height:1.2; direction:ltr; text-align:right}
+.stat.accent .val{color:var(--accent)}
+.stat.done .val{color:var(--done)}
+.stat.prog .val{color:var(--progress)}
+.stat.block .val{color:var(--blocked)}
+
+.overall{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  padding:18px 20px; display:flex; flex-direction:column; gap:10px; box-shadow:var(--shadow);
+}
+.overall .row{display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap}
+.overall .pct{font-size:1.5rem; font-weight:700; font-variant-numeric:tabular-nums; color:var(--accent); direction:ltr}
+.bar-lg{height:10px; background:var(--surface-3); border-radius:6px; overflow:hidden}
+.bar-lg i{display:block; height:100%; background:linear-gradient(to left,var(--accent),var(--accent-2)); border-radius:6px; transition:width .3s ease}
+.overall .note{font-size:.83rem; color:var(--muted)}
+
+/* ============================================================
+   الشارات
+   ============================================================ */
+.badge{
+  display:inline-flex; align-items:center; gap:5px;
+  font-size:.72rem; padding:3px 9px; border-radius:4px; white-space:nowrap;
+  font-weight:600; line-height:1.7;
+}
+.badge::before{content:""; width:6px; height:6px; border-radius:50%; background:currentColor; flex:0 0 6px}
+.badge.nodot::before{display:none}
+.pri-critical{background:var(--critical-bg); color:var(--critical)}
+.pri-high{background:var(--high-bg); color:var(--high)}
+.pri-medium{background:var(--medium-bg); color:var(--medium)}
+.pri-low{background:var(--low-bg); color:var(--low)}
+.st-notstarted{background:var(--notstarted-bg); color:var(--notstarted)}
+.st-progress{background:var(--progress-bg); color:var(--progress)}
+.st-done{background:var(--done-bg); color:var(--done)}
+.st-blocked{background:var(--blocked-bg); color:var(--blocked)}
+.badge.meta{background:var(--surface-2); color:var(--muted); font-weight:500}
+.badge.meta::before{display:none}
+
+/* ============================================================
+   الجداول
+   ============================================================ */
+.tablewrap{overflow-x:auto; border:1px solid var(--line); border-radius:var(--radius); background:var(--surface); box-shadow:var(--shadow)}
+table{border-collapse:collapse; width:100%; font-size:.86rem; min-width:840px}
+caption{text-align:right; padding:10px 14px; caption-side:top; color:var(--muted); font-size:.78rem}
+th{
+  text-align:right; font-size:.75rem; color:var(--muted); font-weight:600;
+  padding:11px 14px; border-bottom:1px solid var(--line);
+  background:var(--surface-2); white-space:nowrap;
+}
+td{padding:11px 14px; border-bottom:1px solid var(--line); vertical-align:top; color:var(--ink-2)}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:var(--surface-2)}
+td.pnum{font-family:var(--mono); color:var(--accent); font-weight:600; text-align:center; width:44px; direction:ltr}
+td.pname{color:var(--ink); font-weight:600}
+td.pname a{color:inherit; text-decoration:none}
+td.pname a:hover{color:var(--accent)}
+.mini-prog{display:flex; align-items:center; gap:8px; min-width:112px}
+.mini-prog .track{flex:1; height:5px; background:var(--surface-3); border-radius:3px; overflow:hidden}
+.mini-prog .track i{display:block; height:100%; background:var(--accent); border-radius:3px; transition:width .25s}
+.mini-prog span{font-family:var(--mono); font-size:.73rem; font-variant-numeric:tabular-nums; color:var(--muted); min-width:36px; text-align:center; direction:ltr}
+
+/* ============================================================
+   أدوات التحكم
+   ============================================================ */
+.controls{
+  display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  padding:12px 14px; box-shadow:var(--shadow);
+}
+.search{
+  flex:1; min-width:200px; padding:8px 12px; font:inherit; font-size:.88rem;
+  background:var(--ground); color:var(--ink);
+  border:1px solid var(--line); border-radius:5px; font-family:var(--ar);
+}
+.search::placeholder{color:var(--muted)}
+.filters{display:flex; flex-wrap:wrap; gap:6px}
+.fbtn{
+  font-size:.78rem; font-family:var(--ar); font-weight:600;
+  padding:6px 13px; border-radius:5px; border:1px solid var(--line);
+  background:var(--ground); color:var(--ink-2); cursor:pointer; line-height:1.6;
+}
+.fbtn:hover{border-color:var(--accent); color:var(--accent)}
+.fbtn[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:#fff}
+:root[data-theme="dark"] .fbtn[aria-pressed="true"]{color:#0F1514}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .fbtn[aria-pressed="true"]{color:#0F1514}
+}
+.abtn{
+  font-size:.82rem; padding:7px 13px; border-radius:5px; border:1px solid var(--line);
+  background:var(--ground); color:var(--ink-2); cursor:pointer; font-family:var(--ar);
+}
+.abtn:hover{border-color:var(--accent); color:var(--accent)}
+.abtn.danger:hover{border-color:var(--critical); color:var(--critical)}
+
+/* ============================================================
+   بطاقات المراحل
+   ============================================================ */
+.phases{display:flex; flex-direction:column; gap:14px}
+.phase{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  box-shadow:var(--shadow); overflow:hidden; scroll-margin-top:74px;
+}
+.phase[data-status="blocked"]{border-right:3px solid var(--blocked)}
+.phase[data-status="done"]{border-right:3px solid var(--done)}
+.phase[data-status="progress"]{border-right:3px solid var(--progress)}
+.phase[hidden]{display:none}
+
+.phase-head{
+  width:100%; text-align:right; background:none; border:0; font:inherit; color:inherit;
+  font-family:var(--ar);
+  padding:16px 20px; cursor:pointer; display:flex; flex-wrap:wrap; gap:10px 14px; align-items:center;
+}
+.phase-head:hover{background:var(--surface-2)}
+.phase-head .caret{
+  font-size:.75rem; color:var(--muted);
+  transition:transform .18s ease; flex:0 0 auto; line-height:1; display:inline-block;
+}
+.phase[data-open="true"] .phase-head .caret{transform:rotate(-90deg)}
+.phase-head .idx{
+  font-family:var(--mono); font-size:.72rem; color:var(--accent); font-weight:600;
+  background:var(--accent-soft); padding:3px 9px; border-radius:4px; white-space:nowrap; direction:ltr;
+}
+.phase-head .ptitle{font-weight:700; font-size:1rem; flex:1 1 240px; min-width:0}
+.phase-head .hmeta{display:flex; flex-wrap:wrap; gap:6px; align-items:center}
+.phase-head .hprog{display:flex; align-items:center; gap:8px; min-width:120px}
+.phase-head .hprog .track{width:70px; height:5px; background:var(--surface-3); border-radius:3px; overflow:hidden}
+.phase-head .hprog .track i{display:block; height:100%; background:var(--accent); border-radius:3px; transition:width .25s}
+.phase-head .hprog span{font-family:var(--mono); font-size:.73rem; color:var(--muted); font-variant-numeric:tabular-nums; direction:ltr}
+
+.phase-body{padding:0 20px 20px; display:flex; flex-direction:column; gap:18px; border-top:1px solid var(--line)}
+.phase[data-open="false"] .phase-body{display:none}
+
+.block{display:flex; flex-direction:column; gap:8px}
+.block > h4{font-size:.79rem; color:var(--muted); font-weight:700}
+.block p, .block li{font-size:.91rem; color:var(--ink-2)}
+.block.goal p{font-size:.97rem; color:var(--ink)}
+
+.grid2{display:grid; grid-template-columns:repeat(auto-fit,minmax(276px,1fr)); gap:14px}
+.impact{background:var(--surface-2); border-radius:5px; padding:12px 15px; display:flex; flex-direction:column; gap:5px}
+.impact h4{font-size:.76rem; color:var(--muted); font-weight:700}
+.impact p{font-size:.87rem; color:var(--ink-2)}
+
+/* المهام */
+.tasks{display:flex; flex-direction:column; gap:8px; list-style:none; padding:0}
+.task{
+  border:1px solid var(--line); border-radius:5px; background:var(--ground);
+  padding:12px 14px; display:flex; gap:11px; align-items:flex-start;
+}
+.task[hidden]{display:none}
+.task input[type=checkbox]{
+  width:17px; height:17px; margin:4px 0 0; flex:0 0 17px; cursor:pointer; accent-color:var(--accent);
+}
+.task .tbody{display:flex; flex-direction:column; gap:7px; min-width:0; flex:1}
+.task .tlabel{font-size:.92rem; font-weight:600; color:var(--ink); cursor:pointer; line-height:1.6}
+.task.checked .tlabel{text-decoration:line-through; color:var(--muted); text-decoration-thickness:1px}
+.task.checked{background:var(--done-bg); border-color:color-mix(in srgb, var(--done) 30%, var(--line))}
+.task .where{font-size:.78rem; color:var(--muted); line-height:1.7}
+.task .where b{color:var(--ink-2); font-weight:700; font-size:.8rem}
+.task ul.subs{margin:0; padding-right:1.1em; display:flex; flex-direction:column; gap:4px}
+.task ul.subs li{font-size:.85rem; color:var(--ink-2); line-height:1.65}
+.task ul.subs li::marker{color:var(--muted)}
+
+/* القوائم */
+.checklist,.risklist,.testlist{list-style:none; padding:0; display:flex; flex-direction:column; gap:6px}
+.checklist li,.risklist li,.testlist li{display:flex; gap:9px; font-size:.89rem; color:var(--ink-2); line-height:1.65}
+.checklist li::before{content:"✓"; color:var(--done); font-weight:700; flex:0 0 auto; font-size:.85rem; line-height:1.8}
+.risklist li::before{content:"!"; color:var(--critical); font-weight:700; font-family:var(--mono); flex:0 0 10px; line-height:1.7}
+.testlist li::before{content:"◂"; color:var(--accent); flex:0 0 auto; line-height:1.6}
+
+.phase-actions{display:flex; flex-wrap:wrap; gap:8px; padding-top:6px; border-top:1px solid var(--line)}
+
+.milestone{
+  background:var(--accent-soft); border:1px solid color-mix(in srgb, var(--accent) 30%, var(--line));
+  border-radius:5px; padding:12px 15px; font-size:.9rem; color:var(--ink-2);
+  display:flex; gap:10px; align-items:flex-start;
+}
+.milestone strong{color:var(--accent)}
+
+/* ============================================================
+   التسلسل والخط الزمني
+   ============================================================ */
+.seqwrap{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  padding:20px; overflow-x:auto; box-shadow:var(--shadow);
+}
+pre.seq{
+  font-family:var(--mono); font-size:.74rem; line-height:1.65; margin:0;
+  color:var(--ink-2); white-space:pre; min-width:660px;
+  direction:ltr; text-align:left; unicode-bidi:isolate;
+}
+.seqnote{font-size:.83rem; color:var(--muted); margin-top:10px}
+
+.tl{display:flex; flex-direction:column}
+.tl-row{
+  display:grid; grid-template-columns:54px 1fr; gap:14px;
+  border-right:2px solid var(--line); margin-right:24px; padding:0 22px 16px 0; position:relative;
+}
+.tl-row:last-child{padding-bottom:0; border-right-color:transparent}
+.tl-row::before{
+  content:""; position:absolute; right:-7px; top:5px; width:12px; height:12px;
+  border-radius:50%; background:var(--notstarted); border:2px solid var(--surface);
+}
+.tl-row[data-status="done"]::before{background:var(--done)}
+.tl-row[data-status="progress"]::before{background:var(--progress)}
+.tl-row[data-status="blocked"]::before{background:var(--blocked)}
+.tl-row .tl-idx{font-family:var(--mono); font-size:.75rem; color:var(--accent); font-weight:600; padding-top:2px; direction:ltr; text-align:center}
+.tl-row .tl-body{display:flex; flex-direction:column; gap:6px; min-width:0}
+.tl-row .tl-title{font-weight:700; font-size:.94rem}
+.tl-row .tl-meta{display:flex; flex-wrap:wrap; gap:6px; align-items:center}
+.tl-row .tl-dep{font-size:.84rem; color:var(--muted)}
+
+/* ============================================================
+   بطاقات المخاطر
+   ============================================================ */
+.cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(268px,1fr)); gap:12px}
+.card{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  padding:15px 17px; display:flex; flex-direction:column; gap:6px; box-shadow:var(--shadow);
+}
+.card.crit{border-right:3px solid var(--critical)}
+.card.warn{border-right:3px solid var(--high)}
+.card.info{border-right:3px solid var(--accent)}
+.card h4{font-size:.92rem}
+.card p{font-size:.87rem; color:var(--ink-2)}
+
+/* ============================================================
+   قائمة الإنجاز النهائية
+   ============================================================ */
+.final{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  padding:20px; display:flex; flex-direction:column; gap:9px; box-shadow:var(--shadow);
+}
+.ftask{display:flex; gap:11px; align-items:flex-start; padding:11px 13px; border:1px solid var(--line); border-radius:5px; background:var(--ground)}
+.ftask.checked{background:var(--done-bg); border-color:color-mix(in srgb, var(--done) 30%, var(--line))}
+.ftask input{width:17px; height:17px; margin:4px 0 0; flex:0 0 17px; cursor:pointer; accent-color:var(--accent)}
+.ftask label{font-size:.91rem; cursor:pointer; line-height:1.6}
+.ftask.checked label{text-decoration:line-through; color:var(--muted); text-decoration-thickness:1px}
+.ftask label small{display:block; color:var(--muted); font-size:.81rem; text-decoration:none; margin-top:3px}
+
+footer.pagefoot{padding:22px 28px 40px; color:var(--muted); font-size:.83rem; border-top:1px solid var(--line); margin-top:10px; display:flex; flex-direction:column; gap:6px}
+
+.empty{padding:26px; text-align:center; color:var(--muted); font-size:.92rem; border:1px dashed var(--line); border-radius:var(--radius)}
+.empty[hidden]{display:none}
+
+/* ============================================================
+   الاستجابة
+   ============================================================ */
+.menu-toggle{display:none}
+@media (max-width:960px){
+  .sidebar{
+    position:fixed; right:0; top:0; z-index:100; transform:translateX(100%);
+    transition:transform .22s ease; box-shadow:0 0 40px rgba(0,0,0,.25);
+  }
+  .sidebar.open{transform:translateX(0)}
+  .menu-toggle{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:34px; height:34px; border:1px solid var(--line); border-radius:5px;
+    background:var(--ground); color:var(--ink); cursor:pointer; font-size:1rem; line-height:1;
+  }
+  .content{padding:20px 16px}
+  .topbar{padding:11px 16px}
+}
+@media (max-width:620px){
+  body{font-size:15px}
+  .hero{padding:20px} .hero h1{font-size:1.4rem}
+  .phase-head{padding:14px} .phase-body{padding:0 14px 16px}
+  .topbar .mini-bar{width:76px} .topbar .tb-title{font-size:.85rem}
+  .stat .val{font-size:1.45rem}
+}
+@media print{
+  .sidebar,.topbar,.controls,.phase-actions{display:none !important}
+  .phase-body{display:flex !important}
+  .phase{break-inside:avoid; box-shadow:none}
+  body{background:#fff}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none !important; animation:none !important}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <aside class="sidebar" id="sidebar" aria-label="تنقل خارطة الطريق">
+    <div class="brand">
+      <span class="eyebrow">DentalLink / DentHub</span>
+      <strong>خارطة طريق التنفيذ</strong>
+    </div>
+    <nav id="sideNav">
+      <a href="#overview"><span class="pnum">—</span><span>نظرة عامة</span></a>
+      <a href="#sequence"><span class="pnum">—</span><span>التسلسل والاعتماديات</span></a>
+      <div class="navgroup">المراحل</div>
+      <div class="navgroup" id="navAfterPhases">مراجع</div>
+      <a href="#risks"><span class="pnum">—</span><span>المخاطر والقرارات</span></a>
+      <a href="#final"><span class="pnum">—</span><span>قائمة الإنجاز النهائية</span></a>
+    </nav>
+  </aside>
+
+  <div class="main">
+
+    <header class="topbar">
+      <button class="menu-toggle" id="menuToggle" aria-label="إظهار القائمة" aria-expanded="false">☰</button>
+      <span class="tb-title">DentalLink — خارطة طريق التنفيذ</span>
+      <div class="mini-bar" role="progressbar" aria-label="نسبة الإنجاز الإجمالية" aria-valuemin="0" aria-valuemax="100" id="topBarProgress" aria-valuenow="0">
+        <i id="topBarFill" style="width:0%"></i>
+      </div>
+      <span class="mini-pct" id="topBarPct">0%</span>
+      <button class="abtn" id="themeToggle" type="button" aria-label="تبديل السمة">◐</button>
+    </header>
+
+    <div class="content">
+
+      <div class="hero">
+        <span class="eyebrow ar">نظام إدارة عيادات الأسنان</span>
+        <h1>خارطة طريق التنفيذ — المراحل 0 إلى 12</h1>
+        <p class="sub">
+          خطة التنفيذ الكاملة والمرتّبة لبناء نظام احترافي لإدارة عيادات الأسنان فوق المشروع الحالي المبني على Laravel.
+          أُعيد تركيبها من «مخطط المنتج والمعمارية» (القسم 25) ومقاطعتها مع تدقيق المنصة، بحيث تشير كل مهمة إلى الملف
+          أو الجدول أو الخدمة أو نقطة النهاية التي تمسّها تحديداً.
+        </p>
+        <p class="sub">
+          <strong>الحالة عند كتابة هذه الوثيقة: 0% — لم تبدأ أي مرحلة.</strong>
+          لا يوجد أي جدول من جداول قاعدة البيانات الأربعة والعشرين الحالية يمثّل بيانات سريرية، لذا فإن المراحل من 1 إلى 12
+          هي بناء من الصفر داخل مستودع قائم. النسبة القابلة لإعادة الاستخدام من الكود الحالي تقارب 15%
+          (أنماط الطبقات، مركز الإشعارات، بنية Sanctum، أساسيات <bdi class="ltr">DoctorSchedule</bdi>، وآلية استيراد Excel).
+        </p>
+        <div class="facts">
+          <span>13 مرحلة</span>
+          <span>نقطة إطلاق النسخة الأولى: نهاية المرحلة 6</span>
+          <span>المدد الزمنية: غير محددة</span>
+          <span>الجهد معبَّر عنه بدرجة التعقيد</span>
+        </div>
+      </div>
+
+      <section id="progress" aria-label="لوحة التقدم">
+        <div class="stats">
+          <div class="stat accent"><span class="lbl">إجمالي المراحل</span><span class="val" id="statPhases">13</span></div>
+          <div class="stat done"><span class="lbl">مراحل مكتملة</span><span class="val" id="statPhasesDone">0</span></div>
+          <div class="stat prog"><span class="lbl">مراحل قيد التنفيذ</span><span class="val" id="statPhasesProg">0</span></div>
+          <div class="stat block"><span class="lbl">مراحل متوقفة</span><span class="val" id="statPhasesBlocked">0</span></div>
+          <div class="stat"><span class="lbl">إجمالي المهام</span><span class="val" id="statTasks">0</span></div>
+          <div class="stat done"><span class="lbl">مهام منجزة</span><span class="val" id="statTasksDone">0</span></div>
+        </div>
+        <div class="overall">
+          <div class="row">
+            <div>
+              <div class="eyebrow ar" style="font-weight:600">نسبة الإنجاز الإجمالية</div>
+              <div class="note">تُحسب من المهام المؤشَّرة عبر المراحل الثلاث عشرة، وتُحفظ في هذا المتصفح عبر localStorage.</div>
+            </div>
+            <span class="pct" id="overallPct">0%</span>
+          </div>
+          <div class="bar-lg" role="progressbar" aria-label="إنجاز المهام" aria-valuemin="0" aria-valuemax="100" id="overallBar" aria-valuenow="0">
+            <i id="overallFill" style="width:0%"></i>
+          </div>
+        </div>
+      </section>
+
+      <section id="overview">
+        <div class="sec-head">
+          <h2><span class="snum">01</span>نظرة عامة على خارطة الطريق</h2>
+          <p>
+            المراحل الثلاث عشرة في جدول واحد. الأولوية مُشتقّة من تصنيفات المخطط الأصلي:
+            <em>حاجز</em> ← حرجة، <em>ضروري</em> ← عالية، <em>ينبغي</em> ← متوسطة، <em>ممكن</em> ← منخفضة.
+            المخطط الأصلي حدّد درجات التعقيد ولم يحدّد أي مدد زمنية، لذا يعرض عمود الجهد درجة التعقيد
+            وتُسجَّل المدة على أنها <em>غير محددة</em> في كل المراحل.
+          </p>
+        </div>
+        <div class="tablewrap">
+          <table>
+            <caption>ملخص المراحل</caption>
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">المرحلة</th>
+                <th scope="col">الهدف</th>
+                <th scope="col">الأولوية</th>
+                <th scope="col">الجهد (التعقيد)</th>
+                <th scope="col">المدة</th>
+                <th scope="col">الاعتماديات</th>
+                <th scope="col">الحالة</th>
+                <th scope="col">التقدم</th>
+              </tr>
+            </thead>
+            <tbody id="overviewBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="sequence">
+        <div class="sec-head">
+          <h2><span class="snum">02</span>مخطط الاعتماديات والتسلسل</h2>
+          <p>
+            المراحل من 0 إلى 6 متسلسلة بصرامة وتنتهي عند نقطة إطلاق النسخة الأولى. بعد المرحلة 6 يمكن تشغيل ثلاثة
+            مسارات (7 و8 و9) بالتوازي لأن اعتمادياتها جميعاً مستوفاة بانتهاء المرحلة 6. المرحلة 10 تحتاج بيانات
+            تنتجها المراحل 3 إلى 8، والمرحلة 11 تعتمد على كل ما سبق، والمرحلة 12 تحتاج إضافةً إلى ذلك 12 شهراً
+            أو أكثر من بيانات التشغيل الفعلي لميزاتها التنبؤية.
+          </p>
+        </div>
+
+        <div class="seqwrap">
+<pre class="seq">SEQUENTIAL CORE — MVP TRACK
+┌────────┐   ┌────────┐   ┌────────┐   ┌────────┐   ┌────────┐   ┌────────┐   ┌────────┐
+│ PHASE 0│──▶│ PHASE 1│──▶│ PHASE 2│──▶│ PHASE 3│──▶│ PHASE 5│──▶│ PHASE 6│──▶│  MVP   │
+│Security│   │ Clinic │   │Patients│   │Schedule│   │Treatmt │   │Billing │   │ LAUNCH │
+│Tenancy │   │Foundatn│   │        │   │        │   │Planning│   │ Ledger │   │        │
+└────────┘   └────────┘   └────────┘   └───┬────┘   └────▲───┘   └────────┘   └───┬────┘
+                               │           │             │                        │
+                               │      ┌────▼───┐         │                        │
+                               └─────▶│ PHASE 4│─────────┘                        │
+                                      │ Dental │                                  │
+                                      │ Chart  │  (P4 depends on P2 only, so it   │
+                                      └────────┘   may overlap with P3)           │
+                                                                                  │
+POST-MVP — THESE THREE MAY RUN IN PARALLEL ◀──────────────────────────────────────┘
+   ┌──────────────┐      ┌──────────────┐      ┌──────────────┐
+   │   PHASE 7    │      │   PHASE 8    │      │   PHASE 9    │
+   │ Imaging, Rx, │      │  Inventory,  │      │Portal, Comms,│
+   │ Consent, Lab │      │ Equip, Steri │      │Recall,Booking│
+   │  needs P4,P5 │      │  needs P5,P6 │      │needs P3,P5,P6│
+   └──────┬───────┘      └──────┬───────┘      └──────┬───────┘
+          └─────────────────────┼─────────────────────┘
+                                ▼
+                        ┌──────────────┐
+                        │   PHASE 10   │  Analytics — needs data from P3–P8
+                        │  Dashboards  │
+                        └──────┬───────┘
+                               ▼
+                        ┌──────────────┐
+                        │   PHASE 11   │  Multi-branch & enterprise
+                        └──────┬───────┘
+                               ▼
+                        ┌──────────────┐
+                        │   PHASE 12   │  AI & automation
+                        └──────────────┘  + 12 months of production data
+
+HARD GATE:  Nothing clinical may begin before PHASE 0 completes.
+</pre>
+          <p class="seqnote">
+            المخطط أعلاه بالإنجليزية ومن اليسار إلى اليمين عن قصد: الرسم معتمد على محاذاة المحارف أحادية العرض،
+            والخط العربي يكسر هذه المحاذاة. الشرح الكامل بالعربية موجود أعلاه وفي الخط الزمني أدناه.
+          </p>
+        </div>
+
+        <div class="sec-head" style="padding-top:8px">
+          <h3>الخط الزمني</h3>
+          <p>
+            لم يقترح المخطط الأصلي أي تواريخ أو مدد زمنية، لذا لا تظهر هنا. هذا عرض للتسلسل والاعتماديات ودرجة
+            التعقيد فقط — لم تُختلق أي تواريخ.
+          </p>
+        </div>
+        <div class="tl" id="timeline"></div>
+      </section>
+
+      <section id="phases">
+        <div class="sec-head">
+          <h2><span class="snum">03</span>تفاصيل المراحل</h2>
+          <p>
+            كل مرحلة تحمل هدفها ومبرّرها ومهامها مع الملفات والجداول التي تمسّها بالتحديد، والاعتماديات والمخرجات
+            المتوقعة ومعايير القبول والمخاطر والاختبارات اللاحقة. أشِّر على المهمة لتسجيل التقدم؛ تُحفظ الحالة في هذا المتصفح.
+          </p>
+        </div>
+
+        <div class="controls">
+          <input type="search" class="search" id="searchBox" placeholder="ابحث في المراحل والمهام والملفات…" aria-label="بحث">
+          <div class="filters" role="group" aria-label="تصفية حسب الحالة">
+            <button class="fbtn" data-filter="all" aria-pressed="true" type="button">الكل</button>
+            <button class="fbtn" data-filter="notstarted" aria-pressed="false" type="button">لم تبدأ</button>
+            <button class="fbtn" data-filter="progress" aria-pressed="false" type="button">قيد التنفيذ</button>
+            <button class="fbtn" data-filter="done" aria-pressed="false" type="button">مكتملة</button>
+            <button class="fbtn" data-filter="blocked" aria-pressed="false" type="button">متوقفة</button>
+          </div>
+          <button class="abtn" id="expandAll" type="button">توسيع الكل</button>
+          <button class="abtn" id="collapseAll" type="button">طي الكل</button>
+          <button class="abtn danger" id="resetAll" type="button">تصفير التقدم</button>
+        </div>
+
+        <div class="phases" id="phaseList"></div>
+        <div class="empty" id="emptyState" hidden>لا توجد مراحل مطابقة للتصفية أو البحث الحالي.</div>
+      </section>
+
+      <section id="risks">
+        <div class="sec-head">
+          <h2><span class="snum">04</span>المخاطر والافتراضات والقرارات</h2>
+          <p>مجمّعة من سجل المخاطر في المخطط الأصلي ومن القرارات المعمارية التي صُنّفت بأنها مكلفة التراجع.</p>
+        </div>
+
+        <h3>قرارات معمارية غير قابلة للتراجع — يجب حسمها قبل المرحلة 1</h3>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th scope="col">القرار</th><th scope="col">التوصية</th><th scope="col">كلفة التأجيل</th></tr></thead>
+            <tbody>
+              <tr><td>ملكية المريض</td><td>مملوك للمنشأة (Organization) مع سجل زيارات لكل فرع</td><td><span class="badge pri-critical nodot">كارثية</span> — دمج السجلات السريرية المكرّرة بين الفروع خطِر وغالباً مستحيل</td></tr>
+              <tr><td>عدم قابلية السجل السريري للتعديل</td><td>الإضافة فقط (append-only) مع الإحلال (supersede) في كل ما هو سريري</td><td><span class="badge pri-critical nodot">كارثية</span> — التاريخ المطلوب لم يُلتقط أصلاً ولا يمكن استرجاعه</td></tr>
+              <tr><td>الدفتر المالي</td><td>قيد مزدوج، إضافة فقط، أرقام decimal</td><td><span class="badge pri-critical nodot">كارثية</span> — لا يمكن إعادة بناء الأرصدة التاريخية</td></tr>
+              <tr><td>نموذج تعدد المنشآت</td><td>منشأة ← فرع، مستويان فقط</td><td><span class="badge pri-critical nodot">عالية جداً</span> — كل استعلام وكل سياسة صلاحيات تحمل هذا الشكل</td></tr>
+              <tr><td>التعامل مع المناطق الزمنية</td><td>التخزين بـ UTC مع المنطقة الزمنية للفرع</td><td><span class="badge pri-critical nodot">عالية جداً</span> — كل طابع زمني مخزَّن يصبح ملتبساً</td></tr>
+              <tr><td>محرك قاعدة البيانات</td><td>PostgreSQL لدعم قيود الاستبعاد على النطاقات</td><td><span class="badge pri-critical nodot">عالية جداً</span> — بسيط الآن، ويصبح ترحيل بيانات كامل لاحقاً</td></tr>
+              <tr><td>معمارية الصلاحيات</td><td>صلاحيات لكل عضوية، مقيّدة بالفرع، بثلاثة مستويات</td><td><span class="badge pri-high nodot">عالية</span> — إضافة التفويض لاحقاً على بيانات المرضى هو مصدر الاختراقات</td></tr>
+              <tr><td>تخزين الملفات والصور</td><td>تخزين كائنات خاص مع روابط موقّعة منذ اليوم الأول</td><td><span class="badge pri-high nodot">عالية</span> — ترحيل صور المرضى مع إثبات عدم التسريب مؤلم</td></tr>
+              <tr><td>ترقيم الأسنان</td><td>FDI كمرجع أساسي، مع عرض Universal وPalmer</td><td><span class="badge pri-high nodot">عالية</span> — إعادة ترقيم مخطط سريري حدث يمسّ سلامة المريض</td></tr>
+              <tr><td>معمارية الخط الزمني</td><td>مجرى أحداث مُجسَّد (materialized)</td><td><span class="badge pri-high nodot">عالية</span> — إعادة ملء الأحداث من عشرة جداول عملية ناقصة</td></tr>
+              <tr><td>دقة قبول خطة العلاج</td><td>على مستوى البند، ملتقطة لحظة العرض على المريض</td><td><span class="badge pri-high nodot">عالية</span> — مؤشر نسبة القبول لا يمكن إعادة بنائه بأثر رجعي</td></tr>
+              <tr><td>مخزون العيادة مقابل مخزون المورّد</td><td>جدولان منفصلان يشيران كلاهما إلى منتج عالمي</td><td><span class="badge pri-high nodot">عالية</span> — يجب ألا ينتقل خلل المطابقة بالاسم إلى المخزون السريري</td></tr>
+              <tr><td>نطاق سجل التدقيق</td><td>القراءات كما الكتابات، مع تقسيم (partitioning) منذ البداية</td><td><span class="badge pri-high nodot">متوسطة-عالية</span> — لا يمكن إثبات عدم حدوث اطّلاع بأثر رجعي</td></tr>
+              <tr><td>إصدارات الـ API</td><td><bdi class="ltr">/api/v1</bdi> من أول نقطة نهاية سريرية</td><td><span class="badge pri-medium nodot">متوسطة</span> — لكنها تكسر تطبيقات الجوال المثبَّتة عندما تظهر</td></tr>
+              <tr><td>بنية البحث</td><td>محرك بحث مخصّص مع محلّل عربي</td><td><span class="badge pri-medium nodot">متوسطة</span> — قابل للاستبدال خلف واجهة</td></tr>
+              <tr><td>موقع تخزين البيانات</td><td>إمكانية تثبيت النشر في منطقة جغرافية محددة</td><td><span class="badge pri-high nodot">متوسطة-عالية</span> — يحدّد أي أسواق مؤسسية يمكن دخولها</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 style="padding-top:6px">المخاطر التقنية</h3>
+        <div class="cards">
+          <div class="card crit"><h4>تزامن الحجوزات</h4><p>أصعب مشكلة صحّة في المنتج، ويزيدها صعوبةً افتقار MySQL لقيود الاستبعاد. حجز مزدوج واحد أثناء عرض تجريبي يخسر الصفقة.</p></div>
+          <div class="card crit"><h4>تعقيد مخطط الأسنان</h4><p>يُقدَّر بأقل من حقيقته دائماً: الأسطح، الإحلال، الإطباق المختلط، الجسور الممتدة على عدة أسنان، والعرض من اليمين لليسار. ابنِ نموذجاً أولياً مبكراً مع أطباء ممارسين.</p></div>
+          <div class="card crit"><h4>إضافة عدم القابلية للتعديل لاحقاً</h4><p>إذا صدرت المرحلة 4 بسجلات قابلة للتعديل «توفيراً للوقت»، يضيع التاريخ السريري نهائياً ولا يستعيده أي ترحيل لاحق.</p></div>
+          <div class="card warn"><h4>الكود الحالي</h4><p>بلا اختبارات ولا CI، أخطاء غير مسجَّلة، وثغرات أمنية مفتوحة. البناء فوق هذا الأساس دون المرحلة 0 يضاعف المخاطرة مع كل commit.</p></div>
+          <div class="card warn"><h4>اقتصاديات تخزين الصور</h4><p>الأشعة كبيرة الحجم ويجب الاحتفاظ بها سنوات. احسب كلفة التخزين لكل مريض سنوياً قبل تسعير المنتج لا بعده.</p></div>
+        </div>
+
+        <h3 style="padding-top:6px">مخاطر العمل</h3>
+        <div class="cards">
+          <div class="card crit"><h4>انفلات النطاق</h4><p>أكبر خطر في الخطة. نسخة أولى تتضخم لتشمل التأمين والبوابة والمختبر والذكاء الاصطناعي لن تُطلق أبداً. دافع عن حدود المراحل 0–6 بصرامة.</p></div>
+          <div class="card warn"><h4>صعوبة الترحيل</h4><p>العيادات لا تنتقل لأن الانتقال يعني نقل سنوات من السجلات. استيراد البيانات ليس ميزة بل شرط بيع.</p></div>
+          <div class="card warn"><h4>التحقق السريري</h4><p>بناء برنامج أسنان دون طبيب ممارس ضمن الفريق ينتج منتجاً يبدو صحيحاً ويعمل خطأً. جنِّد مستشارين سريريين قبل المرحلة 4.</p></div>
+          <div class="card warn"><h4>مفاجآت تنظيمية</h4><p>قواعد موقع تخزين البيانات والبيانات الصحية تختلف بين الأسواق وتتغيّر. اكتشاف شرط توطين بعد توقيع عميل مؤسسي يعني إعادة بناء مكلفة.</p></div>
+          <div class="card warn"><h4>عبء الدعم الفني</h4><p>البرمجيات السريرية تولّد عبء دعم أضعاف تطبيق التوريد. العيادة التي لا تستطيع حجز مواعيدها تتصل فوراً.</p></div>
+          <div class="card crit"><h4>تسريب البيانات ينهي الشركة</h4><p>تسريب بيانات المرضى في البرمجيات الصحية وجودي وغير قابل للتعافي. الوضع الأمني في المرحلة 0 قرار تجاري لا تقني.</p></div>
+          <div class="card info"><h4>المنافسة بعدد الميزات</h4><p>لن تتفوق على منتجات عمرها عشرون عاماً بعدد الميزات. اربح باللغة والقناة وسرعة التفعيل وتكامل المشتريات.</p></div>
+          <div class="card info"><h4>التخلي عن السوق الإلكتروني</h4><p>سوق المورّدين هو الميزة الوحيدة التي لا يستطيع المنافسون نسخها. جسر المشتريات في المرحلة 8 هو موضع بناء هذا الخندق التنافسي.</p></div>
+        </div>
+
+        <h3 style="padding-top:6px">افتراضات تحملها هذه الخطة</h3>
+        <ul class="risklist">
+          <li>لم تُقترح أي مدد أو تواريخ في المخطط الأصلي؛ الجهد معبَّر عنه بدرجة التعقيد فقط. أي جدولة زمنية يضيفها فريق التنفيذ.</li>
+          <li>كل المراحل تبدأ من حالة «لم تبدأ». لا يوجد عمل مسجَّل كمنجز.</li>
+          <li>سوق المورّدين يبقى ضمن المنتج؛ المرحلة 8 تفترض وجوده لاستقبال طلبات الشراء.</li>
+          <li>PostgreSQL موصى به لكن القرار مهمة صريحة في المرحلة 0 وليس أمراً محسوماً.</li>
+          <li>مطالبات التأمين وعارض DICOM وبوابة المرضى ووضع العمل دون اتصال والذكاء الاصطناعي كلها خارج النسخة الأولى عن قصد.</li>
+        </ul>
+      </section>
+
+      <section id="final">
+        <div class="sec-head">
+          <h2><span class="snum">05</span>قائمة الإنجاز النهائية</h2>
+          <p>المحطات الكبرى التي يجب اكتمالها جميعاً قبل اعتبار خارطة الطريق منفَّذة بالكامل. تُتابَع بمعزل عن مهام المراحل ولا تدخل في النسبة الإجمالية.</p>
+        </div>
+        <div class="final" id="finalList"></div>
+      </section>
+
+      <footer class="pagefoot">
+        <span>DentalLink / DentHub — خارطة طريق التنفيذ. أُعيد تركيبها من مخطط المنتج والمعمارية (القسم 25) ومن تدقيق المنصة.</span>
+        <span>يُحفظ التقدم في هذا المتصفح فقط (مفتاح <bdi class="ltr">dentallink-roadmap-ar-v1</bdi>) ولا يُشارك بين الأجهزة أو المتصفحات.</span>
+      </footer>
+
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+const PRIORITY_LABEL = { critical:"حرجة", high:"عالية", medium:"متوسطة", low:"منخفضة" };
+const STATUS_LABEL = { notstarted:"لم تبدأ", progress:"قيد التنفيذ", done:"مكتملة", blocked:"متوقفة" };
+const STATUS_CLASS = { notstarted:"st-notstarted", progress:"st-progress", done:"st-done", blocked:"st-blocked" };
+
+/* بيانات المراحل — تُحقن أدناه */
+const PHASES = [];
+const FINAL_CHECKLIST = [];
+PHASES.push(
+{
+  num:0,
+  title:"الأمن وتعدد المنشآت وسلامة البيانات",
+  priority:"critical",
+  complexity:"متوسط-عالٍ",
+  duration:"غير محددة",
+  depsText:"لا شيء — نقطة البداية",
+  goal:"إغلاق الثغرات الأمنية المفتوحة في النظام المنشور، وإرساء أسس تعدد المنشآت والتفويض والتدقيق والسلامة المالية التي تعتمد عليها كل مرحلة لاحقة.",
+  why:"النظام المنشور حالياً يعرض نسخة كاملة من قاعدة البيانات دون مصادقة، ويعمل بوضع التتبع مفعّلاً، ويسمح لأي مستخدم مصادق بتعديل أو حذف كتالوج أي مورّد، ويتيح لأي شخص أن يمنح نفسه أي دور عند التسجيل. وبشكل منفصل، المستخدم حالياً هو نفسه المنشأة — فلا يمكن للعيادة أن يكون لها موظفون ولا يوجد كيان يملك المريض. لا يجوز البدء بأي عمل سريري قبل إصلاح الأمرين.",
+  milestone:"حاجز صارم — لا يجوز بدء أي عمل على الميزات السريرية قبل اكتمال هذه المرحلة.",
+  dbImpact:"جداول تعدد المنشآت الجديدة (organizations, branches, memberships, roles, permissions, role_permission). إضافة أعمدة الملكية لكل جدول قائم. تحويل الأعمدة المالية من float إلى decimal. جدول audit_log جديد مع تقسيم شهري.",
+  apiImpact:"إدخال البادئة /api/v1. كل طلب يحمل سياق المنشأة. نقاط النهاية القائمة تكتسب فحوص الصلاحيات وستبدأ بإرجاع 403 حيث كانت تسمح سابقاً.",
+  frontendImpact:"مبدّل المنشأة والفرع. تغيّر تدفق تسجيل الدخول لدعم انتهاء صلاحية الرمز وتجديده. الشاشات القائمة يجب أن تعالج استجابات 403 الجديدة.",
+  security:"هذه المرحلة هي العمل الأمني نفسه: فحوص الملكية، عزل المنشآت، التخزين الخاص، سجل التدقيق، عمر الرموز، وتدوير المفاتيح السرية.",
+  outcome:"تطبيق Laravel مُحصَّن ومتعدد المنشآت، بتفويض حقيقي وسجل تدقيق وتخزين ملفات خاص وأنواع مالية صحيحة وخط تكامل مستمر — جاهز لاستقبال الوحدات السريرية.",
+  tasks:[
+    { t:"إزالة مسار النسخ الاحتياطي لقاعدة البيانات غير المحمي",
+      where:"routes/api.php:175 · app/Http/Controllers/Financial/OrderController.php:307",
+      subs:["احذف تسجيل المسار وطريقة backupDatabase() بالكامل",
+            "استبدلها بمهمة نسخ احتياطي مجدولة ومشفّرة وخارج الخادم، خارج طبقة HTTP",
+            "اعتبر البيانات الحالية مكشوفة بالفعل وخطّط للإفصاح على هذا الأساس",
+            "ملاحظة: كلمة مرور قاعدة البيانات كانت تُدرَج دون تهريب داخل سلسلة exec() — خطر حقن أوامر"] },
+    { t:"تصحيح إعدادات بيئة النشر",
+      where:".env",
+      subs:["APP_ENV=production",
+            "APP_DEBUG=false",
+            "LOG_LEVEL=warning أو error",
+            "ضبط APP_URL على النطاق الحقيقي — كل روابط الصور الناتجة عن asset() معطّلة حالياً للعملاء"] },
+    { t:"إزالة وسيط CORS الذي يلغي قائمة النطاقات المسموحة",
+      where:"app/Http/Middleware/CorsMiddleware.php · app/Http/Kernel.php · config/cors.php",
+      subs:["احذف CorsMiddleware — فهو يكتب فوق القائمة المضبوطة بالقيمة Access-Control-Allow-Origin: *",
+            "أزِله من مكدس الوسائط العام في Kernel.php",
+            "أبقِ قائمة النطاقات في config/cors.php مصدراً وحيداً للحقيقة"] },
+    { t:"إزالة نقاط النهاية التشخيصية المدمِّرة",
+      where:"app/Http/Controllers/Financial/PaymentController.php (updateExpen) · OrderController.php (showexpen) · routes/api.php",
+      subs:["GET /api/payment/updateExpen يصفّر سجل رصيد المورّد دون أي تأكيد",
+            "showexpen() يحتوي على dd() مع supplier_id = 2 مكتوبة يدوياً",
+            "احذف الملفات الفارغة العالقة في جذر المستودع: composer و satisfiable و your",
+            "احذف الاستيراد غير المستخدم لـ Auth\\AuthController غير الموجود من routes/api.php"] },
+    { t:"إيقاف منح الأدوار ذاتياً عند التسجيل",
+      where:"app/Http/Requests/Auth/RegisterRequest.php · app/Services/Auth/AuthService.php · users migration",
+      subs:["أزِل department_id من حمولة التسجيل المقبولة",
+            "غيّر القيمة الافتراضية لـ users.active إلى 0 (حالياً 1، فتصبح الحسابات فعّالة فوراً)",
+            "أضِف خطوة موافقة إدارية قبل التفعيل"] },
+    { t:"إضافة فحوص الملكية إلى كل نقطة نهاية قائمة",
+      where:"app/Services/Store/InventoryService.php:22,54,95,110 · CartService.php:32,44 · OrderService.php:588-590 · PackageController.php · PaymentController.php · app/Policies/Financial/OrderPolicy.php",
+      subs:["دوال getById/update/delete/multiDelete في InventoryService تستقبل المعرّف فقط دون أي فلترة ملكية",
+            "دالتا update/destroy في CartService تستخدمان findOrFail دون تقييد بـ doctor_id",
+            "أزِل التعليق عن فحص ملكية الطبيب للطلب في OrderService.php:588-590",
+            "OrderController::updateStatus بلا فحص للمورّد — أي شخص يستطيع تعليم أي طلب كمُسلَّم",
+            "دوال update/destroy/toggleStatus في PackageController تستخدم ربط النماذج دون فحص ملكية",
+            "PaymentController::updatePaymentStatus و update بلا فحص ملكية",
+            "اكتب صنف Policy لكل مورد وسجّلها في AuthServiceProvider"] },
+    { t:"تصحيح أخطاء الحسابات المالية ومراجعة الأرصدة القائمة",
+      where:"app/Services/Financial/PaymentService.php:172, :204, :33",
+      subs:["السطران 172 و204 يضبطان remaining = total + paid والصحيح total − paid",
+            "السطر 33 يستعلم عن $user->supplier_id وهي خاصية غير موجودة على User — فيتحوّل فحص تجاوز الدفع إلى paid > paid ولا يُفعَّل أبداً",
+            "المسار نفسه يستدعي خاصية على قيمة null عند غياب سجل OrderExpense",
+            "راجِع وصحّح بيانات الأرصدة القائمة قبل أن تتراكم أكثر"] },
+    { t:"إدخال كيانات Organization و Branch و Membership و Role و Permission",
+      where:"ترحيلات ونماذج وسياسات جديدة",
+      subs:["Organization بنوع ضمن {clinic, supplier, laboratory, platform}",
+            "Branch تحت Organization، ويحمل منطقته الزمنية الخاصة",
+            "Membership يربط مستخدم × منشأة × دور × نطاق فرع، مع تجاوزات منح وسحب",
+            "Role و Permission مع جدول وسيط؛ الصلاحيات مقسّمة إلى مستويات سريرية ومالية وتشغيلية",
+            "استبدال نموذج «القسم كدور» (لا يوجد حالياً سوى الرمزين doctor و supplier)"] },
+    { t:"تطبيق نطاق عزل عام على مستوى الاستعلام",
+      where:"طبقة النماذج — نموذج أساسي أو trait يُطبَّق على كل كيان مملوك لمنشأة",
+      subs:["افرض فلتر المنشأة في طبقة الاستعلام حتى لا يمكن نسيانه في متحكّم",
+            "دفاع متعدد الطبقات: النطاق العام، ثم السياسة، ثم اختبار يؤكد رفض الوصول عبر المنشآت"] },
+    { t:"نقل تخزين الملفات إلى تخزين كائنات خاص مع روابط موقّعة",
+      where:"config/filesystems.php · كل مسارات الرفع (products, users, categories, receipts)",
+      subs:["حاوية S3 خاصة؛ لا قرص عام لأي ملف مرتبط بمريض",
+            "روابط موقّعة قصيرة العمر تُصدَر بعد فحص التفويض فقط",
+            "سجّل كل إصدار لرابط موقّع",
+            "ملاحظة: الإيصالات مستندات مالية وهي حالياً مقروءة للجميع عبر الرابط"] },
+    { t:"بناء سجل التدقيق مع التقسيم منذ اليوم الأول",
+      where:"جدول audit_log جديد وطبقة تسجيل",
+      subs:["الحقول: الفاعل، دوره، organization_id، branch_id، الإجراء، الكيان، patient_id، القيم قبل وبعد، IP، user_agent، request_id، وقت الحدوث، السبب",
+            "سجّل القراءات كما الكتابات لكل ما سيحمل لاحقاً بيانات سريرية",
+            "تقسيم شهري وسياسة أرشفة باردة — هذا الجدول يتجاوز كل الجداول الأخرى حجماً"] },
+    { t:"تحويل الأعمدة المالية من float إلى decimal",
+      where:"products.price · order_expenses.total/paid/remaining · payments.amount · orders.price",
+      subs:["decimal(12,2) أو وحدات صحيحة صغرى في كل مكان",
+            "orders.price حالياً decimal بدقة افتراضية (8,2) فتحدّ الطلب بـ 999,999.99 وتتعارض مع أعمدة float التي تُقارن بها",
+            "أزِل تحويلات (int) التي تبتر القيم المالية في InventoryResource و OrderResource و DoctorResource"] },
+    { t:"إضافة انتهاء صلاحية رموز Sanctum والتجديد ومسار تسجيل الخروج",
+      where:"config/sanctum.php · routes/api.php",
+      subs:["قيمة 'expiration' حالياً null — الرموز لا تنتهي أبداً",
+            "لا يوجد مسار لتسجيل الخروج ولا أي إبطال للرموز",
+            "أبطِل كل رموز الحساب عند إيقافه؛ حالياً يُفحص active عند تسجيل الدخول فقط"] },
+    { t:"تدوير مفاتيح Firebase ونقل الأسرار إلى مخزن مُدار",
+      where:"storage/app/firebase/*.json · app/Services/Notifaction/FirebaseService.php",
+      subs:["ملفا حساب خدمة موجودان على نظام الملفات، وأحدهما مُشار إليه باسم مكتوب يدوياً",
+            "دوّر كليهما وحمّل بيانات الاعتماد من مخزن أسرار"] },
+    { t:"تشغيل Redis للتخزين المؤقت وقوائم الانتظار والجلسات",
+      where:"config/cache.php · config/queue.php · config/session.php · .env",
+      subs:["حالياً تخزين مؤقت بالملفات وجلسات بالملفات وقائمة انتظار على قاعدة البيانات",
+            "مشغّل التخزين المؤقت بالملفات غير مشترك بين العمليات، فلا يمكن تخزين أي شيء ذي معنى"] },
+    { t:"حسم قرار محرك قاعدة البيانات: PostgreSQL أم MySQL",
+      where:"قرار معماري — يؤثر على كل الترحيلات اللاحقة",
+      subs:["PostgreSQL موصى به لدعم tstzrange مع قيود الاستبعاد GiST المطلوبة لجدولة المرحلة 3",
+            "MySQL لا يدعم قيود الاستبعاد؛ البديل قفل صفوف خشن أو جدول فترات منفصلة",
+            "تغيير المحرك الآن أرخص بكثير قبل وجود بيانات سريرية",
+            "يزيل أيضاً ترحيلات ALTER TABLE … MODIFY COLUMN ENUM الخام المقيّدة بـ MySQL"] },
+    { t:"إنشاء خط تكامل مستمر مع اختبار مصفوفة الصلاحيات",
+      where:"tests/ · إعداد خط CI",
+      subs:["المشروع حالياً يحوي ملفَي اختبار افتراضيَّين لم يُمسّا، وبلا CI",
+            "اختبار مبني على جدول يغطي كل دور × كل صلاحية",
+            "اختبار يفشل عند وجود أي نقطة نهاية جديدة بلا سياسة",
+            "امنع الدمج عند فشل الاختبارات"] }
+  ],
+  acceptance:[
+    "المسار GET /api/database/backup يعيد 404 ولا يوجد أي مسار في التطبيق يصدّر قاعدة البيانات",
+    "APP_ENV=production و APP_DEBUG=false في بيئة النشر، ولا تُعاد أي آثار تتبّع للأخطاء",
+    "مستخدم من المنشأة أ يتلقى 403 على كل مورد يخص المنشأة ب، مثبتاً باختبار آلي",
+    "التسجيل لا يمكنه تحديد دور، والحسابات الجديدة غير مفعّلة حتى الموافقة",
+    "حسابات الأرصدة في PaymentService صحيحة وبيانات الأرصدة القائمة روجعت وصُحّحت",
+    "لا يمكن جلب أي ملف مرفوع دون فحص تفويض ورابط موقّع",
+    "كل كتابة على كيان مملوك لمنشأة تنتج صفاً في audit_log",
+    "كل الأعمدة المالية من نوع decimal ولا يتبقى أي float في عمود مالي",
+    "رموز Sanctum تنتهي صلاحيتها ومسار تسجيل الخروج يبطلها",
+    "خط CI يعمل عند كل دفع ويمنع الدمج عند الفشل",
+    "قرار محرك قاعدة البيانات موثّق مع مبرراته"
+  ],
+  risks:[
+    "يمسّ كل استعلام قائم في الكود — ترحيل المنشآت واسع وميكانيكي لكن من السهل إنجازه جزئياً بشكل خاطئ",
+    "بعض التدفقات الحية ستبدأ بحق برفض طلبات كانت تسمح بها؛ راجع البيانات القائمة بحثاً عن أضرار قبل وبعد",
+    "قرار المحرك مكلف التأجيل: بسيط الآن ويصبح ترحيل بيانات لاحقاً",
+    "قد تكون بيانات الأرصدة تالفة فعلاً بسبب خطأ remaining = total + paid، وقد يتطلب التصحيح تسوية يدوية مع العملاء"
+  ],
+  tests:[
+    "رفض الوصول عبر المنشآت على كل نقطة نهاية (اختبار مصفوفة الصلاحيات)",
+    "رفض الملكية: المستخدم ب لا يستطيع قراءة أو تعديل أو حذف منتج أو سلة أو طلب أو باقة أو دفعة تخص المستخدم أ",
+    "التسجيل يرفض أي department_id أو دور مُرسَل",
+    "حسابات الدفتر والأرصدة مقابل بيانات اختبار معروفة",
+    "انتهاء صلاحية الروابط الموقّعة ورفض جلب الملفات دون تفويض بـ 403",
+    "إنتاج صفوف سجل التدقيق عند الإنشاء والتعديل والحذف والاطّلاع",
+    "انتهاء صلاحية الرموز وإبطالها عند إيقاف الحساب"
+  ]
+},
+{
+  num:1,
+  title:"أساس العيادة",
+  priority:"high",
+  complexity:"متوسط",
+  duration:"غير محددة",
+  depsText:"المرحلة 0",
+  goal:"بناء طبقة الإعداد التي تحتاجها العيادة قبل وجود أي مريض أو موعد: الموارد المادية، أوقات العمل، هويات الطاقم، وكتالوج الإجراءات.",
+  why:"لا يمكن لمحرك الجدولة في المرحلة 3 أن يعمل دون كراسي وغرف وساعات عمل وعطل وإجازات وأنواع مواعيد. وكتالوج الإجراءات يغذّي مدد الجدولة وتخطيط العلاج والفوترة في آن واحد، فيجب أن يوجد قبلها جميعاً.",
+  milestone:"",
+  dbImpact:"rooms, chairs, working_hours, holidays, staff_leave, staff_profiles, procedure_catalog, appointment_types, branch_settings. وإعادة تشكيل doctor_schedules القائم ليقع تحت فرع مع منطقة زمنية ونطاقات سريان.",
+  apiImpact:"نقاط نهاية إدارة الإعدادات تحت /api/v1، كلها مقيّدة بالمنشأة والفرع.",
+  frontendImpact:"معالج تهيئة المنشأة، شاشات إعدادات الفرع، إدارة الطاقم، محرّر كتالوج الإجراءات.",
+  security:"كل نقاط نهاية الإعداد محمية بصلاحيات؛ أدوار المالك والمدير فقط تعدّل إعدادات الفرع أو التسعير.",
+  outcome:"عيادة مهيّأة: فروع بغرف وكراسي، طاقم بأدوار وتخصصات، ساعات عمل وعطل، وكتالوج إجراءات مسعّر.",
+  tasks:[
+    { t:"نمذجة الغرف والكراسي كموارد قابلة للحجز تحت الفرع",
+      where:"ترحيلات ونماذج جديدة",
+      subs:["الكرسي (operatory) هو المورد القابل للحجز فعلياً، ويقع تحت الغرفة",
+            "كلاهما مقيّد بالفرع"] },
+    { t:"بناء ساعات العمل والعطل وإجازات الطاقم",
+      where:"إعادة تشكيل app/Models/DoctorSchedule.php وترحيله",
+      subs:["انقل الجداول لتقع تحت فرع لا تحت مستخدم مجرّد",
+            "أضِف المنطقة الزمنية ونطاقات السريان",
+            "أزِل افتراض جدول واحد لكل شخص",
+            "أعِد استخدام traits الحالية HasSchedules و FormatsTime حيثما بقيت صالحة",
+            "إجازات الطاقم يجب أن تحجب التوافر في المرحلة 3"] },
+    { t:"بناء ملفات الطاقم",
+      where:"جدول staff_profiles جديد مرتبط بـ Membership",
+      subs:["رقم الترخيص، التخصص، لون التقويم، إعدادات العمولة",
+            "منفصل عن سجل User وعن Membership"] },
+    { t:"بناء كتالوج الإجراءات",
+      where:"جدول procedure_catalog جديد",
+      subs:["الرمز، الاسم بالعربية والإنجليزية، التصنيف، المدة الافتراضية، الأتعاب الافتراضية",
+            "أعلام: مرتبط بسن، مرتبط بسطح",
+            "مرجع قالب الإقرار المطلوب (يُملأ في المرحلة 7)",
+            "المواد المتوقعة (تُستهلك في المرحلة 8)",
+            "أعمدة اختيارية لربط الترميز الخارجي — أضِفها الآن حتى لو بقيت فارغة (انظر المرحلة 5)"] },
+    { t:"بناء أنواع المواعيد",
+      where:"جدول appointment_types جديد",
+      subs:["المدة، الفاصل الزمني، اللون، وهل الإقرار مطلوب"] },
+    { t:"تنفيذ إعدادات الفرع والتعامل مع المناطق الزمنية",
+      where:"جدول branch_settings جديد",
+      subs:["المنطقة الزمنية تخص الفرع لا المنشأة — المجموعة قد تمتد عبر مناطق",
+            "العملة وإعدادات الضريبة وتجاوزات قوائم الأسعار"] },
+    { t:"بناء معالج تهيئة المنشأة",
+      where:"الواجهة الأمامية وواجهة الـ API الداعمة",
+      subs:["المنشأة أحادية الفرع يجب أن تُعرض باسم «عيادتك» — لا تُجبر طبيب الأسنان الفردي على إعداد هرمية لن يستخدمها أبداً"] }
+  ],
+  acceptance:[
+    "يمكن إنشاء منشأة جديدة وتهيئتها من البداية للنهاية دون تدخل مطوّر",
+    "الفرع يملك غرفاً وكراسي وساعات عمل وعطلاً ومنطقة زمنية",
+    "يمكن دعوة الطاقم وإسناد أدوار لهم وتقييدهم بفروع",
+    "كتالوج الإجراءات يحوي إجراءات مسعّرة بمدد افتراضية",
+    "أنواع المواعيد موجودة بمدد وفواصل زمنية"
+  ],
+  risks:[
+    "مخاطرة منخفضة إجمالاً — معظمها طبقة إعداد",
+    "لكنها الأساس الذي يحتاجه محرك الجدولة؛ نموذج موارد ناقص هنا يتحول إلى إعادة كتابة في المرحلة 3"
+  ],
+  tests:[
+    "إعدادات الفرع غير مرئية ولا قابلة للتعديل عبر المنشآت",
+    "الأدوار المسموح لها فقط تستطيع تعديل التسعير وإعدادات الفرع",
+    "ساعات العمل والإجازات تنتج نوافذ التوافر المتوقعة",
+    "المنطقة الزمنية مرتبطة بالفرع بشكل صحيح وتُطبَّق عند القراءة"
+  ]
+},
+{
+  num:2,
+  title:"المرضى",
+  priority:"high",
+  complexity:"متوسط-عالٍ",
+  duration:"غير محددة",
+  depsText:"المرحلتان 0 و1",
+  goal:"بناء سجل المريض وتوابعه السريرية، ومجرى أحداث الخط الزمني الموحّد الذي تضيف إليه كل وحدة لاحقة.",
+  why:"المريض هو الكيان الذي يتعلق به المنتج السريري بأكمله، ولا يوجد حالياً أي جدول للمرضى إطلاقاً. ومعمارية الخط الزمني تحديداً يجب أن تكون صحيحة من المرة الأولى — كل مرحلة لاحقة تكتب فيها أحداثاً، وإعادة ملء الأحداث لاحقاً من عشرة جداول عملية ناقصة.",
+  milestone:"",
+  dbImpact:"patients, patient_contacts, medical_history_versions, allergies, medical_conditions, medications, dental_histories, patient_documents, patient_timeline_events. تشفير على مستوى الحقل للهوية الوطنية والأعلام الطبية الحساسة.",
+  apiImpact:"إدارة المرضى، البحث، تغذية الخط الزمني (بترقيم صفحات بالمؤشر)، رفع المستندات وجلبها عبر روابط موقّعة.",
+  frontendImpact:"قائمة المرضى والبحث، ملف المريض، نماذج التاريخ الطبي، مكوّن الخط الزمني، شريط التنبيهات الطبية الدائم.",
+  security:"تشفير على مستوى الحقل بمفتاح منفصل. تدقيق القراءة على البيانات السريرية. الحقول الحساسة خلف صلاحية مستقلة عن التاريخ الطبي العام.",
+  outcome:"سجل مريض كامل وقابل للبحث والتدقيق، مع تنبيهات طبية تظهر في كل شاشة سريرية، وخط زمني مُجسَّد جاهز لاستقبال أحداث كل المراحل اللاحقة.",
+  tasks:[
+    { t:"بناء سجل المريض الأساسي",
+      where:"جدول patients جديد",
+      subs:["رقم ملف طبي (MRN) مقروء وتسلسلي وفريد داخل المنشأة",
+            "الاسم بالعربية مع نقحرة لاتينية، تاريخ الميلاد، الجنس، الهواتف، البريد، العنوان",
+            "اللغة المفضّلة، قناة التواصل المفضّلة، المهنة، مصدر الإحالة",
+            "الهوية الوطنية مشفّرة عند التخزين، الصورة، الحالة، primary_branch_id، الوسوم",
+            "مملوك للمنشأة — لا للفرع ولا للطبيب"] },
+    { t:"بناء جهات اتصال المريض",
+      where:"جدول patient_contacts جديد",
+      subs:["جهة اتصال للطوارئ، وليّ الأمر للقاصرين، والطرف المسؤول عن الفوترة",
+            "يُنمذج منفصلاً لأن الدافع غالباً ليس المريض — وهذا يهم في الفوترة والإقرارات"] },
+    { t:"بناء التاريخ الطبي المُصدَّر بنسخ",
+      where:"جدول medical_history_versions جديد",
+      subs:["لقطات لا تُعدَّل في مكانها",
+            "كل مراجعة تنشئ نسخة جديدة مع الطبيب المراجِع والتاريخ",
+            "يجيب على سؤال: ماذا كنا نعرف حين عالجناه"] },
+    { t:"بناء الحساسيات والحالات والأدوية بشكل مُهيكل",
+      where:"جداول allergies و medical_conditions و medications الجديدة",
+      subs:["الحساسية: المادة، رد الفعل، الشدة، من تحقّق منها — مهيكلة لا نص حر، لأنها تقود التحذيرات الآلية في المرحلة 7",
+            "أعلام خطورة الحالات: اضطرابات النزف، مضادات التخثر، السكري، أمراض القلب، الأمراض المعدية، الحمل، نقص المناعة، تاريخ البايفوسفونيت",
+            "الدواء: الاسم، الجرعة، التكرار، البداية والنهاية، الواصف، علم النشاط"] },
+    { t:"بناء نظام التنبيهات الطبية",
+      where:"مكوّن واجهة أمامية وسطح API",
+      subs:["شريط دائم في كل شاشة سريرية لذلك المريض — المخطط، الموعد، الوصفة، خطة العلاج",
+            "ليس تبويباً ولا قسماً يحتاج الطبيب للتمرير إليه",
+            "لا يمكن إغلاقه، والإقرار به يُسجَّل"] },
+    { t:"بناء التاريخ السنّي",
+      where:"جدول dental_histories جديد",
+      subs:["الطبيب السابق، العلاجات السابقة، الزرعات والتركيبات القائمة",
+            "تاريخ التقويم، ردود الفعل على التخدير، المضاعفات السابقة، مستوى القلق"] },
+    { t:"بناء مستندات المريض على التخزين الخاص",
+      where:"جدول patient_documents جديد وطبقة التخزين من المرحلة 0",
+      subs:["مصنّفة ومُصدَّرة بنسخ",
+            "تخزين خاص فقط؛ كل اطّلاع يُسجَّل"] },
+    { t:"تنفيذ مجرى أحداث الخط الزمني المُجسَّد",
+      where:"جدول patient_timeline_events جديد",
+      subs:["الحقول: patient_id, branch_id, occurred_at, event_type, actor_id, subject_type, subject_id, summary, icon, visibility, payload",
+            "visibility ضمن {clinical, financial, administrative, patient_visible} — تفلتر المجرى نفسه حسب دور المطّلع وتُغذّي لاحقاً بوابة المرضى من مصدر واحد",
+            "فهرس واحد على (patient_id, occurred_at DESC)",
+            "الأحداث غير قابلة للتعديل؛ التصحيحات تضيف حدثاً يُحلّ محلّ سابقه",
+            "لا تنفّذه كاتحاد (UNION) وقت التشغيل عبر عشرة جداول — لا يمكن ترقيم صفحاته ولا فهرسته بشكل معقول"] },
+    { t:"تنفيذ بحث المرضى مع التطبيع العربي",
+      where:"طبقة البحث",
+      subs:["طبّع أ/إ/آ/ا و ة/ه و ى/ي والتشكيل — يجب أن تطابق «أشعة» كلمة «اشعة»",
+            "المطابقة على الاسم وجزء من رقم الهاتف ورقم الملف",
+            "نمط LIKE '%…%' المستخدم في بقية الكود غير كافٍ"] },
+    { t:"بناء استيراد المرضى من Excel للترحيل",
+      where:"إعادة استخدام آلية Maatwebsite من app/Imports/ProductsImport.php",
+      subs:["هذا شرط بيع لا ميزة — العيادات لن تنتقل بدونه",
+            "لا تُعِد استخدام مطابقة LIKE '%name%' من ProductsImport؛ فهي تكتب فوق السجل الخطأ",
+            "جدول مرحلي، تحقق، تشغيل تجريبي، وتقرير نتائج للمستخدم"] },
+    { t:"تطبيق ضوابط الخصوصية داخل السجل",
+      where:"طبقة النماذج والسياسات",
+      subs:["الحقول الحساسة (حالة الأمراض المعدية، الحمل، الأدوية النفسية، الهوية الوطنية) خلف صلاحية مستقلة",
+            "مشفّرة عند التخزين بمفتاح منفصل",
+            "قيد تدقيق عند القراءة لا عند الكتابة فقط — الاطّلاع غير المصرّح به هو الحدث الأكثر شيوعاً والأشد ضرراً"] }
+  ],
+  acceptance:[
+    "يمكن تسجيل مريض والبحث عنه بالاسم العربي أو اللاتيني أو جزء من الهاتف أو رقم الملف واسترجاعه",
+    "رقم الملف الطبي فريد داخل المنشأة",
+    "التنبيهات الطبية تظهر في كل شاشة سريرية ولا يمكن إغلاقها",
+    "التاريخ الطبي مُصدَّر بنسخ؛ التعديل ينشئ نسخة جديدة ويحفظ القديمة",
+    "دور موظف الاستقبال يتلقى 403 على التاريخ الطبي والتفاصيل السريرية",
+    "قراءات البيانات السريرية تنتج قيود تدقيق",
+    "الخط الزمني يعيد تغذية أحداث مرتّبة ومفلترة حسب الدور ومرقّمة بالمؤشر",
+    "مستندات المريض لا تُجلب إلا عبر رابط موقّع مصرّح به",
+    "استيراد Excel يعمل عبر جدول مرحلي ويُصدر تقرير نتائج لكل صف"
+  ],
+  risks:[
+    "معمارية الخط الزمني يجب أن تكون صحيحة من المرة الأولى؛ كل وحدة لاحقة تضيف إليها وإعادة الملء ناقصة",
+    "التشفير على مستوى الحقل يعقّد البحث — حدّد أي الحقول قابلة للبحث قبل تشفيرها",
+    "ملكية المريض على مستوى المنشأة غير قابلة للتراجع؛ تقييدها بالفرع ينتج سجلات مكرّرة لا يمكن دمجها بأمان لاحقاً"
+  ],
+  tests:[
+    "خصوصية المريض: الوصول حسب الدور إلى البيانات الديموغرافية مقابل التاريخ الطبي مقابل الحقول الحساسة",
+    "العزل بين المنشآت على كل نقطة نهاية للمرضى",
+    "التطبيع العربي في البحث عبر أشكال الحروف والتشكيل",
+    "ترتيب الخط الزمني وترقيم صفحاته والفلترة حسب الدور",
+    "التحكم بالوصول للملفات وانتهاء صلاحية الروابط الموقّعة",
+    "تصدير نسخ التاريخ الطبي يحفظ النسخ السابقة",
+    "تدقيق القراءة يعمل عند الاطّلاع على السجل السريري"
+  ]
+}
+);
+PHASES.push(
+{
+  num:3,
+  title:"الجدولة والمواعيد",
+  priority:"high",
+  complexity:"عالٍ",
+  duration:"غير محددة",
+  depsText:"المرحلتان 1 و2",
+  goal:"بناء محرك مواعيد متعدد الموارد بضمانات على مستوى قاعدة البيانات ضد الحجز المزدوج، وتقويم سريع بما يكفي للاستخدام اليومي في الاستقبال.",
+  why:"التقويم هو أكثر شاشات المنتج استخداماً وأصعب مشاكله من ناحية الصحّة. موظف الاستقبال يلمسه مئة مرة يومياً، وحجز مزدوج واحد يدمّر الثقة بالنظام كله. الفحص على مستوى التطبيق وحده غير كافٍ — طلبا حجز متزامنان يقرآن كلاهما «متاح» وينجحان معاً.",
+  milestone:"",
+  dbImpact:"appointments, appointment_resources (جدول ربط), waiting_list_entries, blocked_time, وسجل تغيّر حالات المواعيد. قيد استبعاد أو تفرّد على فترات منفصلة لكل مورد × نطاق زمني.",
+  apiImpact:"إدارة المواعيد مع مفاتيح Idempotency، استعلامات التوافر، 409 عند تعارض الحجز، إعادة الجدولة والإلغاء مع الأسباب.",
+  frontendImpact:"تقويم بالسحب والإفلات بعروض يوم/أسبوع/طبيب/كرسي، قفل تفاؤلي مع تحديث عند التعارض، واجهة قائمة الانتظار.",
+  security:"التوافر مقيّد بالفرع. دور مركز الاتصال يحجز عبر الفروع لكنه يرى التوافر وبيانات التواصل فقط.",
+  outcome:"محرك جدولة آمن تحت التزامن، حيث ينتج عن محاولتَي حجز متزامنتين لنفس الفترة موعد واحد فقط، مع التذكيرات وقائمة الانتظار وفترات الطوارئ.",
+  tasks:[
+    { t:"نمذجة المواعيد مقابل موارد متعددة متزامنة",
+      where:"جدولا appointments و appointment_resources الجديدان",
+      subs:["الموعد يستهلك طبيباً وكرسياً، واختيارياً مساعداً وجهازاً",
+            "التوافر هو تقاطع كل هذه الموارد",
+            "استخدم جدول ربط للموارد — لا تضع dentist_id و chair_id على الموعد، وإلا صارت إضافة الأجهزة لاحقاً إعادة تشكيل للجدول الأساسي"] },
+    { t:"تنفيذ منع التداخل على مستوى قاعدة البيانات",
+      where:"ترحيل — القيد يعتمد على قرار المحرك في المرحلة 0",
+      subs:["PostgreSQL: EXCLUDE USING gist (resource_id WITH =, tstzrange(starts_at, ends_at) WITH &&) WHERE status NOT IN ('cancelled','no_show')",
+            "MySQL: SELECT … FOR UPDATE على صف يوم المورد، أو مفتاح فريد على فترات منفصلة بخمس دقائق",
+            "الطبقة الثانية: معاملة — أقفل الموارد، أعِد التحقق، أدرِج، ثبّت",
+            "الطبقة الثالثة: فحص تطبيقي مسبق لتجربة المستخدم فقط، لا يُوثق به أبداً",
+            "الطبقة الرابعة: قفل تفاؤلي في الواجهة عبر updated_at؛ عند التعارض حدّث وأعِد العرض"] },
+    { t:"تنفيذ التخزين بـ UTC والعرض بالمنطقة الزمنية للفرع",
+      where:"نموذج الموعد وطبقة التسلسل",
+      subs:["خزّن بـ UTC، واحفظ المنطقة الزمنية للفرع معه، واعرض بالتوقيت المحلي للفرع",
+            "عالج انتقالات التوقيت الصيفي صراحةً عند توليد المواعيد المتكررة",
+            "إضافة الوعي بالمناطق الزمنية لاحقاً تجعل كل طابع زمني مخزَّن ملتبساً"] },
+    { t:"بناء دورة حياة الموعد",
+      where:"خدمة المواعيد وسجل الحالات",
+      subs:["الإنشاء، إعادة الجدولة مع السبب، الإلغاء مع السبب، التأكيد",
+            "تعليم عدم الحضور بما يغذّي مؤشر التزام المريض",
+            "إدراج الزيارات المباشرة وحالات الطوارئ",
+            "المواعيد المتكررة"] },
+    { t:"اشتقاق المدة من نوع الإجراء مع الفواصل الزمنية",
+      where:"التكامل مع procedure_catalog من المرحلة 1",
+      subs:["المدة الافتراضية من الكتالوج مع تجاوز لكل طبيب يُتعلَّم من المدد الفعلية",
+            "فاصل زمني لكل إجراء ولكل كرسي للتنظيف والتعقيم",
+            "أعلى ميزات الجدولة قيمةً وأقربها إلى البساطة"] },
+    { t:"تنفيذ حجز فترات الطوارئ",
+      where:"محرك التوافر",
+      subs:["فترات محجوزة تُحرَّر قبل ساعات محددة إن لم تُستخدم",
+            "العيادات تفعل هذا يدوياً اليوم ولا تحبه"] },
+    { t:"بناء قائمة الانتظار",
+      where:"جدول waiting_list_entries جديد",
+      subs:["التقاط درجة الاستعجال والتفضيل وإمكانية الوصول",
+            "الملء التلقائي عند الإلغاء في المرحلة 9؛ نموذج البيانات هنا"] },
+    { t:"بناء تقويم السحب والإفلات",
+      where:"الواجهة الأمامية",
+      subs:["عروض اليوم والأسبوع ولكل طبيب ولكل كرسي",
+            "يجب أن يبقى سريعاً مع 200 موعد على الشاشة",
+            "لا تحمّل أكثر من النافذة المرئية أبداً",
+            "فهرس مركّب على (branch_id, starts_at, resource_id)"] },
+    { t:"إضافة مفاتيح Idempotency عند إنشاء الموعد",
+      where:"طبقة الـ API",
+      subs:["عملاء الجوال يعيدون المحاولة؛ الموعد المكرر خلل تشغيلي حقيقي"] },
+    { t:"ربط تذكيرات المواعيد",
+      where:"قائمة الانتظار ومركز الإشعارات القائم",
+      subs:["أعِد استخدام العلاقة متعددة الأشكال related في NotificationsCenter — تحمل المواعيد دون تغيير",
+            "الإرسال متعدد القنوات الكامل في المرحلة 9؛ التذكيرات الأساسية هنا",
+            "ملاحظة: app/Jobs/SendFcmNotification.php يستدعي FirebaseService::sendNotification() وهي غير موجودة — أصلحها قبل الاعتماد على الإشعارات"] }
+  ],
+  acceptance:[
+    "طلبا حجز متزامنان لنفس المورد ونفس الفترة ينتجان موعداً واحداً و409 واحداً، مثبتاً باختبار تزامن آلي على قاعدة بيانات حقيقية",
+    "التداخل يُمنع بقيد في قاعدة البيانات لا بكود التطبيق وحده",
+    "المواعيد مخزّنة بـ UTC وتُعرض صحيحةً بتوقيت الفرع، بما في ذلك عبر حدود التوقيت الصيفي",
+    "مدة الموعد تُشتق افتراضياً من كتالوج الإجراءات وتحترم الفواصل الزمنية",
+    "إجازات الطاقم والعطل والأوقات المحجوبة تزيل التوافر",
+    "إعادة الطلب بنفس مفتاح Idempotency تعيد الموعد الأصلي لا نسخة مكررة",
+    "التقويم يعرض يوماً كاملاً بـ 200 موعد دون بطء ملحوظ",
+    "التذكيرات تُرسَل للمواعيد القادمة"
+  ],
+  risks:[
+    "أعلى مخاطرة تقنية في خارطة الطريق — صحّة التزامن وأداء واجهة التقويم كلاهما صعب",
+    "ابنِ نموذجاً أولياً لأسلوب القيد قبل الالتزام، خصوصاً إن أبقى قرار المرحلة 0 على MySQL",
+    "هذه هي الشاشة التي يُحكم على المنتج بها؛ خصّص لها وقتاً أكثر مما يبدو معقولاً",
+    "حجز مزدوج أثناء عرض تجريبي للمبيعات يخسر الصفقة"
+  ],
+  tests:[
+    "الحجز المتوازي لنفس المورد والفترة — واحد فقط ينجح (يجب أن يعمل على قاعدة بيانات حقيقية)",
+    "التوافر يستثني بشكل صحيح الإجازات والعطل والأوقات المحجوبة والمواعيد القائمة",
+    "عرض المناطق الزمنية عبر انتقالات التوقيت الصيفي",
+    "إنشاء موعد Idempotent تحت إعادة المحاولة",
+    "إعادة الجدولة والإلغاء ينتجان سجل حالات صحيحاً مع التقاط السبب",
+    "تقييد التوافر بالفرع",
+    "أداء استعلام التقويم مع حجم مواعيد واقعي"
+  ]
+},
+{
+  num:4,
+  title:"مخطط الأسنان والسجلات السريرية",
+  priority:"high",
+  complexity:"عالٍ",
+  duration:"غير محددة",
+  depsText:"المرحلة 2 (يمكن أن تتداخل مع المرحلة 3)",
+  goal:"بناء مخطط الأسنان كسجل سريري طولي قابل للإضافة فقط، إضافة إلى مخطط اللثة والتشخيصات والملاحظات السريرية.",
+  why:"هذه هي الميزة التي يقيّم أطباء الأسنان المنتج على أساسها، وأسهلها وقوعاً في الخطأ الدقيق. إنها سجل سريري طولي لا نموذج إدخال. كما أنها تعتمد على المرحلة 2 فقط، فيمكن أن تتداخل مع المرحلة 3.",
+  milestone:"تحقّق من تصميم مخطط الأسنان مع أطباء أسنان ممارسين قبل كتابته.",
+  dbImpact:"teeth (بيانات مرجعية مُبذَّرة), patient_tooth, tooth_condition (إضافة فقط مع supersedes_id), periodontal_charts, diagnoses, clinical_notes بحالات مسودة/موقّعة/ملحق.",
+  apiImpact:"قراءة المخطط بأي تاريخ سابق، إضافة قيد للمخطط، نقاط نهاية المسودة والتوقيع والملحق. الملاحظات الموقّعة بلا مسار تعديل.",
+  frontendImpact:"مخطط أسنان دقيق على مستوى الأسطح مع دعم الاتجاه من اليمين لليسار، إطباق دائم/لبني/مختلط، شريط تمرير زمني، ومحرّر ملاحظات بقوالب.",
+  security:"المستوى السريري من الصلاحيات فقط. كل تعديل على المخطط أو الملاحظات يُدقَّق. توقيع مُشارك للقيود التي يكتبها المساعدون وأخصائيو الصحة.",
+  outcome:"مخطط سريري قابل لإعادة التشغيل يمكن استرجاع حالته في أي تاريخ سابق، مع ملاحظات موقّعة منسوبة وغير قابلة للتعديل.",
+  tasks:[
+    { t:"تبذير جدول الأسنان المرجعي",
+      where:"جدول teeth جديد مع seeder",
+      subs:["FDI من 11 إلى 48 للدائمة و51 إلى 85 للبنية؛ Universal من 1 إلى 32 ومن A إلى T؛ وترقيم Palmer",
+            "القوس والربع والنوع وعلم اللبني والأسطح",
+            "خزّن FDI داخلياً كمرجع أساسي، واعرض Universal أو Palmer حسب تفضيل المستخدم",
+            "الترقيم شأن عرض لا شأن تخزين — هذا يمنع ترحيلاً مؤلماً عند البيع في سوق يستخدم نظاماً آخر"] },
+    { t:"بناء حالة السن لكل مريض",
+      where:"جدول patient_tooth جديد",
+      subs:["موجود | مفقود | مخلوع | غير بازغ، ومنطمر، وزائد، ودرجة الحركة، وملاحظات",
+            "الأسنان الزائدة تحتاج هوية خاصة — قد يملك المريض سناً خارج المجموعة القياسية"] },
+    { t:"بناء سجل tooth_condition القابل للإضافة فقط",
+      where:"جدول tooth_condition جديد — البنية السريرية الجوهرية",
+      subs:["قيد المخطط لا يُعدَّل أبداً؛ التصحيح يكتب صفاً جديداً يحلّ محلّ القديم",
+            "الحقول: surfaces[] (الترميم يمتد على عدة أسطح)، الحالة، المادة، الوضع، group_id، treatment_id، recorded_by، recorded_at، المصدر، supersedes_id، superseded_at",
+            "group_id يربط جسراً من ثلاث وحدات كحقيقة سريرية واحدة لا ثلاث حقائق منفصلة",
+            "المخطط الحالي: WHERE superseded_at IS NULL",
+            "المخطط بتاريخ D: WHERE recorded_at <= D AND (superseded_at IS NULL OR superseded_at > D)"] },
+    { t:"بناء مخطط اللثة كبنية منفصلة",
+      where:"جدول periodontal_charts جديد",
+      subs:["لكل سن: ست قياسات لعمق الجيب (MB B DB ML L DL)، وست قيم للانحسار، والنزف عند السبر، والتقيّح، وتشعّب الجذور، والحركة، ومؤشر اللويحة",
+            "يُسجَّل في فحص لثة كامل لا مع كل علاج",
+            "لا تنمذجه داخل tooth_condition — ينتج مئات الصفوف عديمة المعنى ولا يمكن رسمه بيانياً عبر الزمن"] },
+    { t:"بناء واجهة مخطط الأسنان",
+      where:"الواجهة الأمامية",
+      subs:["رسم دقيق على مستوى السطح — الحشوة الإنسية الإطباقية يجب أن تُرسم على السطحين الإنسي والإطباقي لا كنقطة",
+            "التبديل بين الإطباق الدائم واللبني والمختلط",
+            "التمييز البصري بين القائم والمخطط له والمنجَز",
+            "دعم كامل للاتجاه من اليمين لليسار لا مجرد انعكاس — ترتيب الأرباع واتجاه الترقيم والأرقام العربية واللاتينية المختلطة",
+            "التسجيل في ثلاث نقرات أو أقل: اختر السن ← الأسطح ← الحالة",
+            "تكافؤ بين لوحة المفاتيح واللمس؛ يجب أن يعمل بيد واحدة على جهاز لوحي مع ارتداء القفازات"] },
+    { t:"تنفيذ التمرير عبر الزمن",
+      where:"الواجهة الأمامية واستعلام المخطط بتاريخ",
+      subs:["اسحب شريط التاريخ وشاهد المخطط يتغيّر",
+            "ينتج مجاناً من نموذج الإحلال، وأثره في العروض التقديمية كبير"] },
+    { t:"بناء التشخيصات",
+      where:"جدول diagnoses جديد",
+      subs:["مرتبطة بالسن والسطح، مرمّزة، بحالة ضمن {نشط، مُعالَج، مستبعَد، تحت المراقبة}",
+            "دعم تشخيصات متعددة متزامنة وتشخيصات تفريقية على السن نفسه",
+            "لها تاريخها الخاص"] },
+    { t:"بناء الملاحظات السريرية بحالات المسودة والتوقيع والملحق",
+      where:"جدول clinical_notes جديد",
+      subs:["المسودة قابلة للتعديل؛ التوقيع يجمّد الملاحظة ويختم الكاتب والوقت",
+            "التغييرات بعد التوقيع ملاحق تُعرض أسفل الأصل ولا تحلّ محلّه",
+            "الملاحظات الموقّعة يجب ألا يكون لها مسار تعديل في الـ API"] },
+    { t:"بناء نظام قوالب الملاحظات",
+      where:"جدول note_templates جديد",
+      subs:["ثلاثة مستويات: قوالب النظام، وقوالب المنشأة المخصّصة، وقوالب الطبيب الشخصية",
+            "SOAP كقالب لا كإلزام — أغلب ملاحظات الأسنان مرتبطة بالإجراء",
+            "الملء التلقائي من المخطط والعلاج والموعد؛ إعادة كتابة رقم السن هي موضع فقدان الثقة",
+            "ملكية القوالب عامل احتفاظ بالعملاء"] },
+    { t:"تنفيذ التوقيع المُشارك",
+      where:"الملاحظات السريرية وقيود المخطط",
+      subs:["المساعد أو أخصائي الصحة يكتب المسودة، والطبيب المشرف يوقّع",
+            "مطلوب في كثير من الولايات القضائية وثغرة حقيقية عند عدة منافسين"] }
+  ],
+  acceptance:[
+    "لا يمكن تعديل قيد في المخطط في مكانه أبداً؛ التصحيح ينتج صفاً محلّاً ويحتفظ الأصل بكاتبه وطابعه الزمني",
+    "يمكن إعادة بناء المخطط بأي تاريخ سابق ويطابق ما سُجّل حينها",
+    "الجسر من ثلاث وحدات يُخزَّن ويُعرض كحقيقة سريرية واحدة عبر group_id",
+    "مخطط الأسنان يُعرض صحيحاً في الاتجاه من اليمين لليسار بترتيب أرباع واتجاه ترقيم صحيحين",
+    "التسجيل الروتيني يكتمل في ثلاث نقرات",
+    "مخطط اللثة يُخزَّن منفصلاً ويمكن رسمه بيانياً عبر الزمن",
+    "الملاحظة السريرية الموقّعة تعيد 405 أو 403 عند أي محاولة تعديل؛ والملاحق تُضاف أسفل الأصل",
+    "القيود التي يكتبها المساعد تتطلب توقيع طبيب مشارك لتُعتبر نهائية",
+    "كل تعديل على المخطط أو الملاحظات ينتج قيد تدقيق"
+  ],
+  risks:[
+    "مخاطرة عالية على مستوى الصحّة السريرية — تحقّق مع أطباء ممارسين قبل الكتابة",
+    "يُقدَّر بأقل من حقيقته دائماً: الأسطح، الإحلال، الإطباق المختلط، الجسور الممتدة، والعرض من اليمين لليسار",
+    "إن صدرت هذه المرحلة بقيود قابلة للتعديل «توفيراً للوقت»، يضيع التاريخ السريري نهائياً ولا يستعيده أي ترحيل",
+    "ابنِه كنموذج بـ 32 مربع اختيار ولن تتبناه أي عيادة مهما كان بقية المنتج صحيحاً"
+  ],
+  tests:[
+    "عدم قابلية المخطط للتعديل: محاولات التعديل مرفوضة؛ الإحلال يحفظ الصف الأصلي",
+    "إعادة تشغيل المخطط بتاريخ سابق تعيد الحالة التاريخية الصحيحة",
+    "القيود متعددة الأسطح ومتعددة الأسنان (الجسور) تُجمَّع بشكل صحيح",
+    "تحويل الترقيم FDI ← Universal ← Palmer يعود صحيحاً في الاتجاهين",
+    "الملاحظات الموقّعة غير قابلة للتعديل؛ الملاحق تُضاف وتُنسَب",
+    "تدفق التوقيع المشارك يفرض شرط الطبيب المشرف",
+    "المستوى السريري من الصلاحيات: أدوار المحاسب والاستقبال تتلقى 403"
+  ]
+},
+{
+  num:5,
+  title:"تخطيط العلاج والإجراءات",
+  priority:"high",
+  complexity:"متوسط-عالٍ",
+  duration:"غير محددة",
+  depsText:"المرحلتان 3 و4",
+  goal:"بناء خطط علاج مُصدَّرة بنسخ مع قبول على مستوى البند، وسجلات تنفيذ العلاج المنبثقة عنها.",
+  why:"المتطلب الذي يشكّل الوحدة كلها هو أن المريض يقبل بعض البنود ويرفض أخرى، فالقبول يقع على البند لا على الخطة. ونسبة قبول العلاج هي المؤشر الذي يشتري المالك المنتج من أجله، ولا يمكن إعادة بنائها بأثر رجعي — فالتقاطها لحظة العرض يجب أن يُصمَّم الآن.",
+  milestone:"",
+  dbImpact:"treatment_plans بنسخ غير قابلة للتعديل، treatment_plan_items بحالة وأتعاب لكل بند، treatments, treatment_materials.",
+  apiImpact:"عرض الخطة، القبول والرفض لكل بند، تصدير نسخ الخطة، تنفيذ العلاج. حالة الخطة مُشتقّة ولا تُضبط يدوياً.",
+  frontendImpact:"منشئ الخطط، عرض للمريض، تدفق من المخطط إلى الخطة، شاشة تنفيذ العلاج مع صور قبل وبعد.",
+  security:"تغييرات الأتعاب والخصومات محمية بصلاحيات وبسقف مضبوط. المستوى السريري للمحتوى السريري والمستوى المالي للتسعير.",
+  outcome:"خطط علاج يمكن عرضها وقبولها جزئياً وتصدير نسخ منها وجدولتها — مع توافر تحليلات القبول منذ أول خطة.",
+  tasks:[
+    { t:"بناء خطط العلاج مع تصدير النسخ",
+      where:"جدول treatment_plans جديد",
+      subs:["الحقول: patient_id, created_by, presented_at, presented_by, version, status",
+            "عرض الخطة يجمّد نسخة بأسعارها؛ والتعديل ينشئ النسخة 2 وتبقى النسخة 1 تماماً كما رآها المريض",
+            "هذا سجل سريري وتجاري معاً — عبارة «أنت سعّرتها لي بثمانية آلاف» نقاش يجب أن يحسمه النظام",
+            "حالة الخطة مُشتقّة من بنودها ولا تُضبط يدوياً أبداً"] },
+    { t:"بناء بنود خطة العلاج مع القبول لكل بند",
+      where:"جدول treatment_plan_items جديد",
+      subs:["الحقول: plan_id, procedure_id, tooth_id[], surfaces[], phase, priority, estimated_duration, dentist_id",
+            "المالية: fee, discount, tax, insurance_estimate, patient_portion",
+            "الحالة ضمن: مقترح | مقبول | مرفوض | مؤجَّل | مجدوَل | قيد التنفيذ | منجَز | ملغى",
+            "accepted_at, declined_at, decline_reason",
+            "يرتبط بـ appointment_id عند الجدولة وبـ treatment_id عند التنفيذ",
+            "phase يرتّب: العاجل ← الترميمي ← الاختياري"] },
+    { t:"تنفيذ التقاط تحليلات القبول",
+      where:"تدفق عرض الخطة",
+      subs:["قيمة المقبول ÷ قيمة المعروض، مقسّمة حسب الطبيب والإجراء والفترة",
+            "يتطلب التقاط presented_at وأتعاب كل بند لحظة العرض",
+            "صمّمه الآن — لا يمكن إعادة بنائه لاحقاً"] },
+    { t:"بناء التدفق من المخطط إلى الخطة",
+      where:"الواجهة الأمامية — تكامل مخطط الأسنان",
+      subs:["النقر على سطح متسوّس يعرض الإجراءات التي تعالجه، مسعّرة من الكتالوج، وتنتقل مباشرة إلى خطة علاج",
+            "هذا التفاعل هو ما يحوّل التسجيل السريري إلى إيراد، وموضع ارتباك أغلب المنافسين"] },
+    { t:"بناء العلاجات المنفَّذة",
+      where:"جدول treatments جديد",
+      subs:["المريض، السن والأسطح، الطبيب، المساعد، الموعد، التاريخ، المدة الفعلية",
+            "ربط الملاحظة السريرية، الحالة، المرفقات، صور قبل وبعد",
+            "الأتعاب المحصّلة فعلياً؛ وقيود المخطط التي أنتجها",
+            "قابل للإضافة فقط بعد الاكتمال؛ التصحيحات ملاحق"] },
+    { t:"ربط العلاجات باستهلاك المواد",
+      where:"جدول ربط treatment_materials جديد — يُستهلك في المرحلة 8",
+      subs:["حشوة الكومبوزيت تستهلك كبسولة كومبوزيت ووحدة لاصق وقفازين",
+            "هذا هو الجسر بين الشقّ السريري وشقّ المشتريات في المنتج"] },
+    { t:"بناء شاشة عرض الخطة للمريض",
+      where:"الواجهة الأمامية",
+      subs:["لغة مفهومة للمريض، مع قبول ورفض لكل بند",
+            "شفافية مالية: ما الذي يدفعه المريض لكل بند"] },
+    { t:"إضافة حقول ربط الترميز الخارجي الاختيارية",
+      where:"procedure_catalog من المرحلة 1",
+      subs:["ICD-10/ICD-11 للتشخيصات و CDT للإجراءات",
+            "ابنِ كتالوجك الخاص كمفتاح أساسي مع ربط اختياري بالرموز",
+            "أضِف أعمدة الربط الآن حتى لو بقيت فارغة — يجعل التأمين في المرحلة 3 تغيير إعدادات لا ترحيل بيانات"] }
+  ],
+  acceptance:[
+    "يمكن للمريض قبول بعض بنود الخطة ورفض غيرها؛ وحالة الخطة تُشتق صحيحاً من حالات البنود",
+    "عرض الخطة يجمّد نسخة بأسعارها؛ والتعديل اللاحق لا يغيّر ما أظهرته النسخة الأولى",
+    "يمكن حساب نسبة قبول العلاج لكل طبيب ولكل إجراء ولكل فترة من بيانات لحظة العرض",
+    "النقر على حالة مسجّلة في المخطط يعرض إجراءات مسعّرة وينشئ بند خطة",
+    "العلاج المنجَز يكتب قيود المخطط المقابلة",
+    "تجاوزات الأتعاب والخصومات فوق السقف المضبوط تُرفض دون صلاحية مرفوعة",
+    "العلاجات غير قابلة للتعديل بعد اكتمالها"
+  ],
+  risks:[
+    "نموذج القبول يجب أن يكون على مستوى البند من البداية؛ إضافته لاحقاً تُبطل كل مؤشرات القبول التاريخية",
+    "تصدير نسخ الخطة يسهل إغفال تفاصيله — الخطة القابلة للتعديل تدمّر السجل التجاري"
+  ],
+  tests:[
+    "القبول الجزئي: خليط من القبول والرفض ينتج حالة خطة مشتقّة صحيحة",
+    "تصدير النسخ: النسخة 1 دون تغيير بعد إنشاء النسخة 2",
+    "تجميد الأسعار: تغييرات أسعار الكتالوج لا تغيّر خطة معروضة",
+    "حساب نسبة القبول مقابل بيانات اختبار معروفة",
+    "فرض سقف الخصم حسب الدور",
+    "اكتمال العلاج يكتب قيود المخطط الصحيحة ويصبح بعدها غير قابل للتعديل"
+  ]
+}
+);
+PHASES.push(
+{
+  num:6,
+  title:"الفوترة والنظام المالي",
+  priority:"high",
+  complexity:"عالٍ",
+  duration:"غير محددة",
+  depsText:"المرحلة 5",
+  goal:"بناء فوترة المرضى على دفتر أستاذ مزدوج القيد قابل للإضافة فقط، مع الفواتير والمدفوعات والمرتجعات وخطط التقسيط والتسوية اليومية.",
+  why:"أموال المرضى تشمل الدفعات الجزئية وحسابات العائلة وتقسيمات التأمين والمرتجعات والإعفاءات والنزاعات. الرصيد القابل للتعديل لا ينجو من أي منها. ونمط order_expenses القائم — صف total/paid/remaining قابل للتعديل بأعمدة float وحسابات معكوسة حالياً — يجب ألا يُمدَّد إلى حسابات المرضى.",
+  milestone:"نقطة إطلاق النسخة الأولى — المنتج قابل للبيع للعيادات عند نهاية هذه المرحلة.",
+  dbImpact:"ledger_accounts, ledger_entries (إضافة فقط), invoices, invoice_items, payments, credit_notes, refunds, write_offs, payment_plans, installments. القاعدة الثابتة: مجموع المدين = مجموع الدائن لكل معاملة.",
+  apiImpact:"إصدار الفاتورة، تحصيل الدفعة مع مفاتيح Idempotency، الاسترداد، الإشعار الدائن، أعمار الذمم، الإقفال اليومي. ويب هوكس البوابة فريدة على (gateway, gateway_txn_id).",
+  frontendImpact:"شاشات الفواتير، تحصيل الدفعات، عرض حساب المريض، تقرير الإقفال والتسوية اليومية، لوحة أعمار الذمم.",
+  security:"المستوى المالي من الصلاحيات. الاسترداد والإلغاء يتطلبان صلاحية مرفوعة. كل التغييرات المالية مُدقَّقة.",
+  outcome:"نظام مالي قابل للتسوية يمكن فيه تفسير أي رصيد مريض بسلسلة قيود قابلة للإضافة فقط.",
+  tasks:[
+    { t:"بناء دفتر الأستاذ مزدوج القيد",
+      where:"جدولا ledger_accounts و ledger_entries الجديدان — الشيء الوحيد الذي يكتب المال",
+      subs:["حسابات لكل مريض ولكل شركة تأمين ولكل صندوق فرع ولكل تصنيف إيراد ولكل بند خصم أو إعفاء",
+            "ledger_entry: transaction_id, account_id, debit, credit, currency, reference_type, reference_id, occurred_at, posted_at, created_by, branch_id",
+            "قاعدة ثابتة: لكل transaction_id يكون مجموع المدين = مجموع الدائن",
+            "إضافة فقط — لا تعديل ولا حذف؛ التصحيحات قيود عكسية",
+            "رصيد المريض إسقاط محسوب على الحساب لا رقم مخزَّن قابل للتعديل",
+            "المال بنوع decimal(12,2) أو وحدات صحيحة صغرى — لا float أبداً"] },
+    { t:"بناء الفواتير بترقيم متسلسل بلا فجوات",
+      where:"جدولا invoices و invoice_items الجديدان",
+      subs:["ترقيم متسلسل لكل فرع، بلا فجوات، وغير قابل للتعديل بعد الإصدار",
+            "بنود الفاتورة ترتبط بالعلاجات وتحمل الأتعاب والخصم والضريبة والسن",
+            "التصحيحات عبر إشعار دائن لا بتعديل الفاتورة"] },
+    { t:"بناء المدفوعات والدفعات الجزئية والعرابين",
+      where:"جدول payments جديد",
+      subs:["طريقة الدفع، المرجع، معرّف معاملة البوابة، مفتاح Idempotency",
+            "قيد تفرّد على (gateway, gateway_txn_id) بحيث لا يفعل الويب هوك المكرر شيئاً",
+            "العرابين والدفعات المسبقة تُحتجز كالتزام حتى تنفيذ العلاج"] },
+    { t:"بناء المرتجعات والإشعارات الدائنة والإعفاءات",
+      where:"جداول credit_notes و refunds و write_offs الجديدة",
+      subs:["كل منها يسجّل قيوداً عكسية في الدفتر",
+            "الاسترداد والإلغاء يتطلبان صلاحية مرفوعة"] },
+    { t:"تنفيذ الخصومات بسقوف محكومة بالصلاحيات",
+      where:"طبقة الفاتورة وبنود الخطة",
+      subs:["خصومات لكل إجراء ولكل فاتورة",
+            "سقف محكوم بالصلاحية مع سبب إلزامي"] },
+    { t:"بناء حسابات العائلة والطرف المسؤول",
+      where:"طبقة حسابات الدفتر و patient_contacts من المرحلة 2",
+      subs:["الأب الذي يدفع عن ثلاثة أبناء حساب واحد بثلاثة مرضى",
+            "الدافع غالباً ليس المريض"] },
+    { t:"بناء خطط الدفع والأقساط",
+      where:"جدولا payment_plans و installments الجديدان",
+      subs:["الزرعات والتقويم نادراً ما تُدفع دفعة واحدة"] },
+    { t:"بناء الإقفال والتسوية اليومية",
+      where:"طبقة التقارير",
+      subs:["موظف الاستقبال يشغّله في نهاية الوردية",
+            "غير لامع، وهو أول ما يسأل عنه مديرو العيادات"] },
+    { t:"بناء أعمار الذمم المدينة",
+      where:"طبقة التقارير",
+      subs:["شرائح 0–30 و31–60 و61–90 وأكثر من 90 يوماً",
+            "الدين المتقادم غير مرئي بدون هذا، وهو موضع أكبر خسائر العيادات"] },
+    { t:"دمج بوابة دفع إلكتروني",
+      where:"تكامل جديد",
+      subs:["ويب هوكس Idempotent؛ أعِد دائماً 200",
+            "سوِّ مع البوابة يومياً منذ أول معاملة",
+            "غلّف إنشاء الطلب والدفع في معاملة؛ وعند الفشل ألغِ أو استرد تلقائياً"] },
+    { t:"إعداد الضريبة لكل فرع",
+      where:"branch_settings من المرحلة 1",
+      subs:["نسب الضريبة وقواعدها تختلف بين الفروع والولايات القضائية"] }
+  ],
+  acceptance:[
+    "كل معاملة في الدفتر متوازنة: مجموع المدين = مجموع الدائن، مفروضة ومختبرة",
+    "رصيد المريض يساوي دائماً مجموع قيوده في الدفتر",
+    "لا يوجد مسار في الكود يعدّل أو يحذف قيداً في الدفتر؛ التصحيحات قيود عكسية",
+    "أرقام الفواتير متسلسلة وبلا فجوات لكل فرع، والفاتورة المُصدَرة غير قابلة للتعديل",
+    "الدفعات الجزئية والعرابين والمرتجعات والإعفاءات تنتج أرصدة صحيحة جميعاً",
+    "ويب هوك مكرر من البوابة لا يسجّل قيداً مزدوجاً",
+    "إعادة طلب دفع بنفس مفتاح Idempotency لا تسبب خصماً مزدوجاً",
+    "الإقفال اليومي يسوّي النقد والبطاقات وتحصيلات البوابة",
+    "شرائح أعمار الذمم صحيحة مقابل بيانات اختبار",
+    "لا يتبقى أي float في أي عمود مالي"
+  ],
+  risks:[
+    "مخاطرة عالية — الصحّة والتعرّض التنظيمي",
+    "سوِّ يومياً مقابل البوابة منذ أول معاملة على الإطلاق",
+    "هذه نقطة إطلاق النسخة الأولى؛ ضغط اختصار الطرق سيكون أعلى ما يكون تحديداً حيث تكلّف الاختصارات أكثر"
+  ],
+  tests:[
+    "قاعدة توازن الدفتر عبر كل أنواع المعاملات",
+    "إسقاط الرصيد يساوي مجموع الدفتر بعد تسلسلات عشوائية من الرسوم والمدفوعات والمرتجعات والإعفاءات",
+    "Idempotency الويب هوك المكرر",
+    "Idempotency إعادة محاولة الدفع",
+    "عدم قابلية الفاتورة للتعديل بعد الإصدار",
+    "فرض سقف الخصم حسب الدور",
+    "رفع الصلاحية للاسترداد والإلغاء",
+    "أعمار الذمم والإقفال اليومي مقابل بيانات اختبار معروفة"
+  ]
+},
+{
+  num:7,
+  title:"التصوير والوصفات والإقرارات والمختبر",
+  priority:"medium",
+  complexity:"متوسط-عالٍ",
+  duration:"غير محددة",
+  depsText:"المرحلتان 4 و5 — يمكن أن تعمل بالتوازي مع المرحلتين 8 و9",
+  goal:"إضافة التصوير السريري مع التعليقات، والوصف الآمن للأدوية، والتقاط الإقرارات بشكل سليم قانونياً، وإدارة حالات مختبر الأسنان.",
+  why:"هذه الوحدات الأربع تُكمل السجل السريري. التصوير يقود التشخيص وعرض الحالة؛ والإقرار وثيقة قانونية؛ والوصفات تحمل التزاماً بسلامة المريض؛ وتواريخ استحقاق حالات المختبر هي المصدر الأكثر شيوعاً للإخفاق أمام المريض في عيادة الأسنان.",
+  milestone:"",
+  dbImpact:"images مع تعليقات مخزّنة كطبقة منفصلة, formulary_drugs, prescriptions, prescription_items, consent_templates (مُصدَّرة بنسخ), consent_signatures (غير قابلة للتعديل ومُجزَّأة), lab_cases, lab_case_messages, lab_case_attachments.",
+  apiImpact:"رفع الصور مع توليد المشتقات عبر قائمة الانتظار، الجلب الموقّع، إصدار الوصفة مع حجب الحساسيات، توقيع الإقرار (بلا مسار تعديل)، دورة حياة حالة المختبر.",
+  frontendImpact:"عارض صور بالمقارنة والتعليق، محرّر الوصفات، توقيع الإقرار على جهاز لوحي، لوحة حالات المختبر.",
+  security:"كل التصوير على تخزين خاص مع تسجيل إصدار الروابط الموقّعة. الإقرارات الموقّعة غير قابلة للتعديل ومُجزَّأة. تجاوز الحساسية يتطلب سبباً ويُسجَّل.",
+  outcome:"سجل سريري كامل يشمل الصور والوصفات والإقرارات الموقّعة وحالات المختبر المتتبَّعة.",
+  tasks:[
+    { t:"بناء إدارة الصور على التخزين الخاص",
+      where:"جدول images جديد وطبقة التخزين من المرحلة 0",
+      subs:["تخزين كائنات خاص فقط؛ روابط موقّعة قصيرة العمر بعد فحص التفويض؛ سجّل كل إصدار",
+            "ولّد المشتقات عند الرفع عبر قائمة الانتظار — مصغّرة ومحسّنة للويب؛ لا تُعِد ترميز الأصل التشخيصي أبداً",
+            "اربط بالمريض والأسنان (متعددة) والعلاج والموعد والتشخيص ووقت الالتقاط والملتقِط والجهاز",
+            "الأنواع: ذروية، عضّية، بانورامية، سيفالومترية، مرجع أشعة مقطعية، صور داخل الفم، صور خارج الفم، مسح نماذج، مسح مستندات"] },
+    { t:"بناء التعليقات كطبقة بيانات منفصلة",
+      where:"جدول image_annotations جديد",
+      subs:["لا تحرق التعليقات داخل البكسلات أبداً",
+            "الأصل يجب أن يبقى نقياً تشخيصياً، والتعليقات يجب أن تكون منسوبة وقابلة للتراجع"] },
+    { t:"بناء عرض مقارنة الصور",
+      where:"الواجهة الأمامية",
+      subs:["جنباً إلى جنب وقبل/بعد حسب التاريخ",
+            "سهل البناء وقيمته عالية بشكل غير متناسب في عرض الحالة وإقناع المريض بالعلاج"] },
+    { t:"إضافة تخزين ملفات DICOM وتحليل بياناتها الوصفية",
+      where:"طبقة استقبال الصور",
+      subs:["اقبل واحفظ ملفات .dcm، واستخرج بيانات المريض والدراسة والسلسلة، واعرض الصور أحادية الإطار",
+            "العارض الكامل مع النوافذ وشبكات PACS في المرحلة 3 — ليس هنا",
+            "لا تبنِ إعادة بناء ثلاثية الأبعاد للأشعة المقطعية أبداً؛ تكامل مع البرامج التي يملكها الأطباء"] },
+    { t:"بناء جسر أجهزة الاستشعار",
+      where:"تطبيق مساعد صغير لسطح المكتب",
+      subs:["يدفع اللقطات من مستشعرات داخل الفم مباشرة إلى سجل المريض",
+            "غير لامع، وهو ما يجعل الاستخدام اليومي بلا احتكاك"] },
+    { t:"بناء دليل الأدوية",
+      where:"جدول formulary_drugs جديد مع بيانات أولية",
+      subs:["مجموعة منتقاة تخص طب الأسنان بنحو 200 دواء، لا قاعدة بيانات وطنية كاملة",
+            "مسكّنات، مضادات حيوية، مطهّرات، مخدّرات موضعية، مضادات فطريات، مهدّئات",
+            "المراجع الدوائية المهيكلة هي ما يجعل فحص السلامة ممكناً"] },
+    { t:"بناء الوصفات مع حجب صارم للحساسيات",
+      where:"جدولا prescriptions و prescription_items الجديدان",
+      subs:["الدواء، التركيز، الشكل، الجرعة، التكرار، طريق الإعطاء، المدة، الكمية، التكرارات، التعليمات بلغة المريض",
+            "يجب أن يحجب النظام بشكل صارم أي دواء مسجّل أن المريض يتحسّس منه",
+            "التجاوز يتطلب سبباً صريحاً ويُسجَّل",
+            "التحذير اللين الذي يتجاوزه الطبيب المشغول أسوأ من لا شيء — ابنِه صحيحاً أو لا تدّعِه",
+            "فحص التداخلات الدوائية يتطلب قاعدة بيانات سريرية مرخّصة وهو في المرحلة 3؛ لا تُصدر بيانات تداخلات تقريبية أبداً"] },
+    { t:"بناء طباعة الوصفة",
+      where:"طبقة الطباعة وملفات PDF",
+      subs:["ترويسة العيادة ورقم ترخيص الواصف",
+            "جودة الطباعة مهمة — تُسلَّم للمرضى وهي واجهة العيادة",
+            "قوالب وصفات لكل طبيب"] },
+    { t:"بناء قوالب الإقرارات المُصدَّرة بنسخ",
+      where:"جدول consent_templates جديد",
+      subs:["لكل تصنيف إجراء، ومتعدد اللغات",
+            "تعديل القالب ينشئ نسخة جديدة دائماً؛ والتواقيع القائمة تبقى مرتبطة بالنسخة الموقّعة",
+            "الأنواع: علاج عام، جراحة وخلع، زرع، علاج لبّي، تقويم، تخدير، تصوير ونشر، معالجة بيانات، وعلاج القاصر عبر وليّ الأمر"] },
+    { t:"بناء تواقيع الإقرار غير القابلة للتعديل",
+      where:"جدول consent_signatures جديد",
+      subs:["المريض، نسخة القالب، وقت التوقيع، صورة التوقيع أو التوقيع المعمّى، الموظف الشاهد، عنوان IP والجهاز",
+            "خزّن بصمة تجزئة (hash) للمستند المعروض بالضبط — هذا ما يثبت أن شيئاً لم يتغيّر بعدها",
+            "لا مسار تعديل في الـ API؛ والسحب سجل جديد يشير إلى الأصل",
+            "الالتقاط على جهاز لوحي بجانب الكرسي؛ وإرفاق ملف PDF بالخط الزمني"] },
+    { t:"بناء إدارة حالات المختبر",
+      where:"جدول lab_cases جديد",
+      subs:["المختبر وحدة قائمة بذاتها تشترك في سجل Organization بنوع laboratory — وليس مورّداً",
+            "حالة المختبر عمل مُصنَّع حسب الطلب مرتبط بمريض وسن، لا شراء صنف من كتالوج",
+            "الحقول: المريض، العلاج، الأسنان، الطبيب، الفرع، المختبر، نوع الحالة، المادة، اللون ودليل الألوان، ملاحظات الإطباق، تعليمات خاصة، نوع الطبعة، المرفقات",
+            "التواريخ: الإرسال، الاستحقاق، التجربة، الاستلام، التركيب",
+            "الحالات: مسودة ← مُرسَلة ← قيد التصنيع ← تجربة ← تعديلات ← مشحونة ← مستلمة ← مركّبة (+ إعادة تصنيع، مرفوضة)",
+            "المختبرات كثيراً ما تكون داخلية، وهو ما لا يستطيع نموذج المورّد التعبير عنه إطلاقاً"] },
+    { t:"ربط تواريخ استحقاق المختبر بالجدولة",
+      where:"حالات المختبر × مواعيد المرحلة 3",
+      subs:["حجز موعد التركيب قبل استحقاق الحالة هو سير العمل الفعلي",
+            "التحذير عند عدم وصول الحالة في الوقت يمنع الإخفاق الأكثر شيوعاً أمام المريض في عيادة الأسنان"] },
+    { t:"بناء تتبّع إعادة التصنيع وتحليلاته",
+      where:"lab_cases: remake_reason, remake_of_case_id",
+      subs:["نسبة إعادة التصنيع لكل مختبر تخبر المالك بأي مختبر يجب التوقف عن التعامل معه",
+            "لا يُظهرها أي منافس بشكل جيد"] }
+  ],
+  acceptance:[
+    "لا يمكن جلب أي صورة دون فحص تفويض ورابط موقّع، وكل إصدار يُسجَّل",
+    "الأصول التشخيصية لا يُعاد ترميزها أبداً؛ والتعليقات تُخزَّن كطبقة منفصلة",
+    "وصف دواء يتحسّس منه المريض يُحجب؛ والتجاوز يتطلب سبباً وينتج قيد تدقيق",
+    "الإقرار الموقّع لا يمكن تعديله عبر أي مسار في الـ API، وبصمة المستند تتحقق",
+    "تعديل قالب إقرار ينشئ نسخة جديدة ويُبقي التواقيع القائمة مرتبطة بالنسخة الموقّعة",
+    "حالة المختبر تمرّ بدورة حياتها الكاملة ويظهر تاريخ استحقاقها مقابل موعد التركيب",
+    "نسبة إعادة التصنيع لكل مختبر قابلة للاستخراج في تقرير"
+  ],
+  risks:[
+    "حجب الحساسيات يجب أن يكون صارماً فعلاً أو ألا يُصدر إطلاقاً",
+    "اقتصاديات تخزين الصور: الأشعة كبيرة ويُحتفظ بها سنوات — احسب الكلفة لكل مريض سنوياً قبل التسعير",
+    "عدم قابلية الإقرار للتعديل شرط قانوني؛ سجل إقرار قابل للتعديل قيمته سلبية"
+  ],
+  tests:[
+    "التحكم بالوصول للملفات: جلب صورة دون تفويض مرفوض؛ الروابط الموقّعة تنتهي",
+    "حجب الدواء المتعارض مع الحساسية ومسار التجاوز المُسجَّل",
+    "عدم قابلية الإقرار للتعديل: محاولات التعديل مرفوضة؛ البصمة تطابق المستند المعروض",
+    "تصدير نسخ قوالب الإقرار يحفظ التواقيع السابقة",
+    "انتقالات حالات المختبر وتحذيرات تاريخ الاستحقاق",
+    "استخراج بيانات DICOM الوصفية مقابل ملفات عيّنة"
+  ]
+},
+{
+  num:8,
+  title:"المخزون والأجهزة والتعقيم",
+  priority:"medium",
+  complexity:"متوسط-عالٍ",
+  duration:"غير محددة",
+  depsText:"المرحلتان 5 و6 — يمكن أن تعمل بالتوازي مع المرحلتين 7 و9",
+  goal:"بناء مخزون العيادة مع تتبّع التشغيلات وتواريخ الصلاحية، وصيانة أجهزة تحجب الجدولة، وسجلات التعقيم — وجسر المشتريات إلى سوق المورّدين.",
+  why:"مخزون العيادة ومخزون المورّد مشكلتان مختلفتان ويجب أن يكونا جدولين منفصلين؛ الكود الحالي يخلطهما بنسخ صفوف المنتجات بمطابقة الاسم نصياً. وهذه المرحلة أيضاً الأهم استراتيجياً بعد النسخة الأولى: حلقة العلاج ← الاستهلاك ← إعادة الطلب ← السوق هي الميزة الوحيدة غير القابلة للنسخ بنيوياً.",
+  milestone:"استراتيجية — هنا يُبنى الخندق التنافسي.",
+  dbImpact:"clinic_inventory_items (تشغيلة، لوط، صلاحية، رقم تسلسلي), stock_movements (إضافة فقط), stock_transfers, purchase_requests, assets, maintenance_schedules, maintenance_records, breakdowns, sterilization_cycles.",
+  apiImpact:"استهلاك المخزون عند اكتمال العلاج، استعلامات الصلاحية، البحث من التشغيلة إلى المرضى، إنشاء طلب شراء في السوق.",
+  frontendImpact:"شاشات المخزون، لوحة الصلاحيات، سجل الأجهزة، إدخال سجل التعقيم، مراجعة إعادة الطلب.",
+  security:"أدوار المخزون والمشتريات بلا أي وصول لبيانات المرضى. البحث بالتشغيلة يعبر إلى بيانات المرضى ويتطلب صلاحية سريرية.",
+  outcome:"مخزون عيادة ينقص مع تسجيل الإجراءات، وينبّه قبل انتهاء الصلاحية، ويتتبّع التشغيلة إلى المرضى المعالَجين بها، ويرفع طلبات شراء إلى سوق المورّدين.",
+  tasks:[
+    { t:"بناء مخزون العيادة منفصلاً عن مخزون المورّد",
+      where:"جدول clinic_inventory_items جديد",
+      subs:["مرتبط بـ product_id عالمي — لا نسخة من صف منتج",
+            "مقيّد بالفرع وبموقع التخزين (غرفة، خزانة، صينية بجانب الكرسي)",
+            "تشغيلة، لوط، صلاحية، رقم تسلسلي، الرصيد، المحجوز، الحد الأدنى، نقطة إعادة الطلب، الوحدة وتحويل العبوة",
+            "نسخ المنتج بمطابقة الاسم في OrderService::updateStatus يجب ألا ينتقل إلى المخزون السريري"] },
+    { t:"بناء حركات المخزون القابلة للإضافة فقط",
+      where:"جدول stock_movements جديد",
+      subs:["الأنواع: استلام، استهلاك، تحويل، تسوية، إعدام لانتهاء الصلاحية، تلف، مرتجع",
+            "الرصيد إسقاط محسوب لا رقم مخزَّن قابل للتعديل",
+            "المبدأ نفسه في الدفتر المالي وللسبب نفسه"] },
+    { t:"ربط الاستهلاك بالعلاجات",
+      where:"treatment_materials من المرحلة 5",
+      subs:["حشوة الكومبوزيت تستهلك كبسولة كومبوزيت ووحدة لاصق وقفازين",
+            "هذا هو الجسر بين الشقّ السريري وشقّ المشتريات في المنتج"] },
+    { t:"بناء إدارة الصلاحيات",
+      where:"خدمة الصلاحيات ومهمة مجدولة",
+      subs:["لوحة بالمخزون المقارب للانتهاء",
+            "تنبيهات قابلة للضبط عند 90 و60 و30 يوماً",
+            "اقتراح الاستهلاك بمبدأ الأقرب انتهاءً أولاً (FEFO)",
+            "منع استهلاك التشغيلات منتهية الصلاحية",
+            "ملاحظة: التطبيق حالياً بلا أي مهام مجدولة — دالة Console/Kernel::schedule() فارغة"] },
+    { t:"بناء التتبّع من التشغيلة إلى المرضى",
+      where:"استعلام يربط stock_movements × treatments × patients",
+      subs:["عند إعطاء رقم تشغيلة، اعرض كل مريض عولج بها",
+            "قدرة تنظيمية، يصعب إضافتها لاحقاً، وتكاد تكون غائبة عن المنافسين في هذه الشريحة"] },
+    { t:"بناء تحويلات المخزون بين الفروع",
+      where:"جدول stock_transfers جديد",
+      subs:["حركة خروج من فرع وحركة دخول إلى آخر كزوج مترابط"] },
+    { t:"بناء سجل الأجهزة",
+      where:"جدول assets جديد",
+      subs:["الاسم، التصنيف، الرقم التسلسلي، الصانع، الطراز، تاريخ الشراء، الكلفة، انتهاء الضمان، الفرع، الغرفة، الحالة",
+            "أمثلة: كراسي الأسنان، أجهزة الأشعة، أجهزة التعقيم، الضواغط، الماسحات، ماكينات التفريز"] },
+    { t:"بناء جدولة الصيانة التي تحجب المواعيد",
+      where:"maintenance_schedules و maintenance_records و breakdowns × جدولة المرحلة 3",
+      subs:["الكرسي المعطّل يحجب فتراته القابلة للحجز تلقائياً — هذه هي الميزة الحاسمة",
+            "الأجهزة كقائمة فقط سجل أصول لا يحدّثه أحد",
+            "تذكيرات الصيانة عبر المجدوِل"] },
+    { t:"بناء تسجيل دورات التعقيم",
+      where:"جدول sterilization_cycles جديد",
+      subs:["رقم الدورة، الجهاز، التاريخ والوقت، المشغّل، البرنامج، الحرارة والضغط، محتويات الحمولة، نتيجة المؤشر البيولوجي أو الكيميائي، نجاح أو فشل",
+            "متطلب امتثال في أغلب الولايات القضائية، ويُحفظ اليوم في دفتر ورقي",
+            "تعقيد منخفض وثقة عالية — نحو أسبوع عمل ويكسب العروض التقديمية",
+            "تتبّع حزم الأدوات عبر الباركود هو المستوى المتقدم ومكانه المرحلة 3"] },
+    { t:"بناء جسر المشتريات إلى السوق",
+      where:"جدول purchase_requests جديد ← تدفق الطلبات القائم في سوق المورّدين",
+      subs:["بلوغ نقطة إعادة الطلب يولّد طلب شراء في منصة المورّدين",
+            "الخندق التنافسي: العلاج يستهلك المخزون ← المخزون يطلق إعادة الطلب ← إعادة الطلب تصل إلى سوق موردين موثّقين",
+            "غير قابل للنسخ بنيوياً دون شبكة توريد",
+            "يتطلب إصلاحات جانب السوق من تدقيق المنصة (supplier_id على الطلب، تجميد الأسعار، حجز المخزون) ليكون موثوقاً"] }
+  ],
+  acceptance:[
+    "اكتمال العلاج ينقص مخزون العيادة عبر سجل حركة لا عبر تعديل مباشر للكمية",
+    "الرصيد يساوي دائماً مجموع حركات المخزون",
+    "التشغيلات منتهية الصلاحية لا يمكن استهلاكها؛ والتنبيهات تعمل عند العتبات المضبوطة",
+    "عند إعطاء رقم تشغيلة يعرض النظام كل مريض عولج بها",
+    "الكرسي المعطّل أو تحت الصيانة لا يعرض فترات قابلة للحجز",
+    "يمكن تسجيل دورة تعقيم واسترجاعها مع نتيجة المؤشر",
+    "بلوغ نقطة إعادة الطلب يرفع طلب شراء في سوق المورّدين",
+    "أدوار المخزون والمشتريات تتلقى 403 على كل نقاط نهاية المرضى"
+  ],
+  risks:[
+    "تعقيد متوسط، لكن جسر السوق يعتمد على إصلاحات سلامة جانب السوق المحدَّدة في تدقيق المنصة",
+    "يجب أن يبقى مخزون العيادة والمورّد منفصلين؛ دمجهما يعيد خلل المطابقة بالاسم",
+    "الأهم استراتيجياً بعد النسخة الأولى — التقصير هنا يعني التفريط في الميزة التنافسية"
+  ],
+  tests:[
+    "مجموع حركات المخزون يساوي الرصيد عبر تسلسلات حركات عشوائية",
+    "منع استهلاك التشغيلة منتهية الصلاحية",
+    "اقتراح FEFO يختار التشغيلة الصحيحة",
+    "البحث بالتشغيلة يعيد بالضبط المرضى المعالَجين بها",
+    "عطل الجهاز يزيل التوافر في المجدوِل",
+    "إنشاء طلب الشراء يصل إلى السوق وهو Idempotent",
+    "دور المشتريات بلا وصول لبيانات المرضى"
+  ]
+}
+);
+PHASES.push(
+{
+  num:9,
+  title:"بوابة المرضى والتواصل والاستدعاء والحجز الإلكتروني",
+  priority:"medium",
+  complexity:"متوسط-عالٍ",
+  duration:"غير محددة",
+  depsText:"المراحل 3 و5 و6 — يمكن أن تعمل بالتوازي مع المرحلتين 7 و8",
+  goal:"بناء التواصل متعدد القنوات مع المرضى، ومحرك الاستدعاء، وبوابة المرضى، والحجز الإلكتروني العام.",
+  why:"الاستدعاء هو مصدر الإيراد المتكرر لعيادة الأسنان وهو موضع التسرّب المالي في أغلب العيادات. وواتساب هو القناة التي يقرؤها المرضى فعلاً في السوق المستهدف. والبوابة والحجز الإلكتروني يخففان عبء الهاتف ويفتحان قناة استقطاب.",
+  milestone:"",
+  dbImpact:"message_templates, message_logs, notification_preferences, recall_rules, patient_recalls, جلسات البوابة, leads.",
+  apiImpact:"واجهة بوابة بسطح صلاحيات منفصل تماماً. نقاط نهاية حجز عامة تشترك في محرك التوافر الداخلي.",
+  frontendImpact:"تطبيق بوابة المرضى، صفحة الحجز العامة، تسجيل الوصول الرقمي، لوحة الاستدعاء، محرّر قوالب الرسائل.",
+  security:"البوابة سطح مصادقة منفصل. المحتوى السريري لا يصل المريض إلا بعد إفراج صريح من الطبيب. الحجز يجب ألا يتجاوز ضمانات التزامن من المرحلة 3.",
+  outcome:"المرضى يتلقون التذكيرات على القناة التي يقرؤونها، والاستدعاءات تتحوّل إلى مواعيد تلقائياً، ويستطيع المرضى الحجز والموافقة على الخطط والدفع ذاتياً.",
+  tasks:[
+    { t:"بناء خدمة إرسال الرسائل بقنوات قابلة للتركيب",
+      where:"خدمة إرسال جديدة ومشغّلات قنوات",
+      subs:["واجهة WhatsApp Business API، رسائل نصية، بريد إلكتروني، إشعارات دفع، إشعارات داخل التطبيق",
+            "إدارة قوالب مع استبدال المتغيّرات ونسخ لكل لغة",
+            "تفضيلات القناة لكل مريض ولكل نوع حدث",
+            "تتبّع حالة التسليم مع إعادة المحاولة والتحويل الاحتياطي (واتساب ← رسالة نصية عند الفشل)",
+            "ساعات الهدوء؛ احترام إلغاء الاشتراك عالمياً؛ محاسبة كلفة كل رسالة",
+            "كل رسالة تُسجَّل في الخط الزمني للمريض",
+            "أصلح app/Jobs/SendFcmNotification.php الذي يستدعي FirebaseService::sendNotification() غير الموجودة",
+            "انقل كل إرسال الإشعارات إلى قوائم الانتظار — FirebaseService حالياً ينفّذ نداءات HTTPS متزامنة غير محمية داخل الطلب"] },
+    { t:"بدء إجراءات WhatsApp Business API مبكراً",
+      where:"إجراء خارجي",
+      subs:["تسجيل واجهة الأعمال واعتماد القوالب مسبقاً وسجل الموافقة كلها لها مدد انتظار خارجية",
+            "ابدأ هذا الإجراء أثناء المرحلة 6 لا في الأسبوع السابق للإطلاق"] },
+    { t:"بناء محرك قواعد الاستدعاء",
+      where:"جدول recall_rules جديد",
+      subs:["المُطلِق: اكتمال إجراء | آخر زيارة | زرع مثبَّت | بدء تقويم | علاج لثة | مخصّص",
+            "الفترة: 6 أو 12 أو 3 أشهر أو مخصّصة",
+            "النوع: تنظيف، فحص، صيانة لثة، مراجعة زرع، تعديل تقويم، متابعة بعد العملية، أشعة مستحقة",
+            "تسلسل التواصل، مثلاً: −14 يوماً، −3 أيام، +7 أيام، +30 يوماً عبر قنوات مختلفة"] },
+    { t:"بناء استدعاءات المرضى مع مهمة تجسيد ليلية",
+      where:"جدول patient_recalls جديد ومهمة مجدولة",
+      subs:["الحالة ضمن: مستحق | تم التواصل | مجدوَل | منجَز | فائت | ملغى الاشتراك",
+            "مصفوفة المحاولات (القناة، وقت الإرسال، الاستجابة)، appointment_id، completed_at",
+            "اكتمال العلاج يجدول الاستدعاء التالي تلقائياً",
+            "لوحة: المستحق، من تم التواصل معه، المتحوّل، والإيراد المنسوب للاستدعاء — أقنع رقم يمكن وضعه أمام مالك العيادة"] },
+    { t:"بناء الملء التلقائي لقائمة الانتظار عند الإلغاء",
+      where:"قائمة الانتظار من المرحلة 3 وخدمة الإرسال",
+      subs:["عند الإلغاء، رتّب حسب الاستعجال والتفضيل وإمكانية الوصول، ثم أبلغ على موجات",
+            "يستعيد إيراداً يضيع تماماً لولا ذلك — أوضح قصة عائد على الاستثمار في المنتج"] },
+    { t:"بناء بوابة المرضى",
+      where:"تطبيق بوابة جديد وسطح صلاحيات منفصل في الـ API",
+      subs:["مرئي: المواعيد (حجز/إعادة جدولة/إلغاء ضمن السياسة)، خطط العلاج بلغة مفهومة مع قبول ورفض لكل بند، الفواتير والرصيد مع الدفع الإلكتروني، وصفاته الخاصة، نماذج الإقرار للمراجعة والتوقيع، المستندات والصور المُفرَج عنها صراحةً، تذكيرات الاستدعاء، المراسلة الآمنة",
+            "غير مرئي أبداً: الملاحظات السريرية الخام، الأعلام الداخلية وتعليقات الطاقم، بيانات الكلفة والهامش وتكاليف المختبر، التشخيصات المبدئية أو التفريقية التي لم تُناقش بعد، سجلات أفراد العائلة الآخرين ما لم يُفوَّض، والصور افتراضياً",
+            "القاعدة الحاكمة: المحتوى السريري لا يصل المريض إلا بعد أن يختار الطبيب الإفراج عنه",
+            "النشر التلقائي للملاحظات يولّد معلومات مقلقة بلا سياق ومكالمات دعم ستُحمّلها العيادة لك"] },
+    { t:"بناء الحجز الإلكتروني العام",
+      where:"نقاط نهاية عامة على محرك التوافر من المرحلة 3",
+      subs:["يجب أن يشترك في محرك التوافر نفسه وضمانات التزامن نفسها — لا مسار ثانٍ أبداً لكتابة المواعيد",
+            "قيّده بأنواع الفترات المضبوطة",
+            "اطلب عربوناً للحالات مرتفعة القيمة أو للمرضى ذوي تاريخ عدم الحضور",
+            "وجّه حجوزات المرضى الجدد إلى طابور فرز لا مباشرة إلى التقويم",
+            "سياسة الإلغاء والتذكيرات الآلية"] },
+    { t:"بناء تسجيل الوصول الرقمي وحالة الطابور",
+      where:"الواجهة الأمامية والـ API",
+      subs:["تسجيل وصول عبر رمز QR، وحالة غرفة الانتظار",
+            "مكسب ظاهر في تجربة المريض ورخيص البناء"] },
+    { t:"بناء إدارة علاقات مبسّطة: العملاء المحتملون وقمع التحويل",
+      where:"جدول leads جديد",
+      subs:["مصدر الإحالة على كل مريض؛ التقاط العملاء المحتملين من صفحة الحجز؛ كيان Lead بسيط بحالة",
+            "القمع: عميل محتمل ← حجز ← حضور ← قبول علاج ← إيراد",
+            "يجيب على سؤال «أي تسويق أنتج إيراداً فعلاً» — سؤال لا يجيب عليه أي نظام أسنان تقريباً",
+            "لا تبنِ إدارة حملات كاملة ولا أتمتة تسويق بالبريد ولا تسلسلات تنقيط؛ تكامل مع الأدوات التي تستخدمها العيادات"] },
+    { t:"بناء ملاحظات المرضى وطلبات التقييم",
+      where:"خدمة الإرسال وجدول feedback جديد",
+      subs:["التقاط الرضا بعد الزيارة وطلب التقييمات"] }
+  ],
+  acceptance:[
+    "التذكير يُسلَّم على القناة المفضّلة للمريض ويتحوّل احتياطياً بشكل صحيح عند الفشل",
+    "إلغاء الاشتراك وساعات الهدوء محترمة عالمياً",
+    "الاستدعاءات تُجسَّد ليلياً وتتبع تسلسل التواصل وتتحوّل إلى مواعيد",
+    "نسبة تحوّل الاستدعاء والإيراد المنسوب إليه قابلان للاستخراج في تقرير",
+    "الإلغاء يُطلق إبلاغ قائمة الانتظار على موجات مرتّبة",
+    "مستخدم البوابة لا يستطيع جلب الملاحظات السريرية أو الأعلام الداخلية أو بيانات الكلفة أو سجل مريض آخر",
+    "الصور غير مرئية في البوابة حتى يفرج عنها الطبيب صراحةً",
+    "الحجز العام لا يمكن أن ينتج حجزاً مزدوجاً: يمرّ بالقيد نفسه المستخدم في الحجز الداخلي، مثبتاً باختبار",
+    "قمع العميل المحتمل إلى الإيراد يعمل من البداية للنهاية"
+  ],
+  risks:[
+    "تسجيل WhatsApp Business API واعتماد القوالب لهما مدد انتظار خارجية — ابدأ أثناء المرحلة 6",
+    "البوابة سطح مصادقة جديد وسطح هجوم جديد؛ عامل نموذج صلاحياتها كمنفصل لا كموروث",
+    "الحجز الإلكتروني الذي يتجاوز قيد المرحلة 3 يعيد الحجز المزدوج من الباب الخلفي"
+  ],
+  tests:[
+    "اختيار قناة الإشعار واحترام التفضيلات وساعات الهدوء وإعادة المحاولة والتحويل الاحتياطي",
+    "لا إرسال مكرر عند إعادة المحاولة",
+    "تقييم قواعد الاستدعاء ينتج تواريخ استحقاق صحيحة بلا تكرار؛ واحترام إلغاء الاشتراك",
+    "تفويض البوابة: كل بند في قائمة «غير مرئي أبداً» يعيد 403",
+    "تزامن الحجز العام مقابل حجز داخلي على الفترة نفسها",
+    "فرض العربون على المرضى المعلَّمين",
+    "نسبة القمع مقابل بيانات اختبار"
+  ]
+},
+{
+  num:10,
+  title:"التحليلات ولوحات المعلومات",
+  priority:"medium",
+  complexity:"متوسط",
+  duration:"غير محددة",
+  depsText:"بيانات تنتجها المراحل من 3 إلى 8",
+  goal:"بناء لوحات الطبيب والعيادة والإدارة من تجميعات مُجسَّدة، مع إمكانية التعمّق من كل رقم إلى صفوفه الأصلية.",
+  why:"اللوحات هي الوسيلة التي يبرّر بها المالك اشتراكه كل شهر. ودقة التعريفات أهم من عدد الرسوم البيانية — مؤشر يخالف حسابات العيادة نفسها يدمّر الثقة بكل ما عداه.",
+  milestone:"",
+  dbImpact:"جداول تجميع تُبنى ليلياً. نسخة قراءة متماثلة عندما يصبح حمل التقارير ظاهراً.",
+  apiImpact:"نقاط نهاية اللوحات تُخدَم من التجميعات لا من استعلامات حيّة على الجداول المعاملاتية. نقاط نهاية للتعمّق. التصدير مع تدقيق.",
+  frontendImpact:"ثلاثة أسطح للوحات (الطبيب، العيادة، الإدارة) مع تعمّق وإرسال تقارير مجدول.",
+  security:"المؤشرات المالية خلف المستوى المالي من الصلاحيات. التصدير مُدقَّق ومحدود المعدل مع تنبيه عند الاستخراج الجماعي.",
+  outcome:"لوحات يمكن تفسير كل رقم فيها وتتبّعه، بديلاً عن الإحصاءات الارتجالية الحالية.",
+  tasks:[
+    { t:"بناء جداول التجميع المُجسَّدة",
+      where:"جداول تجميع جديدة ومهام ليلية",
+      subs:["اخدم اللوحات من التجميعات لا من استعلامات حيّة على البيانات المعاملاتية",
+            "StatisticService الحالي ينفّذ أكثر من ستة استعلامات تجميع غير مخزّنة مؤقتاً لكل تحميل للوحة، منها اثنان بـ GROUP BY كاملين على order_items"] },
+    { t:"تنفيذ تعريفات المؤشرات الجوهرية بدقة",
+      where:"طبقة التقارير",
+      subs:["الإنتاج = مجموع أتعاب العلاجات المنجَزة في الفترة، قبل الخصومات",
+            "التحصيل = مجموع المدفوعات المستلمة في الفترة",
+            "نسبة التحصيل = التحصيل ÷ الإنتاج على 90 يوماً متحركة",
+            "الخلط بين الإنتاج والتحصيل هو الخطأ الأكثر شيوعاً في تقارير برامج الأسنان"] },
+    { t:"بناء لوحة الطبيب",
+      where:"الواجهة الأمامية والـ API",
+      subs:["مواعيد اليوم، المرضى، خطط العلاج، العلاجات المعلّقة، المتابعات",
+            "إنتاجه وإيراده ونسبة استغلال الكرسي"] },
+    { t:"بناء لوحة العيادة",
+      where:"الواجهة الأمامية والـ API",
+      subs:["الإيراد اليومي والشهري، المواعيد، عدم الحضور، نسبة الإلغاء",
+            "المرضى الجدد مقابل العائدين، نسبة قبول العلاج، الأرصدة المستحقة",
+            "المخزون، أداء الطاقم"] },
+    { t:"بناء لوحة الإدارة",
+      where:"الواجهة الأمامية والـ API",
+      subs:["الإيراد، الربح، الإنتاج، نسبة التحصيل",
+            "استقطاب المرضى والاحتفاظ بهم، نسبة قبول العلاج",
+            "أداء الأطباء، أداء الفروع، استغلال الكراسي، دوران المخزون"] },
+    { t:"تنفيذ بقية المؤشرات",
+      where:"طبقة التقارير",
+      subs:["نسبة قبول العلاج = قيمة البنود المقبولة ÷ قيمة البنود المعروضة",
+            "استغلال الكرسي = الدقائق الإنتاجية المحجوزة ÷ دقائق الكرسي المتاحة، باستثناء الحجب الإداري والإجازات",
+            "نسبة عدم الحضور حسب الطبيب والنوع ومهلة الحجز",
+            "الاحتفاظ بالمرضى (نسبة من زار خلال 18 شهراً) وقائمة المنقطعين",
+            "تحوّل الاستدعاء؛ الإيراد لكل زيارة؛ القيمة الدائمة للمريض",
+            "أعمار الذمم؛ إنتاج الطبيب ومعدله بالساعة؛ نسبة إعادة تصنيع المختبر؛ دوران المخزون وخسائر انتهاء الصلاحية"] },
+    { t:"جعل كل رقم في اللوحة قابلاً للتعمّق",
+      where:"الواجهة الأمامية والـ API",
+      subs:["النقر يفتح الصفوف الأصلية",
+            "المؤشر غير القابل للتفسير تذكرة دعم فني"] },
+    { t:"بناء إرسال التقارير المجدول والتصدير المُدقَّق",
+      where:"المجدوِل وطبقة التصدير",
+      subs:["تحديد معدل التصدير مع تنبيه عند الاستخراج الجماعي",
+            "كل تصدير مُدقَّق"] },
+    { t:"إضافة نسخة قراءة متماثلة للتقارير",
+      where:"البنية التحتية",
+      subs:["عندما يصبح حمل التقارير ظاهراً، انقل التحليلات خارج المسار المعاملاتي"] }
+  ],
+  acceptance:[
+    "كل مؤشر يطابق حساباً يدوياً مقابل مجموعة بيانات اختبار معروفة",
+    "الإنتاج والتحصيل رقمان متمايزان ولا يُخلط بينهما أبداً",
+    "كل رقم في اللوحة يتعمّق إلى الصفوف التي أنتجته",
+    "اللوحات تُخدَم من التجميعات وتُحمَّل دون استعلام حيّ للجداول المعاملاتية",
+    "المؤشرات المالية مخفية عن الأدوار التي لا تملك المستوى المالي من الصلاحيات",
+    "التصديرات مُدقَّقة ومحدودة المعدل"
+  ],
+  risks:[
+    "مخاطرة تقنية منخفضة؛ ومخاطرة عالية على دقة التعريفات — مؤشر خاطئ يدمّر الثقة بالمنتج كله",
+    "قِدَم التجميعات يجب أن يكون ظاهراً للمستخدم وإلا نوزعت الأرقام محل جدال"
+  ],
+  tests:[
+    "كل مؤشر مقابل بيانات اختبار بقيمة متوقعة محسوبة يدوياً",
+    "التعمّق يعيد بالضبط الصفوف التي جمعها الرقم الرئيسي",
+    "حجب الصلاحيات على اللوحات المالية",
+    "صحّة مهام التجميع وسلامتها عند إعادة التشغيل",
+    "قيود تدقيق التصدير وتحديد المعدل"
+  ]
+},
+{
+  num:11,
+  title:"تعدد الفروع وقدرات المؤسسات",
+  priority:"low",
+  complexity:"متوسط-عالٍ",
+  duration:"غير محددة",
+  depsText:"كل المراحل السابقة",
+  goal:"إطلاق قدرات مستوى المجموعة: التقارير الموحّدة، والعمليات بين الفروع، وأدوار مستوى المنشأة، والدخول الموحّد، وواجهة برمجية عامة.",
+  why:"هذا هو عقد المؤسسات. الكلفة هنا منخفضة إن كانت المرحلة 0 قد نمذجت الفروع بشكل صحيح، وعالية جداً إن لم تفعل — نموذج الفروع هو المحدّد الوحيد لكون هذه المرحلة رخيصة أم إعادة بناء.",
+  milestone:"",
+  dbImpact:"إضافات في معظمها إن كان العزل قد نُمذج صحيحاً في المرحلة 0. قوائم أسعار للفروع، سجلات التحويل بين الفروع، إسناد أدوار على مستوى المنشأة.",
+  apiImpact:"واجهة برمجية عامة مع ويب هوكس ومواصفة OpenAPI منشورة. مسار مصادقة SSO/SAML.",
+  frontendImpact:"وحدة تحكم لإدارة المجموعة، تقارير عبر الفروع، جدولة مركزية.",
+  security:"أدوار على مستوى المنشأة، SSO/SAML، خيارات موقع تخزين البيانات. تثبيت النشر في منطقة جغرافية خاصية معمارية لا إعداد.",
+  outcome:"منتج تستطيع مجموعة عيادات متعددة الفروع تشغيله مركزياً، مع سطح التكامل الذي يطلبه المشترون المؤسسيون.",
+  tasks:[
+    { t:"بناء التقارير الموحّدة عبر الفروع",
+      where:"طبقة التقارير",
+      subs:["أرباح وخسائر المجموعة مع تفصيل لكل فرع"] },
+    { t:"بناء تحويلات المخزون بين الفروع",
+      where:"stock_transfers من المرحلة 8",
+      subs:["استكمال سير عمل التحويل عبر حدود الفروع"] },
+    { t:"بناء قوائم أسعار الفروع",
+      where:"طبقة تجاوز الأسعار من المرحلة 1",
+      subs:["أسعار أساسية على مستوى المنشأة مع تجاوزات على مستوى الفرع"] },
+    { t:"دعم رحلات المرضى عبر الفروع",
+      where:"طبقة المرضى والمواعيد",
+      subs:["المرضى مملوكون للمنشأة أصلاً منذ المرحلة 2، فهذه مسألة تقارير وتجربة استخدام لا ترحيل بيانات",
+            "إظهار تاريخ زيارات المريض لكل فرع في الخط الزمني"] },
+    { t:"بناء الجدولة المركزية",
+      where:"طبقة الجدولة",
+      subs:["دور مركز اتصال يحجز عبر الفروع ويرى التوافر وبيانات التواصل فقط"] },
+    { t:"بناء أدوار على مستوى المنشأة",
+      where:"نطاق الفرع في Membership من المرحلة 0",
+      subs:["نطاق الفرع = الكل لطاقم مستوى المجموعة"] },
+    { t:"إضافة الدخول الموحّد SSO / SAML",
+      where:"طبقة المصادقة",
+      subs:["متطلب في مشتريات المؤسسات"] },
+    { t:"نشر واجهة برمجية عامة مع ويب هوكس ومواصفة OpenAPI",
+      where:"طبقة الـ API",
+      subs:["حمولات ويب هوك موقّعة مع إعادة محاولة",
+            "مواصفة OpenAPI مولّدة من الكود ومنشورة — ميزة تفاضلية حقيقية لدى المشترين المؤسسيين"] },
+    { t:"تنفيذ خيارات موقع تخزين البيانات",
+      where:"معمارية النشر",
+      subs:["التخزين المثبَّت في منطقة خاصية معمارية لا مجرد إعداد",
+            "يحدّد أي أسواق مؤسسية يمكن دخولها",
+            "نظام حماية البيانات السعودي وأنظمة البيانات الصحية الإماراتية كثيراً ما تشترط التخزين داخل الدولة"] }
+  ],
+  acceptance:[
+    "تستطيع المجموعة عرض بياناتها المالية الموحّدة وعلى مستوى كل فرع من وحدة تحكم واحدة",
+    "تحويلات المخزون بين الفروع تتطابق على الطرفين",
+    "تجاوزات أسعار الفروع تُطبَّق صحيحاً وترجع إلى أسعار المنشأة الأساسية",
+    "المريض المعالَج في فرعين له سجل واحد وخط زمني كامل عبر الفروع",
+    "مصادقة SSO تعمل من البداية للنهاية",
+    "الواجهة البرمجية العامة موثّقة بمواصفة OpenAPI منشورة والويب هوكس موقّعة ومعاد محاولتها",
+    "يمكن تثبيت النشر في منطقة جغرافية محددة"
+  ],
+  risks:[
+    "مخاطرة منخفضة إن كانت المرحلة 0 قد نمذجت الفروع صحيحاً؛ وعالية جداً إن لم تفعل",
+    "اكتشاف شرط موقع تخزين البيانات بعد توقيع عميل مؤسسي يعني إعادة بناء مكلفة"
+  ],
+  tests:[
+    "تقييد الصلاحيات عبر الفروع: الطاقم المقيّد بفرع لا يرى الفروع الأخرى",
+    "مجاميع التقارير الموحّدة تساوي مجموع تقارير الفروع",
+    "تطابق تحويلات المخزون بين الفروع",
+    "تسجيل الدخول عبر SSO وربط الأدوار",
+    "التحقق من توقيع الويب هوك وسلوك إعادة المحاولة"
+  ]
+},
+{
+  num:12,
+  title:"الذكاء الاصطناعي والأتمتة المتقدمة",
+  priority:"low",
+  complexity:"متوسط-عالٍ",
+  duration:"غير محددة",
+  depsText:"كل المراحل السابقة + 12 شهراً أو أكثر من بيانات التشغيل للميزات التنبؤية",
+  goal:"إضافة مساعدة بالذكاء الاصطناعي حيث تكون القيمة واضحة والمخاطرة قابلة للاحتواء، مع إشراف بشري على كل مخرَج سريري.",
+  why:"التوثيق هو أكثر ما يشتكي منه أطباء الأسنان في يومهم، ولا يخدمه أي منافس بالعربية بشكل جيد. والميزات التنبؤية تحتاج بيانات تاريخية حقيقية، ولهذا تأتي هذه المرحلة أخيراً.",
+  milestone:"قيد ملزم — لا شيء في هذا المنتج يتخذ قراراً سريرياً مستقلاً. كل مخرَج سريري للذكاء الاصطناعي مسودة يقبلها أو يعدّلها أو يرفضها طبيب مرخّص، ويُسجَّل هذا القبول.",
+  dbImpact:"تخزين التضمينات للبحث الذكي (معزول لكل منشأة). جداول سمات النماذج للميزات التنبؤية.",
+  apiImpact:"نقاط نهاية توليد المسودات التي لا تحفظ تلقائياً أبداً. نقاط نهاية الاسترجاع مفلترة بالصلاحيات وقت الاستعلام.",
+  frontendImpact:"التقاط الصوت، تدفقات مراجعة المسودة وقبولها أو تعديلها أو رفضها، إظهار التنبؤات في الجدولة والاستدعاء.",
+  security:"يجب ألا تُدرَّب نماذج أطراف ثالثة على بيانات المرضى. استخدم مزوّدين بضمانات تعاقدية بعدم التدريب، أو استضف ذاتياً. وثّق هذا قبل أن يُسأل عنه.",
+  outcome:"ذكاء اصطناعي مساعد يقلّل زمن التوثيق قياسياً ويحسّن نتائج الاستدعاء والجدولة، مع موقف حوكمة قابل للدفاع عنه.",
+  tasks:[
+    { t:"بناء تحويل الصوت العربي إلى ملاحظة سريرية مهيكلة",
+      where:"تكامل التعرّف على الكلام وقوالب الملاحظات من المرحلة 4",
+      subs:["أعلى استثمار قيمةً في الذكاء الاصطناعي داخل المنتج — إن نُفّذ واحد فقط فليكن هذا",
+            "تعرّف على الكلام بمفردات طب الأسنان",
+            "الطبيب يراجع ويوقّع؛ ولا شيء يُحفظ دون توقيع"] },
+    { t:"بناء صياغة الملاحظات من بيانات المخطط والإجراء",
+      where:"طبقة الملاحظات السريرية",
+      subs:["يستخدم البيانات المهيكلة القائمة فقط",
+            "حالة مسودة؛ والتوقيع الصريح مطلوب"] },
+    { t:"بناء صياغة رسائل المرضى بالعربية والإنجليزية",
+      where:"خدمة الإرسال من المرحلة 9",
+      subs:["الموظف هو من يرسل؛ ولا إرسال تلقائي أبداً"] },
+    { t:"بناء شرح خطة العلاج للمريض",
+      where:"عرض الخطة من المرحلة 5",
+      subs:["الطبيب يوافق قبل الإفراج للمريض"] },
+    { t:"بناء البحث الذكي عبر السجل",
+      where:"فهرس تضمينات على الملاحظات والمستندات",
+      subs:["تضمينات معزولة لكل منشأة",
+            "للقراءة فقط؛ مفلترة بالصلاحيات وقت الاسترجاع لا بعده"] },
+    { t:"بناء التنبؤ بعدم الحضور",
+      where:"النموذج والتكامل مع الجدولة",
+      subs:["انحدار لوجستي على التاريخ ومهلة الحجز والقناة والبيانات الديموغرافية وسوابق عدم الحضور",
+            "يتطلب 12 شهراً أو أكثر من بيانات مواعيدك أنت",
+            "يقود شدة التذكير واقتراحات الحجز الزائد — ولا يرفض حجزاً أبداً"] },
+    { t:"بناء استهداف الاستدعاء وإعادة التنشيط",
+      where:"محرك الاستدعاء من المرحلة 9",
+      subs:["يرتّب قائمة عمل؛ والموظف هو من يتصرّف"] },
+    { t:"بناء التنبؤ بالطلب على المخزون",
+      where:"المخزون من المرحلة 8",
+      subs:["مبني على تاريخ الاستهلاك؛ يقترح كمية إعادة الطلب",
+            "ممكن فقط لأنك تملك الشقّين السريري والتوريدي — ميزة تراكمية"] },
+    { t:"بناء اقتراحات تحسين الجدول",
+      where:"الجدولة من المرحلة 3",
+      subs:["المدد التاريخية ونسب الاستغلال",
+            "اقتراح فقط؛ وموظف الاستقبال هو من يقرّر",
+            "لا تبنِ جدولة آلية كاملة — موظفو الاستقبال لن يتنازلوا عن التحكم ونمط الفشل صاخب"] },
+    { t:"إرساء حوكمة بيانات الذكاء الاصطناعي",
+      where:"العقود والمعمارية والتوثيق",
+      subs:["يجب ألا تُدرَّب نماذج أطراف ثالثة على بيانات المرضى — ضمانات تعاقدية بعدم التدريب أو استضافة ذاتية",
+            "سيُسأل عن هذا في كل محادثة مشتريات مؤسسية؛ وثّق الإجابة قبل أن تُسأل",
+            "التشخيص الشعاعي جهاز طبي منظَّم في أغلب الولايات القضائية — اشترك مع مزوّد معتمَد ولا تبنِ مصنّفاً",
+            "لا تبنِ أبداً تشخيصاً مستقلاً ولا توصية علاج مستقلة"] }
+  ],
+  acceptance:[
+    "لا يُحفظ أي مخرَج للذكاء الاصطناعي في سجل سريري دون توقيع بشري صريح، ويُسجَّل هذا القبول",
+    "تحويل الصوت العربي إلى ملاحظة ينتج مسودة صالحة يعدّلها الطبيب ويوقّعها",
+    "نتائج البحث الذكي مفلترة بالصلاحيات وقت الاسترجاع ولا تعبر بين المنشآت أبداً",
+    "التنبؤ بعدم الحضور يعدّل شدة التذكير ولا يمنع حجزاً أبداً",
+    "يوجد ضمان تعاقدي موثّق بأن بيانات المرضى لا تُدرَّب عليها نماذج أطراف ثالثة",
+    "لا توجد أي قدرة تشخيصية مستقلة في أي مكان من المنتج"
+  ],
+  risks:[
+    "التزامات السلامة السريرية وحوكمة البيانات يجب أن تكون قائمة قبل إصدار أي ذكاء اصطناعي سريري",
+    "الميزات التنبؤية تحتاج 12 شهراً أو أكثر من بيانات التشغيل؛ إصدارها مبكراً ينتج ضجيجاً يقوّض الثقة",
+    "الذكاء الاصطناعي الشعاعي جهاز طبي منظَّم — بناؤه بدلاً من التكامل معه يخلق تعرّضاً تنظيمياً"
+  ],
+  tests:[
+    "لا يمكن حفظ محتوى مولّد بالذكاء الاصطناعي في سجل سريري دون توقيع",
+    "العزل بين المنشآت في التضمينات والاسترجاع",
+    "فلترة الصلاحيات مطبّقة وقت الاسترجاع لا بعده",
+    "مخرجات التنبؤ لا تستطيع منع حجز أو تعديله تلقائياً",
+    "قيود تدقيق عند كل قبول لمسودة ذكاء اصطناعي"
+  ]
+}
+);
+
+FINAL_CHECKLIST.push(
+  ["لا يوجد مسار غير محمي يكشف بيانات، و APP_DEBUG معطّل في بيئة الإنتاج", "المرحلة 0 — الحاجز الصارم. يُتحقق منه بمراجعة أمنية لـ routes/api.php وملف .env المنشور."],
+  ["رفض الوصول عبر المنشآت والأدوار مثبَت باختبار آلي لمصفوفة الصلاحيات", "المرحلة 0 — الاختبار الذي يجب أن يفشل عند وجود أي نقطة نهاية جديدة بلا سياسة."],
+  ["قرار محرك قاعدة البيانات مُتخذ وموثّق مع مبرراته", "المرحلة 0 — PostgreSQL موصى به؛ يحجب تصميم قيد المرحلة 3."],
+  ["بنية منشأة ← فرع ← عضوية فعّالة وكل كيان مقيّد بها", "المرحلة 0 — لا يجوز بدء أي عمل سريري قبلها."],
+  ["المرضى مملوكون للمنشأة ولديهم خط زمني مُجسَّد", "المرحلة 2 — غير قابل للتراجع إن نُفّذ خطأً."],
+  ["حجزان متزامنان لفترة واحدة ينتجان موعداً واحداً فقط", "المرحلة 3 — مثبَت باختبار تزامن آلي على قاعدة بيانات حقيقية."],
+  ["مخطط الأسنان قابل للإضافة فقط ويمكن إعادة تشغيله بأي تاريخ سابق", "المرحلة 4 — متحقَّق منه مع أطباء أسنان ممارسين."],
+  ["خطط العلاج تدعم القبول لكل بند بأسعار مجمّدة لحظة العرض", "المرحلة 5 — نسبة القبول قابلة للحساب منذ أول خطة."],
+  ["كل معاملة في الدفتر متوازنة ولا يوجد مسار كود يعدّل قيداً فيه", "المرحلة 6 — القاعدة المالية الثابتة للنسخة الأولى."],
+  ["إطلاق النسخة الأولى: المراحل من 0 إلى 6 مكتملة والمنتج قابل للبيع للعيادات", "نهاية المرحلة 6 — البوابة التجارية."],
+  ["الإقرارات الموقّعة والملاحظات السريرية الموقّعة بلا أي مسار تعديل في الـ API", "المرحلتان 4 و7 — متطلب قانوني وطبي قانوني."],
+  ["وصف دواء متعارض مع الحساسية محجوب بصرامة مع تجاوز مُسبَّب ومُسجَّل", "المرحلة 7 — ابنِه صحيحاً أو لا تدّعِه."],
+  ["اكتمال العلاج ينقص مخزون العيادة والتشغيلة تتتبّع إلى المرضى المعالَجين بها", "المرحلة 8 — قدرة تنظيمية."],
+  ["بلوغ نقطة إعادة الطلب يرفع طلب شراء إلى سوق المورّدين", "المرحلة 8 — الخندق التنافسي."],
+  ["الاستدعاءات تُجسَّد تلقائياً والإيراد المنسوب إليها قابل للاستخراج في تقرير", "المرحلة 9 — أوضح قصة عائد على الاستثمار في المنتج."],
+  ["بوابة المرضى لا تكشف أي بند من قائمة «غير مرئي أبداً»", "المرحلة 9 — يُتحقق منه باختبارات تفويض لكل بند."],
+  ["الحجز الإلكتروني العام يشترك في محرك التوافر الداخلي ولا يمكن أن ينتج حجزاً مزدوجاً", "المرحلة 9 — لا مسار كتابة ثانٍ للمواعيد."],
+  ["كل مؤشر في اللوحات يطابق حساباً يدوياً ويتعمّق إلى صفوفه الأصلية", "المرحلة 10 — دقة التعريفات."],
+  ["مجموعة متعددة الفروع تعمل مركزياً بتقارير موحّدة وعلى مستوى كل فرع", "المرحلة 11 — عقد المؤسسات."],
+  ["يوجد ضمان موثّق بأن بيانات المرضى لا تُدرَّب عليها نماذج أطراف ثالثة", "المرحلة 12 — يُسأل عنه في كل محادثة مشتريات مؤسسية."],
+  ["لا يصل أي مخرَج للذكاء الاصطناعي إلى سجل سريري دون توقيع بشري مُسجَّل", "المرحلة 12 — قيد السلامة السريرية."],
+  ["خط التكامل المستمر يمنع الدمج عند الفشل ويغطي كل تدفقات العمل عالية المخاطر", "كل المراحل — العزل، التزامن، السلامة المالية، عدم قابلية التعديل، الوصول للملفات."]
+);
+
+/* ============================================================
+   الحالة والتخزين
+   ============================================================ */
+const STORAGE_KEY = "dentallink-roadmap-ar-v1";
+let state = { tasks:{}, blocked:{}, final:{}, open:{} };
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      state = {
+        tasks:   parsed.tasks   && typeof parsed.tasks   === "object" ? parsed.tasks   : {},
+        blocked: parsed.blocked && typeof parsed.blocked === "object" ? parsed.blocked : {},
+        final:   parsed.final   && typeof parsed.final   === "object" ? parsed.final   : {},
+        open:    parsed.open    && typeof parsed.open    === "object" ? parsed.open    : {}
+      };
+    }
+  }catch(err){
+    console.warn("تعذّرت قراءة التقدم المحفوظ، سيبدأ من جديد.", err);
+    state = { tasks:{}, blocked:{}, final:{}, open:{} };
+  }
+}
+function saveState(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  catch(err){ console.warn("تعذّر حفظ التقدم.", err); }
+}
+
+const taskId = (p,t) => "p"+p+"-t"+t;
+const isDone = id => state.tasks[id] === true;
+
+function phaseStats(phase){
+  const total = phase.tasks.length;
+  let done = 0;
+  for(let i=0;i<total;i++){ if(isDone(taskId(phase.num,i))) done++; }
+  return { total, done, pct: total ? Math.round(done/total*100) : 0 };
+}
+function phaseStatus(phase){
+  if(state.blocked[phase.num]) return "blocked";
+  const s = phaseStats(phase);
+  if(s.done === 0) return "notstarted";
+  if(s.done === s.total) return "done";
+  return "progress";
+}
+
+/* ============================================================
+   أدوات بناء العناصر
+   ============================================================ */
+function el(tag, cls, text){
+  const n = document.createElement(tag);
+  if(cls) n.className = cls;
+  if(text !== undefined) n.textContent = text;
+  return n;
+}
+function badge(cls, text){ return el("span","badge "+cls, text); }
+function ltr(text){ const b = el("bdi","ltr", text); return b; }
+
+/* ============================================================
+   العرض: التنقل الجانبي
+   ============================================================ */
+function renderNav(){
+  const nav = document.getElementById("sideNav");
+  const anchor = document.getElementById("navAfterPhases");
+  PHASES.forEach(p => {
+    const a = el("a");
+    a.href = "#phase-"+p.num;
+    const num = el("span","pnum", String(p.num));
+    const dot = el("span","dot");
+    dot.id = "navdot-"+p.num;
+    a.append(num, dot, el("span", null, p.title));
+    nav.insertBefore(a, anchor);
+  });
+}
+
+/* ============================================================
+   العرض: جدول النظرة العامة
+   ============================================================ */
+function renderOverview(){
+  const body = document.getElementById("overviewBody");
+  body.textContent = "";
+  PHASES.forEach(p => {
+    const tr = el("tr");
+    tr.append(el("td","pnum", String(p.num)));
+
+    const nameTd = el("td","pname");
+    const link = el("a", null, p.title);
+    link.href = "#phase-"+p.num;
+    nameTd.append(link);
+    tr.append(nameTd);
+
+    tr.append(el("td", null, p.goal));
+
+    const priTd = el("td");
+    priTd.append(badge("pri-"+p.priority, PRIORITY_LABEL[p.priority]));
+    tr.append(priTd);
+
+    tr.append(el("td", null, p.complexity));
+    tr.append(el("td", null, p.duration));
+    tr.append(el("td", null, p.depsText));
+
+    const stTd = el("td"); stTd.id = "ovstatus-"+p.num; tr.append(stTd);
+
+    const prTd = el("td");
+    const wrap = el("div","mini-prog");
+    const track = el("div","track");
+    const fill = el("i"); fill.id = "ovfill-"+p.num;
+    track.append(fill);
+    const pctSpan = el("span"); pctSpan.id = "ovpct-"+p.num;
+    wrap.append(track, pctSpan);
+    prTd.append(wrap);
+    tr.append(prTd);
+
+    body.append(tr);
+  });
+}
+
+/* ============================================================
+   العرض: الخط الزمني
+   ============================================================ */
+function renderTimeline(){
+  const tl = document.getElementById("timeline");
+  tl.textContent = "";
+  PHASES.forEach(p => {
+    const row = el("div","tl-row");
+    row.id = "tlrow-"+p.num;
+    row.append(el("div","tl-idx","P"+p.num));
+
+    const body = el("div","tl-body");
+    const meta = el("div","tl-meta");
+    meta.append(badge("pri-"+p.priority, PRIORITY_LABEL[p.priority]));
+    const stHolder = el("span"); stHolder.id = "tlstatus-"+p.num;
+    meta.append(stHolder);
+    meta.append(el("span","badge meta","التعقيد: "+p.complexity));
+    meta.append(el("span","badge meta","المدة: "+p.duration));
+    body.append(el("div","tl-title", p.title), meta, el("div","tl-dep","يعتمد على: "+p.depsText));
+    row.append(body);
+    tl.append(row);
+  });
+}
+
+/* ============================================================
+   العرض: بطاقات المراحل
+   ============================================================ */
+function block(title, contentNode){
+  const b = el("div","block");
+  b.append(el("h4", null, title), contentNode);
+  return b;
+}
+function listOf(items, cls){
+  const ul = el("ul", cls);
+  items.forEach(i => ul.append(el("li", null, i)));
+  return ul;
+}
+
+function renderPhases(){
+  const list = document.getElementById("phaseList");
+  list.textContent = "";
+
+  PHASES.forEach(p => {
+    const card = el("article","phase");
+    card.id = "phase-"+p.num;
+    card.dataset.phase = String(p.num);
+    card.dataset.open = state.open[p.num] === true ? "true" : "false";
+
+    const head = el("button","phase-head");
+    head.type = "button";
+    head.setAttribute("aria-expanded", card.dataset.open);
+    head.setAttribute("aria-controls","phasebody-"+p.num);
+    head.append(el("span","caret","◀"));
+    head.append(el("span","idx","PHASE "+p.num));
+    head.append(el("span","ptitle", p.title));
+
+    const hmeta = el("span","hmeta");
+    hmeta.append(badge("pri-"+p.priority, PRIORITY_LABEL[p.priority]));
+    const stSpan = el("span"); stSpan.id = "hstatus-"+p.num;
+    hmeta.append(stSpan);
+    head.append(hmeta);
+
+    const hprog = el("span","hprog");
+    const track = el("span","track");
+    const fill = el("i"); fill.id = "hfill-"+p.num;
+    track.append(fill);
+    const cnt = el("span"); cnt.id = "hcount-"+p.num;
+    hprog.append(track, cnt);
+    head.append(hprog);
+    card.append(head);
+
+    const body = el("div","phase-body");
+    body.id = "phasebody-"+p.num;
+
+    if(p.milestone){
+      const m = el("div","milestone");
+      m.append(el("strong", null, "⚑ "), document.createTextNode(p.milestone));
+      body.append(m);
+    }
+
+    const goalBlock = block("الهدف", el("p", null, p.goal));
+    goalBlock.classList.add("goal");
+    body.append(goalBlock);
+    body.append(block("لماذا هذه المرحلة مطلوبة", el("p", null, p.why)));
+
+    const grid = el("div","grid2");
+    [["الاعتماديات", p.depsText],
+     ["الأثر على قاعدة البيانات", p.dbImpact],
+     ["الأثر على الـ API", p.apiImpact],
+     ["الأثر على الواجهة", p.frontendImpact],
+     ["اعتبارات أمنية", p.security],
+     ["الجهد المقدَّر", "تعقيد " + p.complexity + " · المدة: " + p.duration]
+    ].forEach(([h,txt]) => {
+      const d = el("div","impact");
+      d.append(el("h4", null, h), el("p", null, txt));
+      grid.append(d);
+    });
+    body.append(grid);
+
+    const tasksWrap = el("div","block");
+    tasksWrap.append(el("h4", null, "المهام (" + p.tasks.length + ")"));
+    const ul = el("ul","tasks");
+    p.tasks.forEach((task, i) => {
+      const id = taskId(p.num, i);
+      const li = el("li","task");
+
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.id = id;
+      cb.checked = isDone(id);
+      cb.addEventListener("change", () => {
+        state.tasks[id] = cb.checked;
+        li.classList.toggle("checked", cb.checked);
+        saveState();
+        refresh();
+      });
+
+      const tb = el("div","tbody");
+      const label = el("label","tlabel", task.t);
+      label.setAttribute("for", id);
+      tb.append(label);
+
+      if(task.where){
+        const w = el("div","where");
+        w.append(el("b", null, "الموضع: "), ltr(task.where));
+        tb.append(w);
+      }
+      if(task.subs && task.subs.length) tb.append(listOf(task.subs, "subs"));
+
+      li.append(cb, tb);
+      if(cb.checked) li.classList.add("checked");
+      ul.append(li);
+    });
+    tasksWrap.append(ul);
+    body.append(tasksWrap);
+
+    body.append(block("المخرجات المتوقعة", el("p", null, p.outcome)));
+    body.append(block("معايير القبول — كيف نعرف أنها اكتملت", listOf(p.acceptance,"checklist")));
+    body.append(block("المخاطر والملاحظات — ما الذي قد يخطئ", listOf(p.risks,"risklist")));
+    body.append(block("ما يجب اختباره بعد التنفيذ", listOf(p.tests,"testlist")));
+
+    const actions = el("div","phase-actions");
+    const blockBtn = el("button","abtn");
+    blockBtn.type = "button";
+    blockBtn.id = "blockbtn-"+p.num;
+    blockBtn.addEventListener("click", () => {
+      state.blocked[p.num] = !state.blocked[p.num];
+      saveState(); refresh();
+    });
+    const allBtn = el("button","abtn","تأشير كل المهام");
+    allBtn.type = "button";
+    allBtn.addEventListener("click", () => {
+      p.tasks.forEach((_,i) => { state.tasks[taskId(p.num,i)] = true; });
+      saveState(); renderPhaseChecks(p); refresh();
+    });
+    const noneBtn = el("button","abtn","إلغاء تأشير المرحلة");
+    noneBtn.type = "button";
+    noneBtn.addEventListener("click", () => {
+      p.tasks.forEach((_,i) => { state.tasks[taskId(p.num,i)] = false; });
+      saveState(); renderPhaseChecks(p); refresh();
+    });
+    actions.append(blockBtn, allBtn, noneBtn);
+    body.append(actions);
+
+    card.append(body);
+
+    head.addEventListener("click", () => {
+      const open = card.dataset.open === "true";
+      card.dataset.open = open ? "false" : "true";
+      head.setAttribute("aria-expanded", String(!open));
+      state.open[p.num] = !open;
+      saveState();
+    });
+
+    list.append(card);
+  });
+}
+
+function renderPhaseChecks(p){
+  p.tasks.forEach((_,i) => {
+    const id = taskId(p.num,i);
+    const cb = document.getElementById(id);
+    if(cb){
+      cb.checked = isDone(id);
+      const li = cb.closest(".task");
+      if(li) li.classList.toggle("checked", cb.checked);
+    }
+  });
+}
+
+/* ============================================================
+   العرض: قائمة الإنجاز النهائية
+   ============================================================ */
+function renderFinal(){
+  const wrap = document.getElementById("finalList");
+  wrap.textContent = "";
+  FINAL_CHECKLIST.forEach(([text, note], i) => {
+    const id = "final-"+i;
+    const row = el("div","ftask");
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.id = id;
+    cb.checked = state.final[id] === true;
+    cb.addEventListener("change", () => {
+      state.final[id] = cb.checked;
+      row.classList.toggle("checked", cb.checked);
+      saveState();
+    });
+    const label = el("label");
+    label.setAttribute("for", id);
+    label.append(document.createTextNode(text));
+    label.append(el("small", null, note));
+    row.append(cb, label);
+    if(cb.checked) row.classList.add("checked");
+    wrap.append(row);
+  });
+}
+
+/* ============================================================
+   إعادة الحساب
+   ============================================================ */
+function refresh(){
+  let totalTasks = 0, doneTasks = 0, pDone = 0, pProg = 0, pBlocked = 0;
+
+  PHASES.forEach(p => {
+    const s = phaseStats(p);
+    const status = phaseStatus(p);
+    totalTasks += s.total;
+    doneTasks  += s.done;
+    if(status === "done") pDone++;
+    else if(status === "progress") pProg++;
+    else if(status === "blocked") pBlocked++;
+
+    const fill = document.getElementById("hfill-"+p.num);
+    if(fill) fill.style.width = s.pct + "%";
+    const cnt = document.getElementById("hcount-"+p.num);
+    if(cnt) cnt.textContent = s.done + "/" + s.total;
+    const hst = document.getElementById("hstatus-"+p.num);
+    if(hst){ hst.textContent = ""; hst.append(badge(STATUS_CLASS[status], STATUS_LABEL[status])); }
+
+    const card = document.getElementById("phase-"+p.num);
+    if(card) card.dataset.status = status;
+
+    const bb = document.getElementById("blockbtn-"+p.num);
+    if(bb) bb.textContent = state.blocked[p.num] ? "إلغاء التوقف" : "تعليم كمتوقفة";
+
+    const ovFill = document.getElementById("ovfill-"+p.num);
+    if(ovFill) ovFill.style.width = s.pct + "%";
+    const ovPct = document.getElementById("ovpct-"+p.num);
+    if(ovPct) ovPct.textContent = s.pct + "%";
+    const ovSt = document.getElementById("ovstatus-"+p.num);
+    if(ovSt){ ovSt.textContent = ""; ovSt.append(badge(STATUS_CLASS[status], STATUS_LABEL[status])); }
+
+    const tlRow = document.getElementById("tlrow-"+p.num);
+    if(tlRow) tlRow.dataset.status = status;
+    const tlSt = document.getElementById("tlstatus-"+p.num);
+    if(tlSt){ tlSt.textContent = ""; tlSt.append(badge(STATUS_CLASS[status], STATUS_LABEL[status])); }
+
+    const dot = document.getElementById("navdot-"+p.num);
+    if(dot) dot.className = "dot " + (status === "notstarted" ? "" : status);
+  });
+
+  const pct = totalTasks ? Math.round(doneTasks/totalTasks*100) : 0;
+
+  document.getElementById("statPhases").textContent       = String(PHASES.length);
+  document.getElementById("statPhasesDone").textContent    = String(pDone);
+  document.getElementById("statPhasesProg").textContent    = String(pProg);
+  document.getElementById("statPhasesBlocked").textContent = String(pBlocked);
+  document.getElementById("statTasks").textContent         = String(totalTasks);
+  document.getElementById("statTasksDone").textContent     = String(doneTasks);
+
+  document.getElementById("overallPct").textContent = pct + "%";
+  document.getElementById("overallFill").style.width = pct + "%";
+  document.getElementById("overallBar").setAttribute("aria-valuenow", String(pct));
+  document.getElementById("topBarFill").style.width = pct + "%";
+  document.getElementById("topBarPct").textContent = pct + "%";
+  document.getElementById("topBarProgress").setAttribute("aria-valuenow", String(pct));
+
+  applyFilters();
+}
+
+/* ============================================================
+   التصفية والبحث
+   ============================================================ */
+let activeFilter = "all";
+
+function applyFilters(){
+  const q = (document.getElementById("searchBox").value || "").trim().toLowerCase();
+  let visible = 0;
+
+  PHASES.forEach(p => {
+    const card = document.getElementById("phase-"+p.num);
+    if(!card) return;
+
+    const status = phaseStatus(p);
+    const statusOk = activeFilter === "all" || activeFilter === status;
+
+    /* بلا بحث: المرحلة وكل مهامها ظاهرة */
+    let headerMatches = true;
+    let taskMatches = p.tasks.map(() => true);
+
+    if(q){
+      headerMatches =
+        p.title.toLowerCase().includes(q) ||
+        p.goal.toLowerCase().includes(q)  ||
+        p.why.toLowerCase().includes(q)   ||
+        ("phase " + p.num).includes(q)    ||
+        ("مرحلة " + p.num).includes(q);
+
+      taskMatches = p.tasks.map(t => {
+        const haystack = (t.t + " " + (t.where || "") + " " + (t.subs || []).join(" ")).toLowerCase();
+        return haystack.includes(q);
+      });
+    }
+
+    const anyTaskMatches = taskMatches.some(Boolean);
+    const show = statusOk && (headerMatches || anyTaskMatches);
+    card.hidden = !show;
+    if(show) visible++;
+
+    /* إذا طابق البحث مهاماً بعينها نضيّق القائمة عليها، وإذا طابق الترويسة نُبقي كل المهام */
+    const narrowToMatchingTasks = Boolean(q) && anyTaskMatches && !headerMatches;
+    card.querySelectorAll(".task").forEach((li, i) => {
+      li.hidden = narrowToMatchingTasks && !taskMatches[i];
+    });
+  });
+
+  document.getElementById("emptyState").hidden = visible !== 0;
+}
+
+/* ============================================================
+   ربط الأحداث
+   ============================================================ */
+function wireControls(){
+  document.getElementById("searchBox").addEventListener("input", applyFilters);
+
+  document.querySelectorAll(".fbtn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      activeFilter = btn.dataset.filter;
+      document.querySelectorAll(".fbtn").forEach(b => b.setAttribute("aria-pressed", String(b === btn)));
+      applyFilters();
+    });
+  });
+
+  document.getElementById("expandAll").addEventListener("click", () => {
+    PHASES.forEach(p => {
+      const card = document.getElementById("phase-"+p.num);
+      if(card){
+        card.dataset.open = "true";
+        card.querySelector(".phase-head").setAttribute("aria-expanded","true");
+      }
+      state.open[p.num] = true;
+    });
+    saveState();
+  });
+
+  document.getElementById("collapseAll").addEventListener("click", () => {
+    PHASES.forEach(p => {
+      const card = document.getElementById("phase-"+p.num);
+      if(card){
+        card.dataset.open = "false";
+        card.querySelector(".phase-head").setAttribute("aria-expanded","false");
+      }
+      state.open[p.num] = false;
+    });
+    saveState();
+  });
+
+  document.getElementById("resetAll").addEventListener("click", () => {
+    if(!window.confirm("تصفير كل التقدم وعلامات التوقف وقائمة الإنجاز النهائية؟ لا يمكن التراجع.")) return;
+    state = { tasks:{}, blocked:{}, final:{}, open:state.open };
+    saveState();
+    PHASES.forEach(renderPhaseChecks);
+    renderFinal();
+    refresh();
+  });
+
+  const sidebar = document.getElementById("sidebar");
+  const toggle = document.getElementById("menuToggle");
+  toggle.addEventListener("click", () => {
+    const open = sidebar.classList.toggle("open");
+    toggle.setAttribute("aria-expanded", String(open));
+  });
+  sidebar.addEventListener("click", e => {
+    if(e.target.closest("a") && window.innerWidth <= 960){
+      sidebar.classList.remove("open");
+      toggle.setAttribute("aria-expanded","false");
+    }
+  });
+
+  const themeBtn = document.getElementById("themeToggle");
+  let savedTheme = null;
+  try{ savedTheme = localStorage.getItem("dentallink-roadmap-theme"); }catch(e){ /* تجاهل */ }
+  if(savedTheme === "dark" || savedTheme === "light"){
+    document.documentElement.setAttribute("data-theme", savedTheme);
+  }
+  themeBtn.addEventListener("click", () => {
+    const current = document.documentElement.getAttribute("data-theme");
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const effective = current || (prefersDark ? "dark" : "light");
+    const next = effective === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    try{ localStorage.setItem("dentallink-roadmap-theme", next); }catch(e){ /* تجاهل */ }
+  });
+}
+
+/* ============================================================
+   التهيئة
+   ============================================================ */
+function init(){
+  loadState();
+  renderNav();
+  renderOverview();
+  renderTimeline();
+  renderPhases();
+  renderFinal();
+  wireControls();
+  refresh();
+}
+
+if(document.readyState === "loading"){
+  document.addEventListener("DOMContentLoaded", init);
+}else{
+  init();
+}
+</script>
+</body>
+</html>

@@ -9,12 +9,12 @@ use App\Exports\PaymentsExport;
 use App\Models\Financial\Payment;
 use App\Http\Controllers\Controller;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Models\Financial\OrderExpense;
 use App\Services\Financial\PaymentService;
 use App\Http\Requests\Financial\PaymentRequest;
 use App\Http\Resources\Financial\PaymentResource;
 use App\Http\Requests\Financial\UpdatePaymentRequest;
 use App\Http\Requests\Financial\UpdatePaymentStatusRequest;
+use Illuminate\Auth\Access\AuthorizationException;
 use App\Models\FcmToken;
 
 class PaymentController extends Controller
@@ -82,7 +82,12 @@ class PaymentController extends Controller
                 'تم انشاء المدفوعة بنجاح',
                 $payment->id,
             );
+        } catch (AuthorizationException $e) {
+            return $this->errorResponse($e->getMessage(), 403);
         } catch (\Exception $e) {
+            // NOTE: this handler still echoes the exception message to the client.
+            // Narrowed to business-rule messages only now that authorization failures
+            // are caught above; full error-response hardening is Stage 9.
             return $this->errorResponse($e->getMessage(), 422);
         }
     }
@@ -99,11 +104,17 @@ class PaymentController extends Controller
                     404
                 );
             }
-            $payment = $this->paymentService->updatePaymentStatus($request->validated(), $paymentRecord);
+            $payment = $this->paymentService->updatePaymentStatus(
+                $request->validated(),
+                $paymentRecord,
+                $request->user()
+            );
             return $this->successResponseWithId(
                 'تم تحديث حالة المدفوعة بنجاح',
                 $payment->id,
             );
+        } catch (AuthorizationException $e) {
+            return $this->errorResponse($e->getMessage(), 403);
         } catch (Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ ما. برجاء المحاولة لاحقاً',
@@ -158,6 +169,8 @@ class PaymentController extends Controller
                 'تم إرسال طلب حذف المدفوعة للطبيب للمراجعة',
                 $payment->id,
             );
+        } catch (AuthorizationException $e) {
+            return $this->errorResponse($e->getMessage(), 403);
         } catch (Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ ما. برجاء المحاولة لاحقاً',
@@ -220,22 +233,4 @@ class PaymentController extends Controller
         }
     }
 
-    public function updateExpen()
-    {
-        try {
-            $user = request()->user();
-            $orderExpense = OrderExpense::where('supplier_id', $user->id)
-                ->first();
-            $orderExpense->update([
-                'total' => 0,
-                'paid' => 0,
-                'remaining' => 0,
-            ]);
-        } catch (\Exception $e) {
-            return $this->errorResponse(
-                'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
-                422
-            );
-        }
-    }
 }

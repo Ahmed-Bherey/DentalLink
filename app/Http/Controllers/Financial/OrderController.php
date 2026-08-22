@@ -10,7 +10,6 @@ use App\Models\Financial\OrderItem;
 use App\Http\Controllers\Controller;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\DeliveredOrdersExport;
-use App\Models\Financial\OrderExpense;
 use App\Services\Financial\OrderService;
 use App\Http\Requests\Financial\OrderRequest;
 use App\Http\Resources\Financial\OrderResource;
@@ -119,6 +118,8 @@ class OrderController extends Controller
             return $this->successResponseWithoutData(
                 'تم تحديث حالة الطلب بنجاح',
             );
+        } catch (AuthorizationException $e) {
+            return $this->errorResponse($e->getMessage(), 403);
         } catch (ModelNotFoundException $e) {
             return $this->errorResponse(
                 'الطلب غير موجود.',
@@ -162,21 +163,23 @@ class OrderController extends Controller
 
     public function updateItemStatus(Request $request, $orderItem_id)
     {
-        //try {
+        $validated = $request->validate([
+            'status' => 'required|in:confirmed,rejected',
+        ]);
+
+        try {
             $orderItem = OrderItem::findOrFail($orderItem_id);
 
-            $validated = $request->validate([
-                'status' => 'required|in:confirmed,rejected',
-            ]);
-
-            $result = $this->orderService->updateItemStatus($validated, $orderItem);
+            $result = $this->orderService->updateItemStatus($validated, $orderItem, $request->user());
 
             return $this->successResponse($result['message']);
-        // } catch (ModelNotFoundException $e) {
-        //     return $this->errorResponse('المنتج غير موجود.', 404);
-        // } catch (Exception $e) {
-        //     return $this->errorResponse('حدث خطأ أثناء تحديث الحالة.', 422);
-        // }
+        } catch (AuthorizationException $e) {
+            return $this->errorResponse($e->getMessage(), 403);
+        } catch (ModelNotFoundException $e) {
+            return $this->errorResponse('المنتج غير موجود.', 404);
+        } catch (Exception $e) {
+            return $this->errorResponse('حدث خطأ أثناء تحديث الحالة.', 422);
+        }
     }
 
 
@@ -208,7 +211,7 @@ class OrderController extends Controller
         try {
             $orderItem = OrderItem::findOrFail($orderItem_id);
 
-            $this->orderService->UpdateItem($orderItem, $request->validated());
+            $this->orderService->UpdateItem($orderItem, $request->validated(), $request->user());
 
             return $this->createSuccessResponse('تم تحديث المنتج بنجاح', $orderItem->order->total_order_price, 200);
         } catch (AuthorizationException $e) {
@@ -231,6 +234,8 @@ class OrderController extends Controller
 
             $this->orderService->requestDelete($user, $order);
             return $this->successResponse('تم حذف الطلب بنجاح');
+        } catch (AuthorizationException $e) {
+            return $this->errorResponse($e->getMessage(), 403);
         } catch (\InvalidArgumentException $e) {
             return $this->errorResponse($e->getMessage(), 400);
         } catch (ModelNotFoundException $e) {
@@ -274,15 +279,6 @@ class OrderController extends Controller
         return Excel::download(new DeliveredOrdersExport($orders), 'delivered_orders.xlsx');
     }
 
-    public function showexpen()
-    {
-        $user = request()->user();
-        $expense = OrderExpense::where('doctor_id', $user->id)
-            ->where('supplier_id', 2)
-            ->first();
-        dd($expense);
-    }
-
     // البحث باسم الطبيب او حالة الطلب
     public function searchOrders()
     {
@@ -304,28 +300,4 @@ class OrderController extends Controller
         }
     }
 
-    public function backupDatabase()
-    {
-        $dbHost     = config('database.connections.mysql.host');
-        $dbPort     = config('database.connections.mysql.port');
-        $dbName     = config('database.connections.mysql.database');
-        $dbUser     = config('database.connections.mysql.username');
-        $dbPassword = config('database.connections.mysql.password');
-
-        $fileName   = "db-backup-" . now()->format('Y-m-d-H-i-s') . ".sql";
-        $backupPath = storage_path("app/backups/{$fileName}");
-
-        // escape password
-        $command = "mysqldump -h {$dbHost} -P {$dbPort} -u {$dbUser} -p\"{$dbPassword}\" {$dbName} > \"{$backupPath}\"";
-
-        $result = null;
-        $output = null;
-        exec($command, $output, $result);
-
-        if ($result === 0 && file_exists($backupPath)) {
-            return response()->download($backupPath)->deleteFileAfterSend();
-        } else {
-            return response()->json(['message' => 'فشل في إنشاء النسخة الاحتياطية'], 500);
-        }
-    }
 }

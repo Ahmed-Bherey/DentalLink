@@ -5,6 +5,7 @@ namespace App\Services\Store;
 use App\Models\Store\Product;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Auth\Access\AuthorizationException;
 
 class InventoryService
 {
@@ -19,9 +20,12 @@ class InventoryService
     }
 
     // عرض منتج واحد
+    // Security (Stage 1): scoped to the owner. Previously `$user` was accepted and
+    // ignored, so any authenticated user could read any product by id (IDOR).
     public function getById($user, $id)
     {
         return Product::where('id', $id)
+            ->where('user_id', $user->id)
             ->first();
     }
 
@@ -51,10 +55,12 @@ class InventoryService
     }
 
     // تحديث المنتج
-    public function update(int $productId, array $data)
+    // Security (Stage 1): the owner scope is enforced in the query. Previously any
+    // authenticated user could rewrite any product (price, quantity, name) by id.
+    public function update($user, int $productId, array $data)
     {
-        return DB::transaction(function () use ($productId, $data) {
-            $product = Product::findOrFail($productId);
+        return DB::transaction(function () use ($user, $productId, $data) {
+            $product = Product::where('user_id', $user->id)->findOrFail($productId);
 
             // معالجة الصورة إن وجدت
             // معالجة الصورة إن وجدت وكانت ملف فعلي
@@ -88,10 +94,12 @@ class InventoryService
     }
 
     // حذف منتج واحد
-    public function delete(int $productId)
+    // Security (Stage 1): owner-scoped. Product deletion cascades into order_items,
+    // so an unscoped delete destroyed other suppliers' historical order lines.
+    public function delete($user, int $productId)
     {
-        return DB::transaction(function () use ($productId) {
-            $product = Product::findOrFail($productId);
+        return DB::transaction(function () use ($user, $productId) {
+            $product = Product::where('user_id', $user->id)->findOrFail($productId);
 
             // حذف الصورة من التخزين إن وجدت
             if ($product->img && Storage::disk('public')->exists($product->img)) {
@@ -105,10 +113,20 @@ class InventoryService
     }
 
     // حذف مجموعة منتجات
-    public function multiDelete(array $productIds)
+    // Security (Stage 1): owner-scoped. Previously an unbounded id array could
+    // delete any supplier's catalog in a single request.
+    public function multiDelete($user, array $productIds)
     {
-        return DB::transaction(function () use ($productIds) {
-            $products = Product::whereIn('id', $productIds)->get();
+        return DB::transaction(function () use ($user, $productIds) {
+            $products = Product::whereIn('id', $productIds)
+                ->where('user_id', $user->id)
+                ->get();
+
+            // Refuse the whole batch if it references products the caller does not own,
+            // rather than silently deleting the subset they do own.
+            if ($products->count() !== count(array_unique($productIds))) {
+                throw new AuthorizationException('عفوا، ليس لديك صلاحية حذف أحد المنتجات المحددة.');
+            }
 
             foreach ($products as $product) {
                 // حذف الصورة من التخزين إن وجدت

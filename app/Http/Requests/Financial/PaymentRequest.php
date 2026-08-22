@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Financial;
 
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -26,7 +28,19 @@ class PaymentRequest extends FormRequest
     public function rules()
     {
         return [
-            'doctor_id' => 'required|exists:users,id|integer',
+            // Security (Stage 1): `exists:users,id` alone let a supplier record a
+            // payment against ANY user account, including other suppliers. The
+            // counterparty on a payment must actually be a doctor.
+            'doctor_id' => [
+                'required',
+                'integer',
+                Rule::exists('users', 'id')->where(
+                    fn($query) => $query->whereIn(
+                        'department_id',
+                        DB::table('departments')->select('id')->where('code', 'doctor')
+                    )
+                ),
+            ],
             'paid' => 'required|numeric|min:0.01',
             'date' => 'required|date',
         ];

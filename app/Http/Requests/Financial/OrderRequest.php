@@ -30,7 +30,11 @@ class OrderRequest extends FormRequest
             'products.*.id'       => 'required|exists:products,id',
             'products.*.quantity' => 'required|integer|min:1',
             'notes'               => 'nullable|string',
-            'status'              => 'nullable|in:pending,preparing,delivered,rejected',
+            // Security (Stage 1): `status` is NOT accepted from the client on create.
+            // Order status is a server-side lifecycle value; a new order is always
+            // created as 'pending' by the database default. OrderService::store()
+            // already ignored this input, so removing it is behaviour-preserving and
+            // removes a latent mass-assignment path onto Order::$fillable['status'].
             'payment_method'      => 'nullable|in:كاش,الكترونى,مدفوعات',
         ];
     }

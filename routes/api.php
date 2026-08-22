@@ -37,9 +37,11 @@ Route::post('login', [UserAuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
     // departments
-    Route::controller(DepartmentController::class)->prefix('department')->group(function () {
-        Route::post('store', 'store');
-    });
+    // NOTE (Stage 1 security hardening): `POST department/store` was removed.
+    // It allowed ANY authenticated user to mint a new department (= role) code,
+    // which combined with self-assignable `department_id` at registration formed a
+    // privilege-escalation primitive. Departments are reference data and must be
+    // managed out-of-band until the admin role architecture lands in Stage 3.
     // statistic
     Route::controller(StatisticController::class)->prefix('statistic')->group(function () {
         Route::get('/', 'dashboardStats');
@@ -118,7 +120,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('export', 'exportToExcel');
         Route::get('search', 'search');
         Route::get('getFcm-token', 'getFcmToken');
-        Route::get('updateExpen', 'updateExpen');
     });
     // receipts
     Route::controller(ReceiptController::class)->prefix('receipt')->group(function () {
@@ -172,4 +173,3 @@ Route::middleware('auth:sanctum')->group(function () {
 // Index department
 Route::get('department/index', [DepartmentController::class, 'index']);
 Route::get('city/index', [CityController::class, 'index']);
-Route::get('database/backup', [OrderController::class, 'backupDatabase']);

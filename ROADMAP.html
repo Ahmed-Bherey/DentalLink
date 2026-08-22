@@ -1,0 +1,2576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DentalLink — Implementation Roadmap</title>
+<style>
+/* ============================================================
+   TOKENS
+   ============================================================ */
+:root{
+  --ground:#F7F8F8; --surface:#FFFFFF; --surface-2:#F0F2F1; --surface-3:#E8ECEB;
+  --ink:#16211F; --ink-2:#3A4846; --muted:#5A6866; --line:#DCE1E0;
+  --accent:#0E6E62; --accent-2:#0B564C; --accent-soft:#E2EFEC;
+
+  --critical:#B3261E; --critical-bg:#FBEAE8;
+  --high:#A85D00;     --high-bg:#FBF1E2;
+  --medium:#3F6493;   --medium-bg:#E9EFF6;
+  --low:#6A7876;      --low-bg:#EDF0EF;
+
+  --done:#1F6B4A;     --done-bg:#E4F0EA;
+  --progress:#A85D00; --progress-bg:#FBF1E2;
+  --blocked:#B3261E;  --blocked-bg:#FBEAE8;
+  --notstarted:#6A7876; --notstarted-bg:#EDF0EF;
+
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+
+  --sidebar-w:264px;
+  --radius:6px;
+  --shadow:0 1px 2px rgba(22,33,31,.05), 0 2px 8px rgba(22,33,31,.04);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#0F1514; --surface:#161F1E; --surface-2:#1D2827; --surface-3:#243130;
+    --ink:#E5EBE9; --ink-2:#C2CECB; --muted:#8FA09D; --line:#2A3735;
+    --accent:#57B8A9; --accent-2:#7FCFC2; --accent-soft:#17302C;
+    --critical:#F08279; --critical-bg:#2E1614;
+    --high:#DCA149;     --high-bg:#2C2113;
+    --medium:#8FB2DC;   --medium-bg:#16232F;
+    --low:#8FA09D;      --low-bg:#1D2827;
+    --done:#6FC49A;     --done-bg:#13291F;
+    --progress:#DCA149; --progress-bg:#2C2113;
+    --blocked:#F08279;  --blocked-bg:#2E1614;
+    --notstarted:#8FA09D; --notstarted-bg:#1D2827;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 2px 8px rgba(0,0,0,.2);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0F1514; --surface:#161F1E; --surface-2:#1D2827; --surface-3:#243130;
+  --ink:#E5EBE9; --ink-2:#C2CECB; --muted:#8FA09D; --line:#2A3735;
+  --accent:#57B8A9; --accent-2:#7FCFC2; --accent-soft:#17302C;
+  --critical:#F08279; --critical-bg:#2E1614;
+  --high:#DCA149;     --high-bg:#2C2113;
+  --medium:#8FB2DC;   --medium-bg:#16232F;
+  --low:#8FA09D;      --low-bg:#1D2827;
+  --done:#6FC49A;     --done-bg:#13291F;
+  --progress:#DCA149; --progress-bg:#2C2113;
+  --blocked:#F08279;  --blocked-bg:#2E1614;
+  --notstarted:#8FA09D; --notstarted-bg:#1D2827;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 2px 8px rgba(0,0,0,.2);
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:var(--sans); font-size:15px; line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{margin:0; line-height:1.25; letter-spacing:-.018em; text-wrap:balance}
+h1{font-size:1.55rem} h2{font-size:1.2rem} h3{font-size:1.02rem} h4{font-size:.88rem}
+p{margin:0}
+ul,ol{margin:0; padding-left:1.15em}
+a{color:var(--accent)}
+code{font-family:var(--mono); font-size:.83em; background:var(--surface-2); padding:.12em .38em; border-radius:3px; color:var(--ink-2); word-break:break-word}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:3px}
+.eyebrow{font-family:var(--mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.13em; color:var(--muted)}
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+.layout{display:flex; min-height:100vh}
+
+.sidebar{
+  width:var(--sidebar-w); flex:0 0 var(--sidebar-w);
+  background:var(--surface); border-right:1px solid var(--line);
+  position:sticky; top:0; height:100vh; overflow-y:auto;
+  padding:22px 0; display:flex; flex-direction:column; gap:6px;
+}
+.sidebar .brand{padding:0 20px 16px; border-bottom:1px solid var(--line); margin-bottom:10px}
+.sidebar .brand strong{display:block; font-size:1rem; letter-spacing:-.02em}
+.sidebar nav{display:flex; flex-direction:column; padding:0 10px}
+.sidebar nav a{
+  display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:5px;
+  text-decoration:none; color:var(--ink-2); font-size:.85rem; line-height:1.35;
+}
+.sidebar nav a:hover{background:var(--surface-2); color:var(--ink)}
+.sidebar nav a .pnum{
+  font-family:var(--mono); font-size:.7rem; color:var(--muted);
+  min-width:22px; text-align:right; flex:0 0 22px;
+}
+.sidebar nav a .dot{width:7px; height:7px; border-radius:50%; flex:0 0 7px; background:var(--notstarted)}
+.sidebar nav a .dot.done{background:var(--done)}
+.sidebar nav a .dot.progress{background:var(--progress)}
+.sidebar nav a .dot.blocked{background:var(--blocked)}
+.sidebar .navgroup{padding:14px 20px 5px; font-family:var(--mono); font-size:.64rem; text-transform:uppercase; letter-spacing:.12em; color:var(--muted)}
+
+.main{flex:1; min-width:0; display:flex; flex-direction:column}
+
+.topbar{
+  position:sticky; top:0; z-index:50;
+  background:color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line);
+  padding:12px 28px; display:flex; flex-wrap:wrap; gap:12px; align-items:center;
+}
+.topbar .tb-title{font-weight:700; font-size:.95rem; margin-right:auto; letter-spacing:-.015em}
+.topbar .mini-bar{width:150px; height:6px; background:var(--surface-3); border-radius:4px; overflow:hidden}
+.topbar .mini-bar i{display:block; height:100%; background:var(--accent); border-radius:4px; transition:width .25s ease}
+.topbar .mini-pct{font-family:var(--mono); font-size:.8rem; font-variant-numeric:tabular-nums; min-width:42px; text-align:right}
+
+.content{padding:28px; display:flex; flex-direction:column; gap:34px; max-width:1180px; width:100%}
+
+section{scroll-margin-top:72px; display:flex; flex-direction:column; gap:16px}
+.sec-head{display:flex; flex-direction:column; gap:5px}
+.sec-head h2{display:flex; align-items:baseline; gap:10px}
+.sec-head .snum{font-family:var(--mono); font-size:.74rem; color:var(--accent); letter-spacing:.08em}
+.sec-head p{color:var(--ink-2); font-size:.92rem; max-width:78ch}
+
+/* ============================================================
+   HEADER / HERO
+   ============================================================ */
+.hero{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  padding:26px 28px; display:flex; flex-direction:column; gap:12px; box-shadow:var(--shadow);
+}
+.hero h1{font-size:1.85rem}
+.hero .sub{color:var(--ink-2); max-width:80ch; font-size:.97rem}
+.hero .facts{display:flex; flex-wrap:wrap; gap:8px 24px; font-family:var(--mono); font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); padding-top:4px; border-top:1px solid var(--line); margin-top:4px}
+
+/* ============================================================
+   STAT CARDS
+   ============================================================ */
+.stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(158px,1fr)); gap:12px}
+.stat{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  padding:15px 17px; display:flex; flex-direction:column; gap:3px; box-shadow:var(--shadow);
+}
+.stat .lbl{font-family:var(--mono); font-size:.65rem; text-transform:uppercase; letter-spacing:.1em; color:var(--muted)}
+.stat .val{font-size:1.7rem; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:-.03em; line-height:1.1}
+.stat.accent .val{color:var(--accent)}
+.stat.done .val{color:var(--done)}
+.stat.prog .val{color:var(--progress)}
+.stat.block .val{color:var(--blocked)}
+
+.overall{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  padding:18px 20px; display:flex; flex-direction:column; gap:10px; box-shadow:var(--shadow);
+}
+.overall .row{display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap}
+.overall .pct{font-size:1.5rem; font-weight:700; font-variant-numeric:tabular-nums; color:var(--accent); letter-spacing:-.03em}
+.bar-lg{height:10px; background:var(--surface-3); border-radius:6px; overflow:hidden}
+.bar-lg i{display:block; height:100%; background:linear-gradient(90deg,var(--accent),var(--accent-2)); border-radius:6px; transition:width .3s ease}
+.overall .note{font-size:.82rem; color:var(--muted)}
+
+/* ============================================================
+   BADGES
+   ============================================================ */
+.badge{
+  display:inline-flex; align-items:center; gap:5px;
+  font-family:var(--mono); font-size:.65rem; text-transform:uppercase; letter-spacing:.07em;
+  padding:3px 8px; border-radius:4px; white-space:nowrap; font-weight:500; line-height:1.5;
+}
+.badge::before{content:""; width:6px; height:6px; border-radius:50%; background:currentColor; flex:0 0 6px}
+.badge.nodot::before{display:none}
+.pri-critical{background:var(--critical-bg); color:var(--critical)}
+.pri-high{background:var(--high-bg); color:var(--high)}
+.pri-medium{background:var(--medium-bg); color:var(--medium)}
+.pri-low{background:var(--low-bg); color:var(--low)}
+.st-notstarted{background:var(--notstarted-bg); color:var(--notstarted)}
+.st-progress{background:var(--progress-bg); color:var(--progress)}
+.st-done{background:var(--done-bg); color:var(--done)}
+.st-blocked{background:var(--blocked-bg); color:var(--blocked)}
+.badge.meta{background:var(--surface-2); color:var(--muted)}
+.badge.meta::before{display:none}
+
+/* ============================================================
+   OVERVIEW TABLE
+   ============================================================ */
+.tablewrap{overflow-x:auto; border:1px solid var(--line); border-radius:var(--radius); background:var(--surface); box-shadow:var(--shadow)}
+table{border-collapse:collapse; width:100%; font-size:.85rem; min-width:820px}
+th{
+  text-align:left; font-family:var(--mono); font-size:.65rem; text-transform:uppercase; letter-spacing:.09em;
+  color:var(--muted); font-weight:500; padding:11px 14px; border-bottom:1px solid var(--line);
+  background:var(--surface-2); white-space:nowrap;
+}
+td{padding:11px 14px; border-bottom:1px solid var(--line); vertical-align:top; color:var(--ink-2)}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:var(--surface-2)}
+td.pnum{font-family:var(--mono); color:var(--accent); font-weight:600; text-align:right; width:44px; white-space:nowrap}
+td.pname{color:var(--ink); font-weight:600}
+td.pname a{color:inherit; text-decoration:none}
+td.pname a:hover{color:var(--accent)}
+.mini-prog{display:flex; align-items:center; gap:8px; min-width:110px}
+.mini-prog .track{flex:1; height:5px; background:var(--surface-3); border-radius:3px; overflow:hidden}
+.mini-prog .track i{display:block; height:100%; background:var(--accent); border-radius:3px; transition:width .25s}
+.mini-prog span{font-family:var(--mono); font-size:.72rem; font-variant-numeric:tabular-nums; color:var(--muted); min-width:34px; text-align:right}
+
+/* ============================================================
+   CONTROLS
+   ============================================================ */
+.controls{
+  display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  padding:12px 14px; box-shadow:var(--shadow);
+}
+.search{
+  flex:1; min-width:190px; padding:7px 11px; font:inherit; font-size:.86rem;
+  background:var(--ground); color:var(--ink);
+  border:1px solid var(--line); border-radius:5px;
+}
+.search::placeholder{color:var(--muted)}
+.filters{display:flex; flex-wrap:wrap; gap:6px}
+.fbtn{
+  font-family:var(--mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.07em;
+  padding:6px 11px; border-radius:5px; border:1px solid var(--line);
+  background:var(--ground); color:var(--ink-2); cursor:pointer; line-height:1.4;
+}
+.fbtn:hover{border-color:var(--accent); color:var(--accent)}
+.fbtn[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:#fff}
+:root[data-theme="dark"] .fbtn[aria-pressed="true"],
+:root:not([data-theme="light"]) .fbtn[aria-pressed="true"]{color:#0F1514}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]) .fbtn[aria-pressed="true"]{color:#fff}}
+.abtn{
+  font-size:.8rem; padding:6px 12px; border-radius:5px; border:1px solid var(--line);
+  background:var(--ground); color:var(--ink-2); cursor:pointer; font-family:inherit;
+}
+.abtn:hover{border-color:var(--accent); color:var(--accent)}
+.abtn.danger:hover{border-color:var(--critical); color:var(--critical)}
+
+/* ============================================================
+   PHASE CARDS
+   ============================================================ */
+.phases{display:flex; flex-direction:column; gap:14px}
+.phase{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  box-shadow:var(--shadow); overflow:hidden; scroll-margin-top:72px;
+}
+.phase[data-status="blocked"]{border-left:3px solid var(--blocked)}
+.phase[data-status="done"]{border-left:3px solid var(--done)}
+.phase[data-status="progress"]{border-left:3px solid var(--progress)}
+.phase[hidden]{display:none}
+
+.phase-head{
+  width:100%; text-align:left; background:none; border:0; font:inherit; color:inherit;
+  padding:16px 20px; cursor:pointer; display:flex; flex-wrap:wrap; gap:10px 14px; align-items:center;
+}
+.phase-head:hover{background:var(--surface-2)}
+.phase-head .caret{
+  font-family:var(--mono); font-size:.8rem; color:var(--muted);
+  transition:transform .18s ease; flex:0 0 auto; line-height:1;
+}
+.phase[data-open="true"] .phase-head .caret{transform:rotate(90deg)}
+.phase-head .idx{
+  font-family:var(--mono); font-size:.72rem; color:var(--accent); font-weight:600;
+  background:var(--accent-soft); padding:3px 8px; border-radius:4px; white-space:nowrap;
+}
+.phase-head .ptitle{font-weight:700; font-size:1rem; letter-spacing:-.015em; flex:1 1 240px; min-width:0}
+.phase-head .hmeta{display:flex; flex-wrap:wrap; gap:6px; align-items:center}
+.phase-head .hprog{display:flex; align-items:center; gap:8px; min-width:118px}
+.phase-head .hprog .track{width:70px; height:5px; background:var(--surface-3); border-radius:3px; overflow:hidden}
+.phase-head .hprog .track i{display:block; height:100%; background:var(--accent); border-radius:3px; transition:width .25s}
+.phase-head .hprog span{font-family:var(--mono); font-size:.72rem; color:var(--muted); font-variant-numeric:tabular-nums}
+
+.phase-body{padding:0 20px 20px; display:flex; flex-direction:column; gap:18px; border-top:1px solid var(--line)}
+.phase[data-open="false"] .phase-body{display:none}
+
+.block{display:flex; flex-direction:column; gap:7px}
+.block > h4{
+  font-family:var(--mono); font-size:.66rem; text-transform:uppercase; letter-spacing:.11em;
+  color:var(--muted); font-weight:500;
+}
+.block p, .block li{font-size:.89rem; color:var(--ink-2)}
+.block.goal p{font-size:.95rem; color:var(--ink)}
+
+.grid2{display:grid; grid-template-columns:repeat(auto-fit,minmax(272px,1fr)); gap:16px}
+.impact{
+  background:var(--surface-2); border-radius:5px; padding:12px 14px;
+  display:flex; flex-direction:column; gap:5px;
+}
+.impact h4{font-family:var(--mono); font-size:.64rem; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); font-weight:500}
+.impact p{font-size:.85rem; color:var(--ink-2)}
+
+/* tasks */
+.tasks{display:flex; flex-direction:column; gap:7px; list-style:none; padding:0}
+.task{
+  border:1px solid var(--line); border-radius:5px; background:var(--ground);
+  padding:11px 13px; display:flex; gap:11px; align-items:flex-start;
+}
+.task[hidden]{display:none}
+.task input[type=checkbox]{
+  width:17px; height:17px; margin:2px 0 0; flex:0 0 17px; cursor:pointer;
+  accent-color:var(--accent);
+}
+.task .tbody{display:flex; flex-direction:column; gap:6px; min-width:0; flex:1}
+.task .tlabel{font-size:.9rem; font-weight:600; color:var(--ink); cursor:pointer; line-height:1.45}
+.task.checked .tlabel{text-decoration:line-through; color:var(--muted); text-decoration-thickness:1px}
+.task.checked{background:var(--done-bg); border-color:color-mix(in srgb, var(--done) 30%, var(--line))}
+.task .where{
+  font-family:var(--mono); font-size:.72rem; color:var(--muted); line-height:1.55;
+  word-break:break-word;
+}
+.task .where strong{color:var(--ink-2); font-weight:500}
+.task ul.subs{margin:0; padding-left:1.05em; display:flex; flex-direction:column; gap:3px}
+.task ul.subs li{font-size:.83rem; color:var(--ink-2); line-height:1.5}
+.task ul.subs li::marker{color:var(--muted)}
+
+/* acceptance / risk / test lists */
+.checklist{list-style:none; padding:0; display:flex; flex-direction:column; gap:5px}
+.checklist li{display:flex; gap:9px; font-size:.87rem; color:var(--ink-2); line-height:1.5}
+.checklist li::before{content:"✓"; color:var(--done); font-weight:700; flex:0 0 auto; font-size:.82rem; line-height:1.7}
+.risklist{list-style:none; padding:0; display:flex; flex-direction:column; gap:5px}
+.risklist li{display:flex; gap:9px; font-size:.87rem; color:var(--ink-2); line-height:1.5}
+.risklist li::before{content:"!"; color:var(--critical); font-weight:700; font-family:var(--mono); flex:0 0 10px; line-height:1.6}
+.testlist{list-style:none; padding:0; display:flex; flex-direction:column; gap:5px}
+.testlist li{display:flex; gap:9px; font-size:.87rem; color:var(--ink-2); line-height:1.5}
+.testlist li::before{content:"▸"; color:var(--accent); flex:0 0 auto; line-height:1.5}
+
+.phase-actions{display:flex; flex-wrap:wrap; gap:8px; padding-top:4px; border-top:1px solid var(--line); margin-top:2px}
+
+/* milestone banner */
+.milestone{
+  background:var(--accent-soft); border:1px solid color-mix(in srgb, var(--accent) 30%, var(--line));
+  border-radius:5px; padding:11px 14px; font-size:.88rem; color:var(--ink-2);
+  display:flex; gap:10px; align-items:flex-start;
+}
+.milestone strong{color:var(--accent)}
+
+/* ============================================================
+   SEQUENCE / TIMELINE
+   ============================================================ */
+.seqwrap{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  padding:20px; overflow-x:auto; box-shadow:var(--shadow);
+}
+pre.seq{
+  font-family:var(--mono); font-size:.74rem; line-height:1.65; margin:0;
+  color:var(--ink-2); white-space:pre; min-width:640px;
+}
+
+.tl{display:flex; flex-direction:column; gap:0}
+.tl-row{
+  display:grid; grid-template-columns:52px 1fr; gap:14px;
+  border-left:2px solid var(--line); margin-left:24px; padding:0 0 16px 22px; position:relative;
+}
+.tl-row:last-child{padding-bottom:0; border-left-color:transparent}
+.tl-row::before{
+  content:""; position:absolute; left:-7px; top:4px; width:12px; height:12px;
+  border-radius:50%; background:var(--notstarted); border:2px solid var(--surface);
+}
+.tl-row[data-status="done"]::before{background:var(--done)}
+.tl-row[data-status="progress"]::before{background:var(--progress)}
+.tl-row[data-status="blocked"]::before{background:var(--blocked)}
+.tl-row .tl-idx{font-family:var(--mono); font-size:.74rem; color:var(--accent); font-weight:600; padding-top:1px}
+.tl-row .tl-body{display:flex; flex-direction:column; gap:5px; min-width:0}
+.tl-row .tl-title{font-weight:600; font-size:.93rem}
+.tl-row .tl-meta{display:flex; flex-wrap:wrap; gap:6px; align-items:center}
+.tl-row .tl-dep{font-size:.82rem; color:var(--muted)}
+
+/* ============================================================
+   RISK CARDS
+   ============================================================ */
+.cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(262px,1fr)); gap:12px}
+.card{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  padding:15px 17px; display:flex; flex-direction:column; gap:6px; box-shadow:var(--shadow);
+}
+.card.crit{border-left:3px solid var(--critical)}
+.card.warn{border-left:3px solid var(--high)}
+.card.info{border-left:3px solid var(--accent)}
+.card h4{font-size:.9rem}
+.card p{font-size:.86rem; color:var(--ink-2)}
+
+/* ============================================================
+   FINAL CHECKLIST
+   ============================================================ */
+.final{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  padding:20px; display:flex; flex-direction:column; gap:9px; box-shadow:var(--shadow);
+}
+.final .ftask{
+  display:flex; gap:11px; align-items:flex-start; padding:10px 12px;
+  border:1px solid var(--line); border-radius:5px; background:var(--ground);
+}
+.final .ftask.checked{background:var(--done-bg); border-color:color-mix(in srgb, var(--done) 30%, var(--line))}
+.final .ftask input{width:17px; height:17px; margin:2px 0 0; flex:0 0 17px; cursor:pointer; accent-color:var(--accent)}
+.final .ftask label{font-size:.89rem; cursor:pointer; line-height:1.5}
+.final .ftask.checked label{text-decoration:line-through; color:var(--muted); text-decoration-thickness:1px}
+.final .ftask label small{display:block; color:var(--muted); font-size:.79rem; text-decoration:none; margin-top:2px}
+
+footer.pagefoot{
+  padding:22px 28px 40px; color:var(--muted); font-size:.8rem;
+  border-top:1px solid var(--line); margin-top:10px; display:flex; flex-direction:column; gap:5px;
+}
+
+.empty{
+  padding:26px; text-align:center; color:var(--muted); font-size:.9rem;
+  border:1px dashed var(--line); border-radius:var(--radius);
+}
+.empty[hidden]{display:none}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+.menu-toggle{display:none}
+@media (max-width:960px){
+  .sidebar{
+    position:fixed; left:0; top:0; z-index:100; transform:translateX(-100%);
+    transition:transform .22s ease; box-shadow:0 0 40px rgba(0,0,0,.25);
+  }
+  .sidebar.open{transform:translateX(0)}
+  .menu-toggle{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:34px; height:34px; border:1px solid var(--line); border-radius:5px;
+    background:var(--ground); color:var(--ink); cursor:pointer; font-size:1rem; line-height:1;
+  }
+  .content{padding:20px 16px}
+  .topbar{padding:11px 16px}
+}
+@media (max-width:620px){
+  body{font-size:14.5px}
+  .hero{padding:20px}
+  .hero h1{font-size:1.45rem}
+  .phase-head{padding:14px}
+  .phase-body{padding:0 14px 16px}
+  .topbar .mini-bar{width:80px}
+  .topbar .tb-title{font-size:.85rem}
+  .stat .val{font-size:1.45rem}
+}
+@media print{
+  .sidebar,.topbar,.controls,.phase-actions{display:none !important}
+  .phase-body{display:flex !important}
+  .phase{break-inside:avoid; box-shadow:none}
+  body{background:#fff}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none !important; animation:none !important}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- ==================== SIDEBAR ==================== -->
+  <aside class="sidebar" id="sidebar" aria-label="Roadmap navigation">
+    <div class="brand">
+      <span class="eyebrow">DentalLink / DentHub</span>
+      <strong>Implementation Roadmap</strong>
+    </div>
+    <nav id="sideNav">
+      <a href="#overview"><span class="pnum">—</span><span>Overview</span></a>
+      <a href="#sequence"><span class="pnum">—</span><span>Sequence &amp; Timeline</span></a>
+      <div class="navgroup">Phases</div>
+      <!-- phase links injected here -->
+      <div class="navgroup" id="navAfterPhases">Reference</div>
+      <a href="#risks"><span class="pnum">—</span><span>Risks &amp; Notes</span></a>
+      <a href="#final"><span class="pnum">—</span><span>Final Checklist</span></a>
+    </nav>
+  </aside>
+
+  <div class="main">
+
+    <!-- ==================== TOPBAR ==================== -->
+    <header class="topbar">
+      <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+      <span class="tb-title">DentalLink — Implementation Roadmap</span>
+      <div class="mini-bar" role="progressbar" aria-label="Overall completion" aria-valuemin="0" aria-valuemax="100" id="topBarProgress" aria-valuenow="0">
+        <i id="topBarFill" style="width:0%"></i>
+      </div>
+      <span class="mini-pct" id="topBarPct">0%</span>
+      <button class="abtn" id="themeToggle" type="button" aria-label="Toggle colour theme">◐</button>
+    </header>
+
+    <div class="content">
+
+      <!-- ==================== HERO ==================== -->
+      <div class="hero">
+        <span class="eyebrow">Dental Clinic Management System</span>
+        <h1>Implementation Roadmap — Phases 0 → 12</h1>
+        <p class="sub">
+          The complete, sequenced implementation plan for building a world-class dental practice management
+          system on the existing Laravel codebase. Reconstructed verbatim from the Product &amp; Architecture
+          Blueprint (§25) and cross-referenced against the platform audit, so every task points at the specific
+          file, table, service or endpoint it affects.
+        </p>
+        <p class="sub">
+          <strong>Overall status at time of writing: 0% — no phase started.</strong>
+          Zero of the 24 existing database tables model anything clinical, so Phases 1–12 are a greenfield build
+          inside an existing repository. Approximately 15% of the current codebase is reusable
+          (layering conventions, notification centre, Sanctum scaffolding, <code>DoctorSchedule</code> primitives,
+          Excel import plumbing).
+        </p>
+        <div class="facts">
+          <span>13 phases</span>
+          <span>MVP launch point: end of Phase 6</span>
+          <span>Durations: not specified</span>
+          <span>Effort expressed as complexity</span>
+        </div>
+      </div>
+
+      <!-- ==================== PROGRESS DASHBOARD ==================== -->
+      <section id="progress" aria-label="Progress dashboard">
+        <div class="stats">
+          <div class="stat accent"><span class="lbl">Total phases</span><span class="val" id="statPhases">13</span></div>
+          <div class="stat done"><span class="lbl">Phases completed</span><span class="val" id="statPhasesDone">0</span></div>
+          <div class="stat prog"><span class="lbl">Phases in progress</span><span class="val" id="statPhasesProg">0</span></div>
+          <div class="stat block"><span class="lbl">Phases blocked</span><span class="val" id="statPhasesBlocked">0</span></div>
+          <div class="stat"><span class="lbl">Total tasks</span><span class="val" id="statTasks">0</span></div>
+          <div class="stat done"><span class="lbl">Tasks completed</span><span class="val" id="statTasksDone">0</span></div>
+        </div>
+        <div class="overall">
+          <div class="row">
+            <div>
+              <div class="eyebrow">Overall completion</div>
+              <div class="note">Calculated from checked tasks across all 13 phases. Saved to this browser via localStorage.</div>
+            </div>
+            <span class="pct" id="overallPct">0%</span>
+          </div>
+          <div class="bar-lg" role="progressbar" aria-label="Overall task completion" aria-valuemin="0" aria-valuemax="100" id="overallBar" aria-valuenow="0">
+            <i id="overallFill" style="width:0%"></i>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== OVERVIEW TABLE ==================== -->
+      <section id="overview">
+        <div class="sec-head">
+          <h2><span class="snum">01</span>Roadmap Overview</h2>
+          <p>
+            All thirteen phases at a glance. Priority is mapped from the blueprint's own labels:
+            <em>Blocking</em> → Critical, <em>Must</em> → High, <em>Should</em> → Medium, <em>Could</em> → Low.
+            The blueprint gave complexity ratings but no calendar durations, so the Effort column shows
+            complexity and duration is recorded as <em>Not specified</em> throughout.
+          </p>
+        </div>
+        <div class="tablewrap">
+          <table>
+            <caption class="eyebrow" style="text-align:left; padding:10px 14px; caption-side:top">Phase summary</caption>
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Phase</th>
+                <th scope="col">Objective</th>
+                <th scope="col">Priority</th>
+                <th scope="col">Effort (complexity)</th>
+                <th scope="col">Duration</th>
+                <th scope="col">Dependencies</th>
+                <th scope="col">Status</th>
+                <th scope="col">Progress</th>
+              </tr>
+            </thead>
+            <tbody id="overviewBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ==================== SEQUENCE ==================== -->
+      <section id="sequence">
+        <div class="sec-head">
+          <h2><span class="snum">02</span>Dependency &amp; Sequence View</h2>
+          <p>
+            Phases 0 → 6 are strictly sequential and end at the MVP launch point. After Phase 6, three tracks
+            (7, 8, 9) can run in parallel because their dependencies are all satisfied by Phase 6. Phase 10
+            needs data produced by Phases 3–8; Phase 11 depends on everything; Phase 12 additionally requires
+            12+ months of production data for its predictive features.
+          </p>
+        </div>
+
+        <div class="seqwrap">
+<pre class="seq">SEQUENTIAL CORE — MVP TRACK
+┌────────┐   ┌────────┐   ┌────────┐   ┌────────┐   ┌────────┐   ┌────────┐   ┌────────┐
+│ PHASE 0│──▶│ PHASE 1│──▶│ PHASE 2│──▶│ PHASE 3│──▶│ PHASE 5│──▶│ PHASE 6│──▶│  MVP   │
+│Security│   │ Clinic │   │Patients│   │Schedule│   │Treatmt │   │Billing │   │ LAUNCH │
+│Tenancy │   │Foundatn│   │        │   │        │   │Planning│   │ Ledger │   │        │
+└────────┘   └────────┘   └────────┘   └───┬────┘   └────▲───┘   └────────┘   └───┬────┘
+                               │           │             │                        │
+                               │      ┌────▼───┐         │                        │
+                               └─────▶│ PHASE 4│─────────┘                        │
+                                      │ Dental │                                  │
+                                      │ Chart  │  (P4 depends on P2 only, so it   │
+                                      └────────┘   may overlap with P3)           │
+                                                                                  │
+POST-MVP — THESE THREE MAY RUN IN PARALLEL ◀──────────────────────────────────────┘
+   ┌──────────────┐      ┌──────────────┐      ┌──────────────┐
+   │   PHASE 7    │      │   PHASE 8    │      │   PHASE 9    │
+   │ Imaging, Rx, │      │  Inventory,  │      │Portal, Comms,│
+   │ Consent, Lab │      │ Equip, Steri │      │Recall,Booking│
+   │  needs P4,P5 │      │  needs P5,P6 │      │needs P3,P5,P6│
+   └──────┬───────┘      └──────┬───────┘      └──────┬───────┘
+          └─────────────────────┼─────────────────────┘
+                                ▼
+                        ┌──────────────┐
+                        │   PHASE 10   │  Analytics — needs data from P3–P8
+                        │  Dashboards  │
+                        └──────┬───────┘
+                               ▼
+                        ┌──────────────┐
+                        │   PHASE 11   │  Multi-branch & enterprise — needs everything
+                        └──────┬───────┘
+                               ▼
+                        ┌──────────────┐
+                        │   PHASE 12   │  AI & automation
+                        └──────────────┘  + requires 12+ months of production data
+
+HARD GATE:  Nothing clinical may begin before PHASE 0 completes.
+</pre>
+        </div>
+
+        <div class="sec-head" style="padding-top:8px">
+          <h3>Timeline</h3>
+          <p>
+            The blueprint proposed no calendar dates or durations, so none are shown here.
+            This is a sequence view with dependencies and complexity only — no dates have been invented.
+          </p>
+        </div>
+        <div class="tl" id="timeline"></div>
+      </section>
+
+      <!-- ==================== PHASES ==================== -->
+      <section id="phases">
+        <div class="sec-head">
+          <h2><span class="snum">03</span>Detailed Phases</h2>
+          <p>
+            Every phase carries its goal, rationale, tasks with the exact files and tables they touch,
+            dependencies, expected outcome, acceptance criteria, risks and post-implementation tests.
+            Tick a task to record progress; state is saved in this browser.
+          </p>
+        </div>
+
+        <div class="controls">
+          <input type="search" class="search" id="searchBox" placeholder="Search phases, tasks, files…" aria-label="Search roadmap">
+          <div class="filters" role="group" aria-label="Filter phases by status">
+            <button class="fbtn" data-filter="all" aria-pressed="true" type="button">All</button>
+            <button class="fbtn" data-filter="notstarted" aria-pressed="false" type="button">Not started</button>
+            <button class="fbtn" data-filter="progress" aria-pressed="false" type="button">In progress</button>
+            <button class="fbtn" data-filter="done" aria-pressed="false" type="button">Completed</button>
+            <button class="fbtn" data-filter="blocked" aria-pressed="false" type="button">Blocked</button>
+          </div>
+          <button class="abtn" id="expandAll" type="button">Expand all</button>
+          <button class="abtn" id="collapseAll" type="button">Collapse all</button>
+          <button class="abtn danger" id="resetAll" type="button">Reset progress</button>
+        </div>
+
+        <div class="phases" id="phaseList"></div>
+        <div class="empty" id="emptyState" hidden>No phases match the current filter or search.</div>
+      </section>
+
+      <!-- ==================== RISKS ==================== -->
+      <section id="risks">
+        <div class="sec-head">
+          <h2><span class="snum">04</span>Risks, Blockers, Assumptions &amp; Decisions</h2>
+          <p>Consolidated from the blueprint's risk register and the architectural decisions it flagged as expensive to reverse.</p>
+        </div>
+
+        <h3>Irreversible architectural decisions — must be settled before Phase 1</h3>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th scope="col">Decision</th><th scope="col">Recommendation</th><th scope="col">Cost if deferred</th></tr></thead>
+            <tbody>
+              <tr><td>Patient ownership</td><td>Organization-owned, with branch visit history</td><td><span class="badge pri-critical nodot">Catastrophic</span> — merging duplicated clinical records across branches is dangerous and often impossible</td></tr>
+              <tr><td>Clinical record immutability</td><td>Append-only + supersede everywhere clinical</td><td><span class="badge pri-critical nodot">Catastrophic</span> — the history you need was never captured; unrecoverable</td></tr>
+              <tr><td>Financial ledger</td><td>Double-entry, append-only, decimal</td><td><span class="badge pri-critical nodot">Catastrophic</span> — historical balances cannot be reconstructed</td></tr>
+              <tr><td>Tenancy model</td><td>Organization → Branch, two levels</td><td><span class="badge pri-critical nodot">Very high</span> — every query and policy carries the shape</td></tr>
+              <tr><td>Timezone handling</td><td>UTC storage + branch timezone</td><td><span class="badge pri-critical nodot">Very high</span> — every stored timestamp becomes ambiguous</td></tr>
+              <tr><td>Database engine</td><td>PostgreSQL, for range exclusion constraints</td><td><span class="badge pri-critical nodot">Very high</span> — trivial now, a data migration later</td></tr>
+              <tr><td>Permission architecture</td><td>Permissions per membership, branch-scoped, three planes</td><td><span class="badge pri-high nodot">High</span> — retrofitting authorization onto patient data is how breaches happen</td></tr>
+              <tr><td>File / image storage</td><td>Private object storage + signed URLs from day one</td><td><span class="badge pri-high nodot">High</span> — migrating patient images while proving nothing leaked is painful</td></tr>
+              <tr><td>Tooth notation</td><td>FDI canonical; render Universal/Palmer</td><td><span class="badge pri-high nodot">High</span> — re-keying a clinical chart is a clinical-safety event</td></tr>
+              <tr><td>Timeline architecture</td><td>Materialized event stream</td><td><span class="badge pri-high nodot">High</span> — backfilling events from a dozen tables is lossy</td></tr>
+              <tr><td>Treatment acceptance granularity</td><td>Per item, captured at presentation time</td><td><span class="badge pri-high nodot">High</span> — the acceptance KPI cannot be reconstructed retroactively</td></tr>
+              <tr><td>Clinic vs supplier inventory</td><td>Separate tables; both reference a global product</td><td><span class="badge pri-high nodot">High</span> — the current name-matching clone must not propagate into clinical stock</td></tr>
+              <tr><td>Audit scope</td><td>Reads as well as writes, partitioned from day one</td><td><span class="badge pri-high nodot">Medium-High</span> — you cannot prove absence of access retroactively</td></tr>
+              <tr><td>API versioning</td><td><code>/api/v1</code> from the first clinical endpoint</td><td><span class="badge pri-medium nodot">Medium</span> — breaks installed mobile clients when it bites</td></tr>
+              <tr><td>Search infrastructure</td><td>Dedicated engine with an Arabic analyzer</td><td><span class="badge pri-medium nodot">Medium</span> — swappable behind an interface</td></tr>
+              <tr><td>Data residency</td><td>Region-pinned deployment capability</td><td><span class="badge pri-high nodot">Medium-High</span> — decides which enterprise markets you can enter</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 style="padding-top:6px">Technical risks</h3>
+        <div class="cards">
+          <div class="card crit"><h4>Scheduling concurrency</h4><p>The hardest correctness problem in the product, made harder by MySQL's lack of exclusion constraints. A double-booking in a demo loses the deal.</p></div>
+          <div class="card crit"><h4>Odontogram complexity</h4><p>Consistently underestimated. Surfaces, supersession, mixed dentition, bridges spanning teeth, RTL rendering. Prototype early with real dentists.</p></div>
+          <div class="card crit"><h4>Retrofitting immutability</h4><p>If Phase 4 ships with mutable chart entries "to save time", the clinical history is permanently lost. Not recoverable by a later migration.</p></div>
+          <div class="card warn"><h4>The existing codebase</h4><p>No tests, no CI, unlogged failures, live security holes. Building clinical features on this substrate without Phase 0 compounds risk with every commit.</p></div>
+          <div class="card warn"><h4>Image storage economics</h4><p>Radiographs are large and must be retained for years. Model storage cost per patient per year before pricing the product, not after.</p></div>
+        </div>
+
+        <h3 style="padding-top:6px">Business risks</h3>
+        <div class="cards">
+          <div class="card crit"><h4>Scope collapse</h4><p>The largest risk in the plan. An MVP that grows to include insurance, portal, lab and AI will never ship. Defend the Phase 0–6 boundary ruthlessly.</p></div>
+          <div class="card warn"><h4>Migration friction</h4><p>Practices do not switch because switching means moving years of records. Data import is not a feature, it is a sales requirement.</p></div>
+          <div class="card warn"><h4>Clinical validation</h4><p>Building dental software without a practising dentist embedded produces a product that looks right and works wrong. Recruit clinical advisors before Phase 4.</p></div>
+          <div class="card warn"><h4>Regulatory surprise</h4><p>Data residency and health-data rules vary by market and change. Discovering a residency requirement after signing an enterprise customer is an expensive re-architecture.</p></div>
+          <div class="card warn"><h4>Support burden</h4><p>Clinical software generates support load orders of magnitude beyond a supply app. A clinic that cannot book patients calls immediately.</p></div>
+          <div class="card crit"><h4>A breach ends the company</h4><p>Patient data breaches in health software are existential, not recoverable. The Phase 0 security posture is a business decision, not a technical one.</p></div>
+          <div class="card info"><h4>Competing on features</h4><p>You will not out-feature twenty-year-old products. Win on language, channel, onboarding speed and procurement integration.</p></div>
+          <div class="card info"><h4>Abandoning the marketplace</h4><p>The supplier marketplace is the only advantage competitors cannot replicate. Phase 8's procurement bridge is where that moat gets built.</p></div>
+        </div>
+
+        <h3 style="padding-top:6px">Assumptions carried by this roadmap</h3>
+        <ul class="risklist">
+          <li>No calendar durations or dates were proposed in the source roadmap; effort is expressed as complexity only. Any scheduling must be added by the delivery team.</li>
+          <li>All phases begin at <em>Not Started</em>. No work is recorded as complete.</li>
+          <li>The supplier marketplace remains in the product; Phase 8 assumes it exists to receive purchase requests.</li>
+          <li>PostgreSQL is recommended but the decision is an explicit Phase 0 task, not a settled fact.</li>
+          <li>Insurance claims, DICOM viewing, patient portal, offline mode and all AI are deliberately outside the MVP.</li>
+        </ul>
+      </section>
+
+      <!-- ==================== FINAL CHECKLIST ==================== -->
+      <section id="final">
+        <div class="sec-head">
+          <h2><span class="snum">05</span>Final Implementation Checklist</h2>
+          <p>The major milestones that must all be complete before this roadmap is considered fully implemented. These are tracked separately from phase tasks and are not counted in the overall percentage.</p>
+        </div>
+        <div class="final" id="finalList"></div>
+      </section>
+
+      <footer class="pagefoot">
+        <span>DentalLink / DentHub — Implementation Roadmap. Reconstructed from the Product &amp; Architecture Blueprint (§25) and the platform audit.</span>
+        <span>Progress is stored in this browser only (localStorage key <code>dentallink-roadmap-v1</code>). It is not shared between machines or browsers.</span>
+      </footer>
+
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   ROADMAP DATA
+   Reconstructed from the previously proposed roadmap (Phases 0-12).
+   No phases, tasks, durations or dependencies invented beyond what
+   was already established. Durations were never specified.
+   ============================================================ */
+
+const PRIORITY_LABEL = { critical:"Critical", high:"High", medium:"Medium", low:"Low" };
+
+const PHASES = [
+{
+  num:0,
+  title:"Security, Tenancy & Integrity Foundations",
+  priority:"critical",
+  complexity:"Medium-High",
+  duration:"Not specified",
+  depsText:"None — this is the entry point",
+  deps:[],
+  goal:"Close the live security holes in the deployed system and put the tenancy, authorization, audit and financial-integrity foundations in place that every later phase depends on.",
+  why:"The deployed system currently exposes an unauthenticated full database dump, runs with debug mode on, allows any authenticated user to edit or delete any supplier's catalog, and lets anyone self-assign a role at registration. Separately, a User is currently the tenant — so a clinic cannot have staff and there is no entity to own a patient. Nothing clinical may begin until both are fixed.",
+  milestone:"HARD GATE — no clinical feature work may start before this phase completes.",
+  dbImpact:"New tenancy tables (organizations, branches, memberships, roles, permissions, role_permission). Ownership columns added to every existing table. Money columns converted from float to decimal. New audit_log table with monthly partitioning.",
+  apiImpact:"Introduce the /api/v1 prefix. Every request carries an organisation context. Existing endpoints gain policy checks and will begin returning 403 where they previously allowed access.",
+  frontendImpact:"Organisation/branch switcher. Login flow changes for token expiry and refresh. Existing screens must handle new 403 responses.",
+  security:"This phase is the security work. Ownership checks, tenant scoping, private storage, audit logging, token lifetime, secret rotation.",
+  outcome:"A hardened, multi-tenant Laravel application with real authorization, an audit trail, private file storage, correct money types and a CI pipeline — ready to receive clinical modules.",
+  tasks:[
+    { t:"Remove the unauthenticated database backup route",
+      where:"routes/api.php:175 · app/Http/Controllers/Financial/OrderController.php:307",
+      subs:["Delete the route registration and the backupDatabase() method entirely",
+            "Replace with a scheduled, encrypted, off-site backup job outside the HTTP layer",
+            "Treat the existing data as already exposed and plan disclosure accordingly",
+            "Note: the DB password was interpolated unescaped into an exec() shell string — command injection risk"] },
+    { t:"Fix the deployed environment configuration",
+      where:".env",
+      subs:["APP_ENV=production","APP_DEBUG=false","LOG_LEVEL=warning or error",
+            "Set APP_URL to the real host — every asset() image URL is currently broken for clients"] },
+    { t:"Remove the CORS wildcard middleware",
+      where:"app/Http/Middleware/CorsMiddleware.php · app/Http/Kernel.php · config/cors.php",
+      subs:["Delete CorsMiddleware — it overwrites the configured whitelist with Access-Control-Allow-Origin: *",
+            "Remove it from the global middleware stack in Kernel.php",
+            "Keep the origin whitelist in config/cors.php as the single source of truth"] },
+    { t:"Remove destructive debug endpoints",
+      where:"app/Http/Controllers/Financial/PaymentController.php (updateExpen) · OrderController.php (showexpen) · routes/api.php",
+      subs:["GET /api/payment/updateExpen zeroes a supplier's balance record with no confirmation",
+            "showexpen() contains a dd() with a hardcoded supplier_id = 2",
+            "Remove the stray empty repo-root files: composer, satisfiable, your",
+            "Remove the unused import of the non-existent Auth\\AuthController from routes/api.php"] },
+    { t:"Stop role self-assignment at registration",
+      where:"app/Http/Requests/Auth/RegisterRequest.php · app/Services/Auth/AuthService.php · users migration",
+      subs:["Remove department_id from the accepted registration payload",
+            "Change users.active to default 0 (currently defaults to 1, so accounts go live instantly)",
+            "Add an admin approval step before activation"] },
+    { t:"Add ownership authorization to every existing endpoint",
+      where:"app/Services/Store/InventoryService.php:22,54,95,110 · CartService.php:32,44 · OrderService.php:588-590 · PackageController.php · PaymentController.php · app/Policies/Financial/OrderPolicy.php",
+      subs:["InventoryService getById/update/delete/multiDelete take only an id — no ownership filter at all",
+            "CartService update/destroy use findOrFail with no doctor_id scope",
+            "Uncomment the doctor-owns-this-order check in OrderService.php:588-590",
+            "OrderController::updateStatus has no supplier check — anyone can mark any order delivered",
+            "PackageController update/destroy/toggleStatus use route-model binding with no ownership check",
+            "PaymentController::updatePaymentStatus and update have no ownership check",
+            "Write a policy class per resource and register them in AuthServiceProvider"] },
+    { t:"Fix the financial arithmetic bugs and audit existing balances",
+      where:"app/Services/Financial/PaymentService.php:172, :204, :33",
+      subs:["Lines 172 and 204 set remaining = total + paid; it must be total − paid",
+            "Line 33 queries $user->supplier_id, an attribute that does not exist on User — the over-payment guard degenerates to paid > paid and never fires",
+            "The same code path dereferences null when no OrderExpense row exists",
+            "Audit and correct existing balance data before it compounds further"] },
+    { t:"Introduce Organization, Branch, Membership, Role and Permission",
+      where:"New migrations, models and policies",
+      subs:["Organization with type ∈ {clinic, supplier, laboratory, platform}",
+            "Branch under Organization, carrying its own timezone",
+            "Membership binding user × organization × role × branch_scope, with granted/revoked overrides",
+            "Role and Permission with a pivot; permissions split into clinical / financial / operational planes",
+            "Replace the department-as-role model (only 'doctor' and 'supplier' codes exist today)"] },
+    { t:"Apply a global tenant scope",
+      where:"Model layer — a base model or trait applied to every tenant-owned entity",
+      subs:["Enforce the organisation filter at the query layer so it cannot be forgotten in a controller",
+            "Defence in depth: global scope, then policy, then a test asserting cross-tenant denial"] },
+    { t:"Move file storage to private object storage with signed URLs",
+      where:"config/filesystems.php · all upload paths (products, users, categories, receipts)",
+      subs:["S3-compatible private bucket; no public disk for any patient-bound file",
+            "Short-lived signed URLs issued only after an authorization check",
+            "Log every signed-URL issuance",
+            "Note: receipts are financial documents and are currently world-readable by URL"] },
+    { t:"Build the audit log with partitioning from day one",
+      where:"New audit_log table + a recording layer",
+      subs:["Fields: actor, actor_role, organization_id, branch_id, action, subject, patient_id, old_values, new_values, ip, user_agent, request_id, occurred_at, reason",
+            "Log reads as well as writes for anything that will later hold clinical data",
+            "Monthly partitions and a cold-archive policy — this table outgrows every other"] },
+    { t:"Convert money columns from float to decimal",
+      where:"products.price · order_expenses.total/paid/remaining · payments.amount · orders.price",
+      subs:["decimal(12,2) or integer minor units throughout",
+            "orders.price is currently decimal with default (8,2) precision, capping an order at 999,999.99 and disagreeing with the float columns it is compared against",
+            "Remove the (int) casts truncating money in InventoryResource, OrderResource and DoctorResource"] },
+    { t:"Add Sanctum token expiry, refresh and a logout route",
+      where:"config/sanctum.php · routes/api.php",
+      subs:["'expiration' is currently null — tokens never expire",
+            "There is no logout route and no token revocation anywhere",
+            "Revoke all tokens when an account is suspended; active is only checked at login today"] },
+    { t:"Rotate the Firebase service-account keys and move secrets to a managed store",
+      where:"storage/app/firebase/*.json · app/Services/Notifaction/FirebaseService.php",
+      subs:["Two service-account JSON files sit on the filesystem; one is referenced by hardcoded filename",
+            "Rotate both and load credentials from a secret store"] },
+    { t:"Stand up Redis for cache, queue and sessions",
+      where:"config/cache.php · config/queue.php · config/session.php · .env",
+      subs:["Currently file cache, file sessions and a database queue",
+            "The file cache driver is not shared across processes, so nothing meaningful can be cached"] },
+    { t:"Decide the database engine: PostgreSQL vs MySQL",
+      where:"Architecture decision — affects all subsequent migrations",
+      subs:["PostgreSQL recommended for tstzrange + GiST exclusion constraints, required by Phase 3 scheduling",
+            "MySQL has no exclusion constraints; the alternative is coarse row-locking or a discrete-slot table",
+            "Migrating engines is far cheaper now, before clinical data exists",
+            "Also removes the raw ALTER TABLE … MODIFY COLUMN ENUM migrations, which are MySQL-locked"] },
+    { t:"Establish CI with a permission-matrix test",
+      where:"tests/ · CI pipeline configuration",
+      subs:["The project currently has two untouched Laravel stubs and no CI",
+            "A table-driven test over every role × every permission",
+            "A test that fails when any new endpoint lacks a policy",
+            "Block merge on failure"] }
+  ],
+  acceptance:[
+    "GET /api/database/backup returns 404; no route in the application dumps the database",
+    "APP_ENV=production and APP_DEBUG=false in the deployed environment; no stack trace is ever returned",
+    "A user from organisation A receives 403 on every resource belonging to organisation B, verified by automated test",
+    "Registration cannot set a role; new accounts are inactive until approved",
+    "PaymentService balance arithmetic is correct and existing balance data has been audited and corrected",
+    "No uploaded file is retrievable without an authorization check and a signed URL",
+    "Every write to a tenant-owned entity produces an audit_log row",
+    "All money columns are decimal; no float remains in a financial column",
+    "Sanctum tokens expire and a logout route revokes them",
+    "CI runs on every push and blocks merge on test failure",
+    "The database engine decision is recorded with its rationale"
+  ],
+  risks:[
+    "Touches every existing query in the codebase — the organisation migration is broad and mechanical but easy to get partially wrong",
+    "Some live workflows will correctly start rejecting requests they previously allowed; audit existing data for damage before and after",
+    "The engine decision is expensive to defer: trivial now, a data migration later",
+    "Existing balance data may already be corrupt from the remaining = total + paid bug; correction may require manual reconciliation with customers"
+  ],
+  tests:[
+    "Cross-tenant denial on every endpoint (the permission-matrix test)",
+    "Ownership denial: user B cannot read, update or delete user A's product, cart, order, package or payment",
+    "Registration rejects a supplied department_id / role",
+    "Ledger and balance arithmetic against known fixtures",
+    "Signed URL expiry and unauthorized file fetch returns 403",
+    "Audit log rows are produced for create, update, delete and view",
+    "Token expiry and revocation on suspension"
+  ]
+},
+{
+  num:1,
+  title:"Clinic Foundation",
+  priority:"high",
+  complexity:"Medium",
+  duration:"Not specified",
+  depsText:"Phase 0",
+  deps:[0],
+  goal:"Build the configuration substrate a clinic needs before any patient or appointment can exist: physical resources, working time, staff identity and the procedure catalog.",
+  why:"The scheduler in Phase 3 cannot function without chairs, rooms, working hours, holidays, leave and appointment types. The procedure catalog feeds scheduling durations, treatment planning and billing simultaneously, so it must exist before any of them.",
+  milestone:"",
+  dbImpact:"rooms, chairs, working_hours, holidays, staff_leave, staff_profiles, procedure_catalog, appointment_types, branch_settings. Reshape the existing doctor_schedules to sit under a branch with timezone and effective-date ranges.",
+  apiImpact:"Configuration CRUD endpoints under /api/v1, all organisation- and branch-scoped.",
+  frontendImpact:"Organisation onboarding wizard, branch settings screens, staff management, procedure catalog editor.",
+  security:"All configuration endpoints permission-gated; only owner/manager roles may edit branch configuration or pricing.",
+  outcome:"A configured clinic: branches with rooms and chairs, staff with roles and specialties, working hours and holidays, and a priced procedure catalog.",
+  tasks:[
+    { t:"Model rooms and chairs as bookable resources under a branch",
+      where:"New migrations + models",
+      subs:["Chair (operatory) is the actual bookable resource, nested under Room",
+            "Both branch-scoped"] },
+    { t:"Build working hours, holidays and staff leave",
+      where:"Reshape app/Models/DoctorSchedule.php and its migration",
+      subs:["Move schedules under a branch, not a bare user",
+            "Add timezone and effective-date ranges",
+            "Remove the assumption of one schedule per person",
+            "Reuse the existing HasSchedules and FormatsTime traits where they still apply",
+            "Staff leave must block availability in Phase 3"] },
+    { t:"Build staff profiles",
+      where:"New staff_profiles table, linked to Membership",
+      subs:["Licence number, specialty, calendar colour, commission settings",
+            "Distinct from the User record and from Membership"] },
+    { t:"Build the procedure catalog",
+      where:"New procedure_catalog table",
+      subs:["Code, name (AR + EN), category, default duration, default fee",
+            "Flags: tooth-specific, surface-specific",
+            "Required consent template reference (populated in Phase 7)",
+            "Expected materials (consumed in Phase 8)",
+            "Optional external code mapping columns — add them now even if unpopulated (see Phase 5)"] },
+    { t:"Build appointment types",
+      where:"New appointment_types table",
+      subs:["Duration, buffer, colour, whether consent is required"] },
+    { t:"Implement branch settings and timezone handling",
+      where:"New branch_settings table",
+      subs:["Timezone belongs to the branch, not the organisation — a group can span zones",
+            "Currency, tax configuration, price list overrides"] },
+    { t:"Build the organisation onboarding wizard",
+      where:"Frontend + supporting API",
+      subs:["A single-branch organisation should be presented as 'your clinic' — do not make solo dentists configure a hierarchy they will never use"] }
+  ],
+  acceptance:[
+    "A new organisation can be created and configured end to end without developer intervention",
+    "A branch has rooms, chairs, working hours, holidays and a timezone",
+    "Staff can be invited, assigned roles and scoped to branches",
+    "The procedure catalog holds priced procedures with default durations",
+    "Appointment types exist with durations and buffers"
+  ],
+  risks:[
+    "Low risk overall — mostly configuration surface",
+    "But it is the substrate the scheduler needs; an incomplete resource model here becomes a Phase 3 rewrite"
+  ],
+  tests:[
+    "Branch-scoped configuration is not visible or editable across organisations",
+    "Only permitted roles can edit pricing and branch configuration",
+    "Working hours and leave produce the expected availability windows",
+    "Timezone is correctly attached to a branch and applied on read"
+  ]
+},
+{
+  num:2,
+  title:"Patients",
+  priority:"high",
+  complexity:"Medium-High",
+  duration:"Not specified",
+  depsText:"Phases 0, 1",
+  deps:[0,1],
+  goal:"Build the patient record, its clinical satellites, and the unified timeline event stream that every later module appends to.",
+  why:"The patient is the entity the entire clinical product hangs off, and there is currently no patient table of any kind. The timeline architecture in particular must be right the first time — every subsequent phase writes events to it, and backfilling events from a dozen tables later is lossy.",
+  milestone:"",
+  dbImpact:"patients, patient_contacts, medical_history_versions, allergies, medical_conditions, medications, dental_histories, patient_documents, patient_timeline_events. Field-level encryption on national ID and sensitive medical flags.",
+  apiImpact:"Patient CRUD, search, timeline feed (cursor-paginated), document upload and retrieval via signed URLs.",
+  frontendImpact:"Patient list and search, patient profile, medical history forms, the timeline component, the persistent medical alert banner.",
+  security:"Field-level encryption with a separate key. Read auditing on clinical data. Sensitive fields behind a distinct permission from general medical history.",
+  outcome:"A complete, searchable, auditable patient record with medical alerts surfacing on every clinical screen, and a materialized timeline ready to receive events from all later phases.",
+  tasks:[
+    { t:"Build the patient core record",
+      where:"New patients table",
+      subs:["MRN: human-readable, sequential, unique per organisation",
+            "Name in Arabic plus Latin transliteration, DOB, gender, phones, email, address",
+            "Preferred language, preferred communication channel, occupation, referral source",
+            "National ID encrypted at rest, photo, status, primary_branch_id, tags",
+            "Owned by the ORGANIZATION — not the branch, not the dentist"] },
+    { t:"Build patient contacts",
+      where:"New patient_contacts table",
+      subs:["Emergency contact, guardian for minors, responsible party for billing",
+            "Modelled separately because the payer is often not the patient — this matters for invoicing and consent"] },
+    { t:"Build versioned medical history",
+      where:"New medical_history_versions table",
+      subs:["Snapshots, never edited in place",
+            "Each review creates a new version with reviewing clinician and date",
+            "Answers 'what did we know when we treated them'"] },
+    { t:"Build structured allergies, conditions and medications",
+      where:"New allergies, medical_conditions, medications tables",
+      subs:["Allergy: allergen, reaction, severity, verified-by — structured, not free text, because it drives automated warnings in Phase 7",
+            "Condition risk flags: bleeding disorder, anticoagulant therapy, diabetes, cardiac, infectious disease, pregnancy, immunosuppression, bisphosphonate history",
+            "Medication: drug, dose, frequency, start/end, prescriber, active flag"] },
+    { t:"Build the medical alert system",
+      where:"Frontend component + API surface",
+      subs:["Persistent banner on EVERY clinical screen for that patient — chart, appointment, prescription, treatment plan",
+            "Not a tab and not a section the dentist scrolls to",
+            "Dismissal impossible; acknowledgement logged"] },
+    { t:"Build dental history",
+      where:"New dental_histories table",
+      subs:["Previous dentist, prior treatments, existing implants and prosthetics",
+            "Orthodontic history, anaesthesia reactions, prior complications, anxiety level"] },
+    { t:"Build patient documents on private storage",
+      where:"New patient_documents table + the Phase 0 storage layer",
+      subs:["Typed and versioned",
+            "Private storage only; every access logged"] },
+    { t:"Implement the materialized timeline event stream",
+      where:"New patient_timeline_events table",
+      subs:["Fields: patient_id, branch_id, occurred_at, event_type, actor_id, subject_type, subject_id, summary, icon, visibility, payload",
+            "visibility ∈ {clinical, financial, administrative, patient_visible} — filters the same stream per viewer role and later powers the patient portal from one source of truth",
+            "Single index on (patient_id, occurred_at DESC)",
+            "Events are immutable; corrections append a superseding event",
+            "Do NOT implement as a runtime UNION over a dozen tables — it cannot be paginated or indexed sensibly"] },
+    { t:"Implement patient search with Arabic normalization",
+      where:"Search layer",
+      subs:["Normalize أ/إ/آ/ا, ة/ه, ى/ي and diacritics — 'أشعة' must match 'اشعة'",
+            "Match on name, phone fragment and MRN",
+            "The existing LIKE '%…%' pattern used elsewhere in the codebase is not adequate"] },
+    { t:"Build Excel patient import for migration",
+      where:"Reuse the Maatwebsite plumbing from app/Imports/ProductsImport.php",
+      subs:["This is a sales requirement, not a feature — practices will not switch without it",
+            "Do NOT reuse the LIKE '%name%' matching from ProductsImport; it overwrites the wrong record",
+            "Staging table, validation, dry run, and a result report to the user"] },
+    { t:"Apply privacy controls within the record",
+      where:"Model + policy layer",
+      subs:["Sensitive fields (infectious disease status, pregnancy, psychiatric medication, national ID) behind a distinct permission",
+            "Encrypted at rest with a separate key",
+            "Audit entry on READ, not only on write — unauthorised reading is the more common and more damaging event"] }
+  ],
+  acceptance:[
+    "A patient can be registered, searched by Arabic or Latin name, phone fragment or MRN, and retrieved",
+    "MRN is unique per organisation",
+    "Medical alerts appear on every clinical screen and cannot be dismissed",
+    "Medical history is versioned; editing produces a new version and preserves the old",
+    "A receptionist role receives 403 on medical history and clinical detail",
+    "Reads of clinical data produce audit entries",
+    "Timeline returns a correctly ordered, cursor-paginated, role-filtered event feed",
+    "Patient documents are only retrievable through an authorized signed URL",
+    "Excel import runs against a staging table and reports per-row results"
+  ],
+  risks:[
+    "The timeline architecture must be right the first time; every later module appends to it and backfilling is lossy",
+    "Field-level encryption complicates search — plan which fields are searchable before encrypting",
+    "Patient ownership at organisation level is irreversible; scoping to branch instead produces duplicate records that cannot safely be merged later"
+  ],
+  tests:[
+    "Patient privacy: role-based access to demographics vs medical history vs sensitive fields",
+    "Cross-tenant isolation on every patient endpoint",
+    "Arabic search normalization across letter variants and diacritics",
+    "Timeline ordering, pagination and per-role visibility filtering",
+    "File access control and signed URL expiry",
+    "Medical history versioning preserves prior versions",
+    "Read auditing fires on clinical record access"
+  ]
+},
+{
+  num:3,
+  title:"Scheduling",
+  priority:"high",
+  complexity:"High",
+  duration:"Not specified",
+  depsText:"Phases 1, 2",
+  deps:[1,2],
+  goal:"Build a multi-resource appointment engine with database-level guarantees against double-booking, and a calendar fast enough for daily reception use.",
+  why:"The calendar is the product's most-used screen and its hardest correctness problem. A receptionist touches it a hundred times a day; a single double-booking destroys trust in the whole system. Application-level checking is not sufficient — two concurrent bookings both read 'free' and both succeed.",
+  milestone:"",
+  dbImpact:"appointments, appointment_resources (join), waiting_list_entries, blocked_time, appointment status history. Exclusion constraint or discrete-slot uniqueness on resource × time range.",
+  apiImpact:"Appointment CRUD with idempotency keys, availability queries, 409 Conflict on booking collision, reschedule and cancel with reasons.",
+  frontendImpact:"Drag-and-drop calendar with day/week/dentist/chair views, optimistic locking with conflict refresh, waiting list UI.",
+  security:"Branch-scoped availability. Call-centre role can book across branches but sees only availability and contact details.",
+  outcome:"A concurrency-safe scheduling engine where two receptionists booking the same slot results in exactly one appointment, plus reminders, waiting list and emergency slots.",
+  tasks:[
+    { t:"Model appointments against multiple simultaneous resources",
+      where:"New appointments + appointment_resources tables",
+      subs:["An appointment consumes a dentist, a chair, optionally an assistant, optionally equipment",
+            "Availability is the intersection of all of them",
+            "Use a resource join table — do NOT put dentist_id and chair_id on the appointment, or adding equipment later means reshaping the core table"] },
+    { t:"Implement database-level overlap prevention",
+      where:"Migration — constraint depends on the Phase 0 engine decision",
+      subs:["PostgreSQL: EXCLUDE USING gist (resource_id WITH =, tstzrange(starts_at, ends_at) WITH &&) WHERE status NOT IN ('cancelled','no_show')",
+            "MySQL: SELECT … FOR UPDATE on the resource day-row, or a unique key on discrete 5-minute slot indexes",
+            "Layer 2: transaction — lock resources, re-verify, insert, commit",
+            "Layer 3: application pre-check for UX only, never trusted",
+            "Layer 4: UI optimistic lock via updated_at; on conflict refresh and re-offer"] },
+    { t:"Implement UTC storage with branch timezone rendering",
+      where:"Appointment model + serialization layer",
+      subs:["Store UTC, store the branch timezone alongside, render in branch-local time",
+            "Handle DST transitions explicitly in recurring appointment generation",
+            "Retrofitting timezone awareness later makes every stored timestamp ambiguous"] },
+    { t:"Build the appointment lifecycle",
+      where:"Appointment service + status history",
+      subs:["Create, reschedule with reason, cancel with reason, confirm",
+            "No-show marking that feeds patient reliability",
+            "Walk-in and emergency insertion",
+            "Recurring appointments"] },
+    { t:"Derive duration from procedure type with buffers",
+      where:"Integrate with procedure_catalog from Phase 1",
+      subs:["Catalog default duration, with a per-dentist override learned from actuals",
+            "Buffer/turnaround per procedure and per chair for cleanup and sterilization",
+            "The highest-value scheduling feature and close to trivial"] },
+    { t:"Implement emergency slot reservation",
+      where:"Availability engine",
+      subs:["Held slots released N hours prior if unclaimed",
+            "Practices do this manually today and dislike it"] },
+    { t:"Build the waiting list",
+      where:"New waiting_list_entries table",
+      subs:["Capture urgency, preference and reachability",
+            "Auto-fill on cancellation is Phase 9; the data model lands here"] },
+    { t:"Build the drag-and-drop calendar",
+      where:"Frontend",
+      subs:["Day, week, per-dentist and per-chair views",
+            "Must stay fast with 200 appointments on screen",
+            "Never load more than a visible window",
+            "Composite index on (branch_id, starts_at, resource_id)"] },
+    { t:"Add idempotency keys on appointment creation",
+      where:"API layer",
+      subs:["Mobile clients retry; a duplicate appointment is a real operational failure"] },
+    { t:"Wire appointment reminders",
+      where:"Queue + the existing notification centre",
+      subs:["Reuse the polymorphic NotificationsCenter related morph — it carries appointments unchanged",
+            "Full multi-channel dispatch is Phase 9; basic reminders land here",
+            "Note: app/Jobs/SendFcmNotification.php calls FirebaseService::sendNotification(), which does not exist — repair before relying on push"] }
+  ],
+  acceptance:[
+    "Two concurrent booking requests for the same resource and slot result in exactly one appointment and one 409, verified by an automated concurrency test against a real database",
+    "Overlap is prevented by a database constraint, not only by application code",
+    "Appointments are stored in UTC and render correctly in branch-local time, including across a DST boundary",
+    "Appointment duration defaults from the procedure catalog and respects buffers",
+    "Staff leave, holidays and blocked time remove availability",
+    "A retried create with the same idempotency key returns the original appointment, not a duplicate",
+    "The calendar renders a full day of 200 appointments without perceptible lag",
+    "Reminders are dispatched for upcoming appointments"
+  ],
+  risks:[
+    "Highest technical risk in the roadmap — concurrency correctness plus calendar UI performance are both hard",
+    "Prototype the constraint approach before committing, especially if the Phase 0 decision kept MySQL",
+    "This is the screen the product is judged on; budget more time than feels reasonable",
+    "A double-booking during a sales demo loses the deal"
+  ],
+  tests:[
+    "Parallel booking of the same resource/slot — exactly one succeeds (must run against a real database)",
+    "Availability correctly excludes leave, holidays, blocked time and existing appointments",
+    "Timezone rendering across DST transitions",
+    "Idempotent appointment creation under retry",
+    "Reschedule and cancel produce correct status history and reason capture",
+    "Branch scoping on availability queries",
+    "Calendar query performance with a realistic appointment volume"
+  ]
+},
+{
+  num:4,
+  title:"Dental Chart & Clinical Records",
+  priority:"high",
+  complexity:"High",
+  duration:"Not specified",
+  depsText:"Phase 2 (may overlap with Phase 3)",
+  deps:[2],
+  goal:"Build the odontogram as an append-only longitudinal clinical record, plus periodontal charting, diagnoses and clinical notes.",
+  why:"This is the feature dentists evaluate the product on, and the one most easily got subtly wrong. It is a longitudinal clinical record, not a form. It also depends only on Phase 2, so it can overlap with Phase 3.",
+  milestone:"Validate the odontogram design with practising dentists BEFORE writing it.",
+  dbImpact:"teeth (seeded reference), patient_tooth, tooth_condition (append-only with supersedes_id), periodontal_charts, diagnoses, clinical_notes with draft/signed/addendum states.",
+  apiImpact:"Chart read at any past date, chart entry append, note draft/sign/addendum endpoints. Signed notes have no UPDATE path.",
+  frontendImpact:"Surface-accurate odontogram with RTL support, adult/primary/mixed dentition, timeline scrubbing, note editor with templates.",
+  security:"Clinical permission plane only. Every chart and note modification audited. Countersigning for assistant- and hygienist-authored entries.",
+  outcome:"A replayable clinical chart where the state at any past date can be reconstructed, with attributable, immutable signed notes.",
+  tasks:[
+    { t:"Seed the teeth reference table",
+      where:"New teeth table + seeder",
+      subs:["FDI 11–48 permanent, 51–85 primary; Universal 1–32 and A–T; Palmer notation",
+            "arch, quadrant, type, is_primary, surfaces",
+            "Store FDI internally as canonical; render Universal or Palmer per user preference",
+            "Notation is a display concern, never a storage concern — this prevents a painful migration when selling into a market that uses a different system"] },
+    { t:"Build per-patient tooth state",
+      where:"New patient_tooth table",
+      subs:["present | missing | extracted | unerupted, impacted, supernumerary, mobility grade, notes",
+            "Supernumerary teeth need their own identity — a patient may have a tooth outside the standard set"] },
+    { t:"Build the append-only tooth_condition log",
+      where:"New tooth_condition table — THE core clinical structure",
+      subs:["A chart entry is NEVER updated; corrections write a new row that supersedes the old",
+            "Fields: surfaces[] (a restoration spans several), condition, material, status, group_id, treatment_id, recorded_by, recorded_at, source, supersedes_id, superseded_at",
+            "group_id ties a 3-unit bridge into ONE clinical fact rather than three unrelated ones",
+            "Active chart: WHERE superseded_at IS NULL",
+            "Chart at date D: WHERE recorded_at <= D AND (superseded_at IS NULL OR superseded_at > D)"] },
+    { t:"Build periodontal charting as a separate structure",
+      where:"New periodontal_charts table",
+      subs:["Per tooth: 6 pocket depths (MB B DB ML L DL), 6 recession values, bleeding on probing, suppuration, furcation, mobility, plaque index",
+            "Charted at a full perio exam, not per treatment",
+            "Do NOT model this inside tooth_condition — it produces hundreds of meaningless rows and cannot be graphed over time"] },
+    { t:"Build the odontogram UI",
+      where:"Frontend",
+      subs:["Surface-accurate rendering — a mesial-occlusal composite must draw on the mesial and occlusal surfaces, not as a dot",
+            "Adult, primary and mixed dentition switching",
+            "Existing vs planned vs completed in visually distinct treatments",
+            "Full RTL, not mirrored LTR — quadrant order, numbering direction, mixed Arabic/Latin numerals",
+            "Charting in ≤3 clicks: select tooth → surfaces → condition",
+            "Keyboard and touch parity; must work one-handed on a tablet with gloves on"] },
+    { t:"Implement timeline scrubbing",
+      where:"Frontend + the chart-at-date query",
+      subs:["Drag a date slider and watch the chart change",
+            "Falls out of the supersede model for free; demos brilliantly"] },
+    { t:"Build diagnoses",
+      where:"New diagnoses table",
+      subs:["Tooth- and surface-specific, coded, with status ∈ {active, resolved, ruled_out, monitoring}",
+            "Support multiple concurrent and differential diagnoses on the same tooth",
+            "Own history"] },
+    { t:"Build clinical notes with draft, sign and addendum states",
+      where:"New clinical_notes table",
+      subs:["Draft is editable; signing freezes the note and stamps author and time",
+            "Post-signature changes are ADDENDA displayed beneath the original, never replacing it",
+            "Signed notes must have no UPDATE path in the API"] },
+    { t:"Build the note template system",
+      where:"New note_templates table",
+      subs:["Three levels: system-provided, organisation-customised, dentist-personal",
+            "SOAP as a template but not forced — most dental notes are procedure-specific",
+            "Auto-populate from the chart, treatment and appointment; re-typing a tooth number is where trust is lost",
+            "Template ownership is a retention feature"] },
+    { t:"Implement countersigning",
+      where:"Clinical notes + chart entries",
+      subs:["An assistant or hygienist drafts; the supervising dentist signs",
+            "Required in many jurisdictions and a genuine gap in several competitors"] }
+  ],
+  acceptance:[
+    "A chart entry can never be updated in place; correction produces a superseding row and the original retains its author and timestamp",
+    "The chart at any past date can be reconstructed and matches what was recorded then",
+    "A three-unit bridge is stored and displayed as one clinical fact via group_id",
+    "The odontogram renders correctly in RTL with correct quadrant order and numbering direction",
+    "Routine charting completes in three clicks",
+    "Periodontal charting is stored separately and can be graphed over time",
+    "A signed clinical note returns 405 or 403 on any update attempt; addenda append below the original",
+    "Assistant-authored entries require a dentist countersignature before they are considered final",
+    "Every chart and note modification produces an audit entry"
+  ],
+  risks:[
+    "High clinical-correctness risk — validate with practising dentists before writing it",
+    "Consistently underestimated: surfaces, supersession, mixed dentition, bridges spanning teeth, RTL rendering",
+    "If this ships with mutable chart entries 'to save time', the clinical history is permanently lost and no later migration recovers it",
+    "Build it as a form with 32 checkboxes and no clinic adopts the product regardless of what else is right"
+  ],
+  tests:[
+    "Chart immutability: update attempts are rejected; supersede preserves the original row",
+    "Chart-at-past-date replay returns the correct historical state",
+    "Multi-surface and multi-tooth (bridge) entries group correctly",
+    "Notation conversion FDI → Universal → Palmer round-trips correctly",
+    "Signed notes cannot be updated; addenda are appended and attributed",
+    "Countersign workflow enforces the supervising-dentist requirement",
+    "Clinical permission plane: accountant and receptionist roles receive 403"
+  ]
+},
+{
+  num:5,
+  title:"Treatment Planning & Procedures",
+  priority:"high",
+  complexity:"Medium-High",
+  duration:"Not specified",
+  depsText:"Phases 3, 4",
+  deps:[3,4],
+  goal:"Build versioned treatment plans with per-item acceptance, and the treatment execution records that flow from them.",
+  why:"The requirement that shapes the whole module is that a patient accepts some items and declines others, so acceptance lives on the item, never on the plan. Treatment acceptance rate is the KPI owners buy the product for, and it cannot be reconstructed retroactively — presentation-time capture must be designed in now.",
+  milestone:"",
+  dbImpact:"treatment_plans with immutable version snapshots, treatment_plan_items with per-item status and fees, treatments, treatment_materials.",
+  apiImpact:"Plan presentation, per-item accept/decline, plan versioning, treatment execution. Plan status is derived, never set by hand.",
+  frontendImpact:"Plan builder, patient-facing presentation view, chart-to-plan flow, treatment execution screen with before/after images.",
+  security:"Fee and discount changes permission-gated with a configured cap. Clinical plane for the clinical content, financial plane for pricing.",
+  outcome:"Treatment plans that can be presented, partially accepted, versioned and scheduled — with acceptance analytics available from the first plan.",
+  tasks:[
+    { t:"Build treatment plans with versioning",
+      where:"New treatment_plans table",
+      subs:["Fields: patient_id, created_by, presented_at, presented_by, version, status",
+            "Presenting a plan freezes a version with its prices; a revision creates version 2 while version 1 stays exactly as the patient saw it",
+            "This is both a clinical record and a commercial one — 'you quoted me 8,000' is a conversation the system must settle",
+            "Plan status is DERIVED from its items, never set by hand"] },
+    { t:"Build treatment plan items with per-item acceptance",
+      where:"New treatment_plan_items table",
+      subs:["Fields: plan_id, procedure_id, tooth_id[], surfaces[], phase, priority, estimated_duration, dentist_id",
+            "Financial: fee, discount, tax, insurance_estimate, patient_portion",
+            "status ∈ proposed | accepted | declined | deferred | scheduled | in_progress | completed | cancelled",
+            "accepted_at, declined_at, decline_reason",
+            "Links out to appointment_id once scheduled and treatment_id once performed",
+            "phase sequences urgent → restorative → elective"] },
+    { t:"Implement acceptance analytics capture",
+      where:"Plan presentation flow",
+      subs:["accepted_value / presented_value, sliced by dentist, procedure and period",
+            "Requires presented_at and per-item fees captured AT PRESENTATION TIME",
+            "Design it in now — it cannot be reconstructed later"] },
+    { t:"Build the chart-to-plan flow",
+      where:"Frontend — odontogram integration",
+      subs:["Clicking a carious surface offers the procedures that treat it, priced from the catalog, dropping straight into a treatment plan",
+            "This is the interaction that converts charting into revenue and where most competitors are clumsy"] },
+    { t:"Build treatments (performed procedures)",
+      where:"New treatments table",
+      subs:["Patient, tooth/surfaces, dentist, assistant, appointment, date, actual duration",
+            "Clinical note link, status, attachments, before/after images",
+            "Fee actually charged; the chart entries it produced",
+            "Append-only once completed; corrections are addenda"] },
+    { t:"Link treatments to material consumption",
+      where:"New treatment_materials join — consumed in Phase 8",
+      subs:["A composite filling consumes one composite capsule, one bonding unit, two gloves",
+            "This is the bridge between the clinical and procurement halves of the product"] },
+    { t:"Build the patient-facing plan presentation view",
+      where:"Frontend",
+      subs:["Patient-friendly language, per-item accept/decline",
+            "Financial transparency: what the patient pays per item"] },
+    { t:"Add optional external code mapping fields",
+      where:"procedure_catalog (from Phase 1)",
+      subs:["ICD-10/ICD-11 for diagnoses, CDT for procedures",
+            "Build your own catalog as the primary key with OPTIONAL code mappings attached",
+            "Add the mapping columns now even if nothing populates them — it makes Phase 3 insurance a configuration change rather than a migration"] }
+  ],
+  acceptance:[
+    "A patient can accept some plan items and decline others; the plan status derives correctly from item states",
+    "Presenting a plan freezes a version with its prices; a later revision does not alter what version 1 showed",
+    "Treatment acceptance rate can be computed per dentist, per procedure and per period from presentation-time data",
+    "Clicking a charted condition offers priced procedures and creates a plan item",
+    "A completed treatment writes the corresponding chart entries",
+    "Fee and discount overrides beyond the configured cap are refused without elevated permission",
+    "Treatments are append-only once completed"
+  ],
+  risks:[
+    "The acceptance model must be item-level from the start; retrofitting it invalidates all historical acceptance metrics",
+    "Plan versioning is easy to under-specify — a mutable plan destroys the commercial record"
+  ],
+  tests:[
+    "Partial acceptance: mixed accept/decline produces the correct derived plan status",
+    "Plan versioning: version 1 is unchanged after version 2 is created",
+    "Price freezing: catalog price changes do not alter a presented plan",
+    "Acceptance rate calculation against known fixtures",
+    "Discount cap enforcement by role",
+    "Treatment completion writes correct chart entries and is thereafter immutable"
+  ]
+},
+{
+  num:6,
+  title:"Billing & Financials",
+  priority:"high",
+  complexity:"High",
+  duration:"Not specified",
+  depsText:"Phase 5",
+  deps:[5],
+  goal:"Build patient billing on a double-entry, append-only ledger, with invoicing, payments, refunds, plans and daily reconciliation.",
+  why:"Patient money involves partial payments, family accounts, insurance splits, refunds, write-offs and disputes. A mutable balance cannot survive any of them. The existing order_expenses pattern — a mutable total/paid/remaining row in float columns with currently-inverted arithmetic — must not be extended to patient accounts.",
+  milestone:"MVP LAUNCH POINT — the product is sellable to dental clinics at the end of this phase.",
+  dbImpact:"ledger_accounts, ledger_entries (append-only), invoices, invoice_items, payments, credit_notes, refunds, write_offs, payment_plans, installments. Invariant: Σdebit = Σcredit per transaction.",
+  apiImpact:"Invoice issue, payment capture with idempotency keys, refund, credit note, A/R ageing, daily close. Gateway webhooks unique on (gateway, gateway_txn_id).",
+  frontendImpact:"Invoice screens, payment capture, patient account view, daily close and reconciliation report, A/R ageing dashboard.",
+  security:"Financial permission plane. Refund and void require elevation. All financial mutations audited.",
+  outcome:"A reconcilable financial system where any patient balance can be explained by an append-only sequence of entries.",
+  tasks:[
+    { t:"Build the double-entry ledger",
+      where:"New ledger_accounts and ledger_entries tables — the ONLY thing that writes money",
+      subs:["Accounts per patient, per insurer, per branch cash drawer, per revenue category, per discount/write-off bucket",
+            "ledger_entry: transaction_id, account_id, debit, credit, currency, reference_type, reference_id, occurred_at, posted_at, created_by, branch_id",
+            "INVARIANT: for every transaction_id, Σdebit = Σcredit",
+            "Append-only — never updated, never deleted; corrections are reversing entries",
+            "Patient balance is a PROJECTION over the account, never a stored mutable number",
+            "Money as decimal(12,2) or integer minor units — never float"] },
+    { t:"Build invoices with gapless numbering",
+      where:"New invoices and invoice_items tables",
+      subs:["Sequential per-branch numbering, gapless, immutable once issued",
+            "Invoice items link to treatments, carrying fee, discount, tax and tooth",
+            "Corrections via credit note, never by editing the invoice"] },
+    { t:"Build payments, partial payments and deposits",
+      where:"New payments table",
+      subs:["Method, reference, gateway transaction id, idempotency key",
+            "Unique constraint on (gateway, gateway_txn_id) so a duplicate webhook is a no-op",
+            "Deposits and pre-payments held as a liability until treatment"] },
+    { t:"Build refunds, credit notes and write-offs",
+      where:"New credit_notes, refunds, write_offs tables",
+      subs:["Each posts reversing ledger entries",
+            "Refund and void require elevated permission"] },
+    { t:"Implement discounts with permission caps",
+      where:"Invoice + plan item layer",
+      subs:["Per-procedure and per-invoice discounts",
+            "Permission-gated cap with a mandatory reason"] },
+    { t:"Build family / responsible-party accounts",
+      where:"Ledger account layer + patient_contacts from Phase 2",
+      subs:["A parent paying for three children is one account with three patients",
+            "The payer is often not the patient"] },
+    { t:"Build payment plans and instalments",
+      where:"New payment_plans and installments tables",
+      subs:["Implants and orthodontics are rarely paid in one transaction"] },
+    { t:"Build daily close and reconciliation",
+      where:"Reporting layer",
+      subs:["A receptionist runs it at shift end",
+            "Unglamorous, and the feature clinic managers ask about first"] },
+    { t:"Build A/R ageing",
+      where:"Reporting layer",
+      subs:["0–30 / 31–60 / 61–90 / 90+ buckets",
+            "Aged debt is invisible without this and is where clinics lose most"] },
+    { t:"Integrate an online payment gateway",
+      where:"New integration",
+      subs:["Idempotent webhooks; always return 200",
+            "Reconcile against the gateway daily from the first transaction",
+            "Wrap order/payment creation in a transaction; on failure, void or auto-refund"] },
+    { t:"Configure tax per branch",
+      where:"branch_settings from Phase 1",
+      subs:["Tax rates and rules vary by branch and jurisdiction"] }
+  ],
+  acceptance:[
+    "Every ledger transaction balances: Σdebit = Σcredit, enforced and tested",
+    "A patient balance always equals the sum of their ledger entries",
+    "No code path updates or deletes a ledger entry; corrections are reversing entries",
+    "Invoice numbers are sequential and gapless per branch, and an issued invoice cannot be edited",
+    "Partial payments, deposits, refunds and write-offs all produce correct balances",
+    "A duplicate gateway webhook does not double-post",
+    "A retried payment request with the same idempotency key does not double-charge",
+    "Daily close reconciles cash, card and gateway takings",
+    "A/R ageing buckets are correct against fixtures",
+    "No float remains in any financial column"
+  ],
+  risks:[
+    "High risk — correctness and regulatory exposure",
+    "Reconcile daily against the gateway from the very first transaction",
+    "This is the MVP launch point; the pressure to cut corners here will be highest exactly where corners cost most"
+  ],
+  tests:[
+    "Ledger balance invariant across every transaction type",
+    "Balance projection equals the ledger sum after arbitrary sequences of charges, payments, refunds and write-offs",
+    "Duplicate webhook idempotency",
+    "Payment retry idempotency",
+    "Invoice immutability after issue",
+    "Discount cap enforcement by role",
+    "Refund and void permission elevation",
+    "A/R ageing and daily close against known fixtures"
+  ]
+},
+{
+  num:7,
+  title:"Imaging, Prescriptions, Consent & Laboratory",
+  priority:"medium",
+  complexity:"Medium-High",
+  duration:"Not specified",
+  depsText:"Phases 4, 5 — may run in parallel with Phases 8 and 9",
+  deps:[4,5],
+  goal:"Add clinical imaging with annotation, safe prescribing, legally sound consent capture, and dental laboratory case management.",
+  why:"These four modules complete the clinical record. Imaging drives diagnosis and case presentation; consent is a legal artifact; prescriptions carry a patient-safety obligation; and lab case due dates are the most common source of patient-facing failure in a dental practice.",
+  milestone:"",
+  dbImpact:"images with annotations stored as overlay data, formulary_drugs, prescriptions, prescription_items, consent_templates (versioned), consent_signatures (immutable, hashed), lab_cases, lab_case_messages, lab_case_attachments.",
+  apiImpact:"Image upload with queued derivative generation, signed retrieval, prescription issue with allergy blocking, consent signing (no update path), lab case lifecycle.",
+  frontendImpact:"Image viewer with comparison and annotation, prescription editor, tablet consent signing, lab case board.",
+  security:"All imaging on private storage with logged signed-URL issuance. Signed consents immutable and hashed. Allergy override requires a reason and is logged.",
+  outcome:"A complete clinical record including images, prescriptions, signed consents and tracked lab cases.",
+  tasks:[
+    { t:"Build image management on private storage",
+      where:"New images table + the Phase 0 storage layer",
+      subs:["Private object storage only; short-lived signed URLs after an authorization check; log every issuance",
+            "Generate derivatives on upload via queue — thumbnail and web-optimised; NEVER re-encode the diagnostic original",
+            "Associate to patient, teeth (many), treatment, appointment, diagnosis, taken-at, taken-by, device",
+            "Types: periapical, bitewing, panoramic, cephalometric, CBCT reference, intraoral, extraoral, model scan, document scan"] },
+    { t:"Build annotation as separate overlay data",
+      where:"New image_annotations table",
+      subs:["Never burn annotations into the pixels",
+            "The original must remain diagnostically pristine; annotations must be attributable and reversible"] },
+    { t:"Build image comparison view",
+      where:"Frontend",
+      subs:["Side-by-side and before/after by date",
+            "Simple to build, disproportionately valuable in case presentation and in selling treatment"] },
+    { t:"Add DICOM file storage and metadata parsing",
+      where:"Image ingestion layer",
+      subs:["Accept and store .dcm, extract patient/study/series metadata, render single-frame images",
+            "Full DICOM viewer with windowing and PACS networking are Phase 3 — not here",
+            "Never build CBCT 3D reconstruction; integrate with software dentists already own"] },
+    { t:"Build a sensor bridge",
+      where:"Small desktop helper application",
+      subs:["Pushes captures from intraoral sensors straight into the patient record",
+            "Unglamorous, and the thing that makes daily use frictionless"] },
+    { t:"Build the drug formulary",
+      where:"New formulary_drugs table + seed data",
+      subs:["A curated dentist-relevant subset of ~200 medications, not a full national database",
+            "Analgesics, antibiotics, antiseptics, local anaesthetics, antifungals, anxiolytics",
+            "Structured drug references are what make safety checking possible"] },
+    { t:"Build prescriptions with HARD allergy blocking",
+      where:"New prescriptions and prescription_items tables",
+      subs:["Drug, strength, form, dose, frequency, route, duration, quantity, refills, instructions in the patient's language",
+            "MUST hard-block a drug the patient is recorded as allergic to",
+            "Override requires an explicit reason and is logged",
+            "A soft warning a busy dentist clicks past is WORSE than nothing — build it or do not claim it",
+            "Drug–drug interaction checking requires a licensed clinical database and is Phase 3; never ship approximate interaction data"] },
+    { t:"Build printable prescription output",
+      where:"Print/PDF layer",
+      subs:["Clinic letterhead and prescriber licence number",
+            "Print quality matters — it is handed to patients and is the clinic's brand",
+            "Per-dentist prescription templates"] },
+    { t:"Build versioned consent templates",
+      where:"New consent_templates table",
+      subs:["Per procedure category, multilingual",
+            "Editing a template ALWAYS creates a new version; existing signatures stay bound to the version signed",
+            "Types: general treatment, surgical/extraction, implant, endodontic, orthodontic, anaesthesia, photography/media, data processing, minor via guardian"] },
+    { t:"Build immutable consent signatures",
+      where:"New consent_signatures table",
+      subs:["Patient, template version, signed_at, signature image or cryptographic signature, witnessing staff, IP/device",
+            "Store a HASH of the exact rendered document — this is what proves nothing changed afterwards",
+            "No UPDATE path in the API; withdrawal is a new record referencing the original",
+            "Capture on a tablet at chairside; attach the PDF to the timeline"] },
+    { t:"Build lab case management",
+      where:"New lab_cases table",
+      subs:["A laboratory is its own module sharing the Organization record with type 'laboratory' — NOT a supplier",
+            "A lab case is a made-to-order job bound to a patient and a tooth, not a purchase of a catalog item",
+            "Fields: patient, treatment, teeth[], dentist, branch, lab, case_type, material, shade + shade guide, occlusion notes, special instructions, impression_type, attachments",
+            "Dates: sent_at, due_at, try_in_at, received_at, fitted_at",
+            "Status: draft → sent → in_production → try_in → adjustments → shipped → received → fitted (+ remake, rejected)",
+            "Labs are frequently in-house, which the supplier model cannot express at all"] },
+    { t:"Integrate lab due dates with scheduling",
+      where:"Lab cases × Phase 3 appointments",
+      subs:["Booking the fitting appointment before the case is due is the workflow",
+            "Warn when a case will not arrive in time — this prevents the most common patient-facing failure in a dental practice"] },
+    { t:"Build remake tracking and analytics",
+      where:"lab_cases: remake_reason, remake_of_case_id",
+      subs:["Remake rate per lab tells an owner which lab to stop using",
+            "No competitor surfaces this well"] }
+  ],
+  acceptance:[
+    "No image is retrievable without an authorization check and a signed URL, and every issuance is logged",
+    "Diagnostic originals are never re-encoded; annotations are stored as separate overlay data",
+    "A prescription for a drug the patient is allergic to is blocked; override requires a reason and produces an audit entry",
+    "A signed consent cannot be updated through any API path, and the document hash verifies",
+    "Editing a consent template creates a new version and leaves existing signatures bound to the version signed",
+    "A lab case moves through its full status lifecycle and its due date is visible against the fitting appointment",
+    "Remake rate per lab is reportable"
+  ],
+  risks:[
+    "Allergy blocking must be genuinely hard-blocking or must not ship at all",
+    "Image storage economics: radiographs are large and retained for years — model cost per patient per year before pricing",
+    "Consent immutability is a legal requirement; a mutable consent record has negative value"
+  ],
+  tests:[
+    "File access control: unauthorized image fetch is refused; signed URLs expire",
+    "Allergy contraindication blocking and the logged override path",
+    "Consent immutability: update attempts rejected; hash verifies against the rendered document",
+    "Consent template versioning preserves prior signatures",
+    "Lab case status transitions and due-date warnings",
+    "DICOM metadata extraction against sample files"
+  ]
+},
+{
+  num:8,
+  title:"Inventory, Equipment & Sterilization",
+  priority:"medium",
+  complexity:"Medium-High",
+  duration:"Not specified",
+  depsText:"Phases 5, 6 — may run in parallel with Phases 7 and 9",
+  deps:[5,6],
+  goal:"Build clinic-side inventory with batch and expiry tracking, equipment maintenance that blocks scheduling, sterilization logging — and the procurement bridge into the supplier marketplace.",
+  why:"Clinic inventory and supplier inventory are different problems and must be different tables; the existing codebase conflates them by cloning product rows matched on a name string. This phase is also strategically the most important after MVP: the treatment → consumption → reorder → marketplace loop is the product's only structurally uncopyable advantage.",
+  milestone:"STRATEGIC — this is where the competitive moat gets built.",
+  dbImpact:"clinic_inventory_items (batch, lot, expiry, serial), stock_movements (append-only), stock_transfers, purchase_requests, assets, maintenance_schedules, maintenance_records, breakdowns, sterilization_cycles.",
+  apiImpact:"Stock consumption triggered by treatment completion, expiry queries, lot-to-patient recall lookup, purchase request creation into the marketplace.",
+  frontendImpact:"Stock screens, expiry dashboard, equipment register, sterilization log entry, reorder review.",
+  security:"Inventory and procurement roles have NO patient access. Recall lookup crosses into patient data and requires clinical permission.",
+  outcome:"Clinic stock that depletes as procedures are recorded, alerts before expiry, traces a lot to the patients treated with it, and raises purchase requests into the supplier marketplace.",
+  tasks:[
+    { t:"Build clinic inventory separate from supplier inventory",
+      where:"New clinic_inventory_items table",
+      subs:["Keyed to a global product_id — NOT a cloned product row",
+            "Scoped to branch and storage location (room, cupboard, chair-side tray)",
+            "Batch, lot, expiry, serial, on-hand, reserved, min level, reorder point, unit and pack conversion",
+            "The current name-matching clone in OrderService::updateStatus must not propagate into clinical stock"] },
+    { t:"Build append-only stock movements",
+      where:"New stock_movements table",
+      subs:["Types: receipt, consumption, transfer, adjustment, expiry write-off, damage, return",
+            "On-hand is a PROJECTION, never a stored mutable number",
+            "Same principle as the financial ledger, for the same reason"] },
+    { t:"Link consumption to treatments",
+      where:"treatment_materials from Phase 5",
+      subs:["A composite filling consumes one composite capsule, one bonding unit, two gloves",
+            "This is the bridge between the clinical and procurement halves of the product"] },
+    { t:"Build expiry management",
+      where:"Expiry service + scheduled job",
+      subs:["Dashboard of expiring stock",
+            "Configurable alerts at 90/60/30 days",
+            "FEFO (first-expiry-first-out) consumption suggestion",
+            "Block consumption of expired lots",
+            "Note: the application currently has no scheduled tasks at all — Console/Kernel::schedule() is empty"] },
+    { t:"Build lot-to-patient recall traceability",
+      where:"Query across stock_movements × treatments × patients",
+      subs:["Given a lot number, list every patient treated with it",
+            "A regulatory capability, hard to add later, and almost absent from competitors in this segment"] },
+    { t:"Build stock transfers between branches",
+      where:"New stock_transfers table",
+      subs:["Movement out of one branch and into another, as paired movements"] },
+    { t:"Build the equipment register",
+      where:"New assets table",
+      subs:["Name, category, serial, manufacturer, model, purchase date, cost, warranty expiry, branch, room, status",
+            "Examples: chairs, X-ray machines, autoclaves, compressors, scanners, milling machines"] },
+    { t:"Build maintenance scheduling that blocks appointments",
+      where:"maintenance_schedules, maintenance_records, breakdowns × Phase 3 scheduling",
+      subs:["A broken chair automatically blocks its bookable slots — this is the killer feature",
+            "Equipment that is merely a list is an asset register nobody updates",
+            "Maintenance reminders via the scheduler"] },
+    { t:"Build sterilization cycle logging",
+      where:"New sterilization_cycles table",
+      subs:["Cycle number, autoclave, date/time, operator, program, temperature/pressure, load contents, biological/chemical indicator result, pass/fail",
+            "Compliance requirement in most jurisdictions, usually kept in a paper notebook today",
+            "Low complexity, high trust — roughly a week of work and it wins demos",
+            "Instrument-pack traceability via barcode is the advanced tier and belongs in Phase 3"] },
+    { t:"Build the marketplace procurement bridge",
+      where:"New purchase_requests table → the existing supplier marketplace Order flow",
+      subs:["Reorder point generates a purchase request into the supplier platform",
+            "THE MOAT: treatment consumes stock → stock triggers reorder → reorder hits a marketplace of verified suppliers",
+            "Structurally uncopyable without a supply network",
+            "Requires the marketplace-side fixes from the platform audit (order supplier_id, price snapshots, stock reservation) to be reliable"] }
+  ],
+  acceptance:[
+    "Completing a treatment decrements clinic stock through a movement record, not a direct quantity update",
+    "On-hand quantity always equals the sum of stock movements",
+    "Expired lots cannot be consumed; alerts fire at the configured thresholds",
+    "Given a lot number, the system lists every patient treated with it",
+    "A broken or under-maintenance chair no longer offers bookable slots",
+    "A sterilization cycle can be logged and retrieved with its indicator result",
+    "Reaching a reorder point raises a purchase request into the supplier marketplace",
+    "Inventory and procurement roles receive 403 on all patient endpoints"
+  ],
+  risks:[
+    "Medium complexity, but the marketplace bridge depends on marketplace-side integrity fixes identified in the platform audit",
+    "Clinic and supplier inventory must stay separate; merging them reintroduces the name-matching defect",
+    "Strategically the most important phase after MVP — under-delivering here forfeits the competitive advantage"
+  ],
+  tests:[
+    "Stock movement sum equals on-hand for arbitrary movement sequences",
+    "Expired lot consumption is blocked",
+    "FEFO suggestion selects the correct batch",
+    "Recall lookup returns exactly the patients treated with a given lot",
+    "Equipment breakdown removes availability in the scheduler",
+    "Purchase request creation reaches the marketplace and is idempotent",
+    "Procurement role has no patient data access"
+  ]
+},
+{
+  num:9,
+  title:"Patient Portal, Communication, Recall & Online Booking",
+  priority:"medium",
+  complexity:"Medium-High",
+  duration:"Not specified",
+  depsText:"Phases 3, 5, 6 — may run in parallel with Phases 7 and 8",
+  deps:[3,5,6],
+  goal:"Build multi-channel patient communication, the recall engine, the patient portal and public online booking.",
+  why:"Recall is where a dental practice's recurring revenue comes from and where most practices leak money. WhatsApp is the channel patients in the target market actually read. The portal and online booking reduce phone load and open an acquisition channel.",
+  milestone:"",
+  dbImpact:"message_templates, message_logs, notification_preferences, recall_rules, patient_recalls, portal sessions, leads.",
+  apiImpact:"Portal API with a strictly separate permission surface. Public booking endpoints sharing the internal availability engine.",
+  frontendImpact:"Patient portal application, public booking page, digital check-in, recall dashboard, message template editor.",
+  security:"The portal is a separate authentication surface. Clinical content reaches a patient only after a clinician explicitly releases it. Booking must never bypass Phase 3 concurrency guarantees.",
+  outcome:"Patients receive reminders on the channel they read, recalls convert automatically, and patients can self-serve bookings, plan approvals and payments.",
+  tasks:[
+    { t:"Build the message dispatch service with pluggable channels",
+      where:"New dispatch service + channel drivers",
+      subs:["WhatsApp Business API, SMS, email, push, in-app",
+            "Template management with variable substitution and per-language variants",
+            "Per-patient and per-event channel preferences",
+            "Delivery status tracking with retry and fallback (WhatsApp → SMS on failure)",
+            "Quiet hours; opt-out honoured globally; per-message cost accounting",
+            "Every message lands on the patient timeline",
+            "Repair app/Jobs/SendFcmNotification.php, which calls a non-existent FirebaseService::sendNotification()",
+            "Move all notification sending to queues — FirebaseService currently runs synchronous, unwrapped HTTPS calls inside the request"] },
+    { t:"Begin WhatsApp Business API onboarding early",
+      where:"External process",
+      subs:["Business API onboarding, template pre-approval and an opt-in record all have external lead times",
+            "Start this process during Phase 6, not the week before launch"] },
+    { t:"Build the recall rules engine",
+      where:"New recall_rules table",
+      subs:["Trigger: procedure_completed | last_visit | implant_placed | ortho_started | perio_treatment | custom",
+            "Interval: 6 / 12 / 3 months / custom",
+            "Type: hygiene, exam, perio maintenance, implant review, ortho adjustment, post-op, radiograph due",
+            "Contact sequence, e.g. −14d, −3d, +7d, +30d across channels"] },
+    { t:"Build patient recalls with a nightly materialization job",
+      where:"New patient_recalls table + scheduled job",
+      subs:["status ∈ due | contacted | scheduled | completed | missed | opted_out",
+            "Attempts array (channel, sent_at, response), appointment_id, completed_at",
+            "Completing a treatment schedules the next recall automatically",
+            "Dashboard: due, contacted, converted, and revenue attributable to recall — the most persuasive number you can put in front of a clinic owner"] },
+    { t:"Build waiting-list auto-fill on cancellation",
+      where:"Waiting list from Phase 3 + dispatch service",
+      subs:["On cancellation, rank by urgency + preference + reachability, then notify in waves",
+            "Directly recovers revenue that is otherwise simply lost — the clearest ROI story in the product"] },
+    { t:"Build the patient portal",
+      where:"New portal application + a separate API permission surface",
+      subs:["Visible: appointments (book/reschedule/cancel within policy), treatment plans in patient-friendly language with per-item accept/decline, invoices and balance with online payment, their own prescriptions, consent forms to review and sign, explicitly released documents and images, recall reminders, secure messaging",
+            "NEVER visible: raw clinical notes, internal flags and staff comments, cost/margin and lab costs, provisional or differential diagnoses not yet discussed, other family members' records unless delegated, images by default",
+            "Governing rule: clinical content reaches a patient ONLY after a clinician chooses to release it",
+            "Auto-publishing notes generates alarming, un-contextualised information and support calls the clinic will blame on you"] },
+    { t:"Build public online booking",
+      where:"Public endpoints on the Phase 3 availability engine",
+      subs:["MUST share the same availability engine and concurrency guarantees — never a second path to writing appointments",
+            "Restrict to configured slot types",
+            "Require deposits for high-value or historically no-showing patients",
+            "Route new-patient bookings into a triage queue rather than straight onto the calendar",
+            "Cancellation policy and automated reminders"] },
+    { t:"Build digital check-in and queue status",
+      where:"Frontend + API",
+      subs:["QR check-in, waiting room status",
+            "Visible patient-experience win; cheap to build"] },
+    { t:"Build light CRM: leads and the conversion funnel",
+      where:"New leads table",
+      subs:["Referral source on every patient; lead capture from the booking page; simple Lead entity with status",
+            "Funnel: Lead → Booked → Attended → Treatment Accepted → Revenue",
+            "Answers 'which marketing actually produced revenue' — a question almost no dental system answers",
+            "Do NOT build full campaign management, email marketing automation or drip sequences; integrate with tools clinics already use"] },
+    { t:"Build patient feedback and review requests",
+      where:"Dispatch service + new feedback table",
+      subs:["Post-visit satisfaction capture and review solicitation"] }
+  ],
+  acceptance:[
+    "A reminder is delivered on the patient's preferred channel and falls back correctly on failure",
+    "Opt-out and quiet hours are honoured globally",
+    "Recalls materialize nightly, follow their contact sequence and convert into appointments",
+    "Recall conversion rate and attributable revenue are reportable",
+    "A cancellation triggers waiting-list notification in ranked waves",
+    "A portal user cannot retrieve clinical notes, internal flags, cost data or another patient's record",
+    "Images are not visible in the portal until explicitly released by a clinician",
+    "A public booking cannot double-book: it goes through the same constraint as internal booking, proven by test",
+    "The lead → revenue funnel reports end to end"
+  ],
+  risks:[
+    "WhatsApp Business API onboarding and template approval have external lead times — start during Phase 6",
+    "The portal is a new authentication surface and a new attack surface; treat its permission model as separate, not inherited",
+    "Online booking that bypasses the Phase 3 constraint reintroduces double-booking through the back door"
+  ],
+  tests:[
+    "Notification channel selection, preference honouring, quiet hours, retry and fallback",
+    "No duplicate sends on retry",
+    "Recall rule evaluation produces correct due dates with no duplicates; opt-out honoured",
+    "Portal authorization: every 'never visible' item returns 403",
+    "Public booking concurrency against the same slot as an internal booking",
+    "Deposit enforcement on flagged patients",
+    "Funnel attribution against fixtures"
+  ]
+},
+{
+  num:10,
+  title:"Analytics & Dashboards",
+  priority:"medium",
+  complexity:"Medium",
+  duration:"Not specified",
+  depsText:"Data produced by Phases 3–8",
+  deps:[3,4,5,6,7,8],
+  goal:"Build the dentist, clinic and management dashboards from materialized aggregates, with every number drillable to its underlying rows.",
+  why:"Dashboards are how the owner justifies the subscription every month. Precision in definitions matters more than chart count — a KPI that disagrees with the clinic's own arithmetic destroys confidence in everything else.",
+  milestone:"",
+  dbImpact:"Nightly-materialized aggregate tables. Read replica once reporting load becomes visible.",
+  apiImpact:"Dashboard endpoints served from aggregates, not live transactional queries. Drill-down endpoints. Export with audit.",
+  frontendImpact:"Three dashboard surfaces (dentist, clinic, management) with drill-down and scheduled report delivery.",
+  security:"Financial KPIs behind the financial permission plane. Exports audited and throttled with alerting on bulk extraction.",
+  outcome:"Dashboards whose every figure can be explained and traced, replacing the current ad-hoc statistics.",
+  tasks:[
+    { t:"Build materialized aggregate tables",
+      where:"New aggregate tables + nightly jobs",
+      subs:["Serve dashboards from aggregates, NOT live queries over transactional data",
+            "The existing StatisticService runs 6+ uncached aggregate queries per dashboard load, including two full GROUP BY joins over order_items"] },
+    { t:"Implement the core KPI definitions precisely",
+      where:"Reporting layer",
+      subs:["Production = Σ fees of treatments COMPLETED in the period, gross of discounts",
+            "Collection = Σ payments received in the period",
+            "Collection rate = Collection ÷ Production, trailing 90 days",
+            "Conflating production and collection is the most common reporting error in dental software"] },
+    { t:"Build the dentist dashboard",
+      where:"Frontend + API",
+      subs:["Today's appointments, patients, treatment plans, pending treatments, follow-ups",
+            "Own production, revenue and chair utilization"] },
+    { t:"Build the clinic dashboard",
+      where:"Frontend + API",
+      subs:["Daily and monthly revenue, appointments, no-shows, cancellation rate",
+            "New vs returning patients, treatment acceptance, outstanding balances",
+            "Inventory, staff performance"] },
+    { t:"Build the management dashboard",
+      where:"Frontend + API",
+      subs:["Revenue, profit, production, collection rate",
+            "Patient acquisition and retention, treatment acceptance",
+            "Dentist performance, branch performance, chair utilization, inventory turnover"] },
+    { t:"Implement the remaining KPIs",
+      where:"Reporting layer",
+      subs:["Treatment acceptance = accepted item value ÷ presented item value",
+            "Chair utilization = booked productive minutes ÷ available chair minutes, excluding admin blocks and leave",
+            "No-show rate by dentist / type / lead time",
+            "Patient retention (% seen in last 18 months) and the lapsed list",
+            "Recall conversion; revenue per patient visit; patient lifetime value",
+            "A/R ageing; dentist production and hourly rate; lab remake rate; inventory turnover and expiry loss"] },
+    { t:"Make every dashboard number drillable",
+      where:"Frontend + API",
+      subs:["Click through to the underlying rows",
+            "An unexplainable KPI is a support ticket"] },
+    { t:"Build scheduled report delivery and audited exports",
+      where:"Scheduler + export layer",
+      subs:["Export throttling with alerting on bulk extraction",
+            "Every export audited"] },
+    { t:"Add a read replica for reporting",
+      where:"Infrastructure",
+      subs:["Once reporting load becomes visible, move analytics off the transactional path"] }
+  ],
+  acceptance:[
+    "Every KPI matches a manual calculation against a known fixture dataset",
+    "Production and collection are distinct figures and are never conflated",
+    "Every dashboard figure drills down to the rows that produced it",
+    "Dashboards are served from aggregates and load without querying transactional tables live",
+    "Financial KPIs are hidden from roles without the financial permission plane",
+    "Exports are audited and rate-limited"
+  ],
+  risks:[
+    "Low technical risk; high risk on definitional precision — a wrong KPI destroys trust in the whole product",
+    "Aggregate staleness must be visible to the user or figures will be disputed"
+  ],
+  tests:[
+    "Each KPI against fixture data with a hand-calculated expected value",
+    "Drill-down returns exactly the rows summed by the headline figure",
+    "Permission gating on financial dashboards",
+    "Aggregate job correctness and idempotency on re-run",
+    "Export audit entries and throttling"
+  ]
+},
+{
+  num:11,
+  title:"Multi-Branch & Enterprise",
+  priority:"low",
+  complexity:"Medium-High",
+  duration:"Not specified",
+  depsText:"All previous phases",
+  deps:[10],
+  goal:"Unlock group-level capability: consolidated reporting, inter-branch operations, org-level roles, SSO and a public API.",
+  why:"This is the enterprise contract. Cost here is low if Phase 0 modelled branches correctly, and very high if it did not — the branch model is the single determinant of whether this phase is cheap or a rewrite.",
+  milestone:"",
+  dbImpact:"Mostly additive if tenancy was modelled correctly in Phase 0. Branch price lists, inter-branch transfer records, org-level role assignments.",
+  apiImpact:"Public API with webhooks and a published OpenAPI spec. SSO/SAML authentication path.",
+  frontendImpact:"Group management console, cross-branch reporting, central scheduling.",
+  security:"Org-level roles, SSO/SAML, data residency options. Region-pinned deployment is an architectural property, not a configuration flag.",
+  outcome:"A product a multi-branch dental group can run centrally, with the integration surface enterprise buyers require.",
+  tasks:[
+    { t:"Build cross-branch reporting and consolidation",
+      where:"Reporting layer",
+      subs:["Group P&L with per-branch breakdown"] },
+    { t:"Build inter-branch stock transfers",
+      where:"stock_transfers from Phase 8",
+      subs:["Complete the transfer workflow across branch boundaries"] },
+    { t:"Build branch price lists",
+      where:"Price override layer from Phase 1",
+      subs:["Organisation base prices with branch-level overrides"] },
+    { t:"Support cross-branch patient journeys",
+      where:"Patient + appointment layer",
+      subs:["Patients are already organisation-owned from Phase 2, so this is reporting and UX rather than migration",
+            "Patient branch visit history surfaced in the timeline"] },
+    { t:"Build central scheduling",
+      where:"Scheduling layer",
+      subs:["A call-centre role booking across branches, seeing availability and contact details only"] },
+    { t:"Build organisation-level roles",
+      where:"Membership branch_scope from Phase 0",
+      subs:["branch_scope = ALL for group-level staff"] },
+    { t:"Add SSO / SAML",
+      where:"Authentication layer",
+      subs:["Enterprise procurement requirement"] },
+    { t:"Publish a public API with webhooks and OpenAPI",
+      where:"API layer",
+      subs:["Signed webhook payloads with retry",
+            "OpenAPI spec generated from code and published — a real differentiator for enterprise buyers"] },
+    { t:"Implement data residency options",
+      where:"Deployment architecture",
+      subs:["Region-pinned storage is an architectural property, not a flag",
+            "Decides which enterprise markets you can enter",
+            "Saudi PDPL and UAE health data regulations often require in-country storage"] }
+  ],
+  acceptance:[
+    "A group can view consolidated and per-branch financials from one console",
+    "Stock transfers between branches reconcile on both sides",
+    "Branch price overrides apply correctly and fall back to organisation base prices",
+    "A patient treated at two branches has one record and a complete cross-branch timeline",
+    "SSO authentication works end to end",
+    "The public API is documented by a published OpenAPI spec and webhooks are signed and retried",
+    "A deployment can be pinned to a region"
+  ],
+  risks:[
+    "Low risk IF Phase 0 modelled branches correctly; very high if it did not",
+    "Data residency discovered after signing an enterprise customer is an expensive re-architecture"
+  ],
+  tests:[
+    "Cross-branch permission scoping: branch-scoped staff cannot see other branches",
+    "Consolidated report totals equal the sum of branch reports",
+    "Inter-branch transfer reconciliation",
+    "SSO login and role mapping",
+    "Webhook signature verification and retry behaviour"
+  ]
+},
+{
+  num:12,
+  title:"AI & Advanced Automation",
+  priority:"low",
+  complexity:"Medium-High",
+  duration:"Not specified",
+  depsText:"All previous phases + 12+ months of production data for predictive features",
+  deps:[11],
+  goal:"Add AI assistance where it has clear value and containable risk, with human oversight on every clinical output.",
+  why:"Documentation is the most-complained-about part of a dentist's day and no incumbent serves it well in Arabic. The predictive features need real historical data, which is why this phase comes last.",
+  milestone:"CONSTRAINT — nothing in this product makes an autonomous clinical decision. Every clinical AI output is a draft a licensed clinician accepts, edits or rejects, and that acceptance is logged.",
+  dbImpact:"Embedding storage for smart search (tenant-isolated). Model feature tables for predictive features.",
+  apiImpact:"Draft-generation endpoints that never auto-commit. Retrieval endpoints permission-filtered at query time.",
+  frontendImpact:"Voice capture, draft review and accept/edit/reject flows, prediction surfacing in scheduling and recall.",
+  security:"Patient data must NOT train third-party models. Use providers with contractual no-training guarantees, or self-host. Document this before it is asked in procurement.",
+  outcome:"Assistive AI that measurably reduces documentation time and improves recall and scheduling outcomes, with a defensible governance position.",
+  tasks:[
+    { t:"Build Arabic voice-to-structured clinical note",
+      where:"ASR integration + note templates from Phase 4",
+      subs:["The highest-value AI investment in the product — if only one is made, make it this",
+            "ASR with dental vocabulary",
+            "Dentist reviews and signs; nothing saves unsigned"] },
+    { t:"Build note drafting from chart and procedure data",
+      where:"Clinical notes layer",
+      subs:["Uses existing structured data only",
+            "Draft state; explicit signing required"] },
+    { t:"Build patient message drafting in Arabic and English",
+      where:"Dispatch service from Phase 9",
+      subs:["Staff sends; never auto-sends"] },
+    { t:"Build treatment plan explanation for patients",
+      where:"Plan presentation from Phase 5",
+      subs:["Dentist approves before release to the patient"] },
+    { t:"Build smart search across the record",
+      where:"Embedding index over notes and documents",
+      subs:["Tenant-isolated embeddings",
+            "Read-only; permission-filtered at retrieval, not after"] },
+    { t:"Build no-show prediction",
+      where:"Model + scheduling integration",
+      subs:["Logistic regression on history, lead time, channel, demographics, prior no-shows",
+            "Requires 12+ months of your own appointment data",
+            "Drives reminder intensity and overbooking suggestions — NEVER refuses a booking"] },
+    { t:"Build recall and reactivation targeting",
+      where:"Recall engine from Phase 9",
+      subs:["Ranks a work list; staff acts"] },
+    { t:"Build inventory demand forecasting",
+      where:"Inventory from Phase 8",
+      subs:["Consumption-based; suggests reorder quantity",
+            "Only possible because you own both the clinical and supply halves — a compounding advantage"] },
+    { t:"Build schedule optimization suggestions",
+      where:"Scheduling from Phase 3",
+      subs:["Historical durations and utilization",
+            "Suggestion only; the receptionist decides",
+            "Do NOT build full auto-scheduling — receptionists will not cede control and the failure mode is loud"] },
+    { t:"Establish AI data governance",
+      where:"Contracts, architecture and documentation",
+      subs:["Patient data must not train third-party models — contractual no-training guarantees or self-hosting",
+            "This will be asked in every enterprise procurement conversation; document the answer before it is asked",
+            "Radiographic diagnosis is a regulated medical device in most jurisdictions — partner with a cleared vendor, do not build a classifier",
+            "Never build autonomous diagnosis or treatment recommendation"] }
+  ],
+  acceptance:[
+    "No AI output is persisted to a clinical record without an explicit human signature, and that acceptance is logged",
+    "Arabic voice-to-note produces a usable draft that a dentist edits and signs",
+    "Smart search results are permission-filtered at retrieval and never cross tenants",
+    "No-show prediction adjusts reminder intensity but never blocks a booking",
+    "A documented, contractual guarantee exists that patient data does not train third-party models",
+    "No autonomous diagnostic capability exists anywhere in the product"
+  ],
+  risks:[
+    "Clinical safety and data-governance commitments must be in place before any clinical AI ships",
+    "Predictive features need 12+ months of production data; shipping them early produces noise that erodes trust",
+    "Radiographic AI is a regulated medical device — building rather than integrating creates regulatory exposure"
+  ],
+  tests:[
+    "No AI-generated content can be saved to a clinical record without a signature",
+    "Tenant isolation on embeddings and retrieval",
+    "Permission filtering applied at retrieval time, not post-filtering",
+    "Prediction outputs cannot block or auto-modify a booking",
+    "Audit entries on every AI draft acceptance"
+  ]
+}
+];
+
+/* Final milestone checklist — major gates before the roadmap is fully implemented */
+const FINAL_CHECKLIST = [
+  ["No unauthenticated route exposes data; APP_DEBUG is false in production", "Phase 0 — the hard gate. Verified by a security review of routes/api.php and the deployed .env."],
+  ["Cross-tenant and cross-role denial is proven by an automated permission-matrix test", "Phase 0 — the test that must fail when any new endpoint lacks a policy."],
+  ["The database engine decision is made and recorded with its rationale", "Phase 0 — PostgreSQL recommended; blocks the Phase 3 constraint design."],
+  ["Organization → Branch → Membership tenancy is live and every entity is scoped", "Phase 0 — nothing clinical may begin before this."],
+  ["Patients are organisation-owned with a materialized timeline", "Phase 2 — irreversible if got wrong."],
+  ["Two concurrent bookings for one slot produce exactly one appointment", "Phase 3 — proven by an automated concurrency test against a real database."],
+  ["The odontogram is append-only and the chart replays correctly at any past date", "Phase 4 — validated with practising dentists."],
+  ["Treatment plans support per-item acceptance with frozen presentation-time prices", "Phase 5 — acceptance rate is computable from the first plan."],
+  ["Every ledger transaction balances and no code path mutates a ledger entry", "Phase 6 — the MVP financial invariant."],
+  ["MVP LAUNCH: Phases 0–6 complete and the product is sellable to dental clinics", "End of Phase 6 — the commercial gate."],
+  ["Signed consents and signed clinical notes have no update path anywhere in the API", "Phases 4 and 7 — legal and medico-legal requirement."],
+  ["Prescribing a contraindicated drug is hard-blocked with a logged, reasoned override", "Phase 7 — build it properly or do not claim it."],
+  ["Treatment completion depletes clinic stock and a lot traces to the patients treated", "Phase 8 — regulatory capability."],
+  ["Reaching a reorder point raises a purchase request into the supplier marketplace", "Phase 8 — the competitive moat."],
+  ["Recalls materialize automatically and recall-attributable revenue is reportable", "Phase 9 — the clearest ROI story in the product."],
+  ["The patient portal exposes nothing on the 'never visible' list", "Phase 9 — verified by authorization tests on every item."],
+  ["Public online booking shares the internal availability engine and cannot double-book", "Phase 9 — no second write path to appointments."],
+  ["Every dashboard KPI matches a hand calculation and drills down to its source rows", "Phase 10 — definitional precision."],
+  ["A multi-branch group runs centrally with consolidated and per-branch reporting", "Phase 11 — the enterprise contract."],
+  ["A documented guarantee exists that patient data does not train third-party models", "Phase 12 — asked in every enterprise procurement conversation."],
+  ["No AI output reaches a clinical record without a logged human signature", "Phase 12 — the clinical safety constraint."],
+  ["CI blocks merge on failure and covers all highest-risk workflows", "All phases — isolation, concurrency, financial integrity, immutability, file access."]
+];
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const STORAGE_KEY = "dentallink-roadmap-v1";
+let state = { tasks:{}, blocked:{}, final:{}, open:{} };
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      state = {
+        tasks:  parsed.tasks  && typeof parsed.tasks  === "object" ? parsed.tasks  : {},
+        blocked:parsed.blocked&& typeof parsed.blocked=== "object" ? parsed.blocked: {},
+        final:  parsed.final  && typeof parsed.final  === "object" ? parsed.final  : {},
+        open:   parsed.open   && typeof parsed.open   === "object" ? parsed.open   : {}
+      };
+    }
+  }catch(err){
+    console.warn("Roadmap: could not read saved progress, starting fresh.", err);
+    state = { tasks:{}, blocked:{}, final:{}, open:{} };
+  }
+}
+function saveState(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  catch(err){ console.warn("Roadmap: could not save progress.", err); }
+}
+
+const taskId = (p,t) => "p"+p+"-t"+t;
+const isDone = id => state.tasks[id] === true;
+
+function phaseStats(phase){
+  const total = phase.tasks.length;
+  let done = 0;
+  for(let i=0;i<total;i++){ if(isDone(taskId(phase.num,i))) done++; }
+  return { total, done, pct: total ? Math.round(done/total*100) : 0 };
+}
+function phaseStatus(phase){
+  if(state.blocked[phase.num]) return "blocked";
+  const s = phaseStats(phase);
+  if(s.done === 0) return "notstarted";
+  if(s.done === s.total) return "done";
+  return "progress";
+}
+const STATUS_LABEL = { notstarted:"Not Started", progress:"In Progress", done:"Completed", blocked:"Blocked" };
+const STATUS_CLASS = { notstarted:"st-notstarted", progress:"st-progress", done:"st-done", blocked:"st-blocked" };
+
+/* ============================================================
+   RENDER HELPERS
+   ============================================================ */
+function el(tag, cls, text){
+  const n = document.createElement(tag);
+  if(cls) n.className = cls;
+  if(text !== undefined) n.textContent = text;
+  return n;
+}
+function badge(cls, text){ return el("span","badge "+cls, text); }
+
+/* ============================================================
+   RENDER: SIDEBAR NAV
+   ============================================================ */
+function renderNav(){
+  const nav = document.getElementById("sideNav");
+  const anchor = document.getElementById("navAfterPhases");
+  PHASES.forEach(p => {
+    const a = el("a");
+    a.href = "#phase-"+p.num;
+    const num = el("span","pnum", String(p.num));
+    const dot = el("span","dot");
+    dot.id = "navdot-"+p.num;
+    const label = el("span", null, p.title);
+    a.append(num, dot, label);
+    nav.insertBefore(a, anchor);
+  });
+}
+
+/* ============================================================
+   RENDER: OVERVIEW TABLE
+   ============================================================ */
+function renderOverview(){
+  const body = document.getElementById("overviewBody");
+  body.textContent = "";
+  PHASES.forEach(p => {
+    const tr = el("tr");
+    tr.id = "ovrow-"+p.num;
+
+    tr.append(el("td","pnum", String(p.num)));
+
+    const nameTd = el("td","pname");
+    const link = el("a", null, p.title);
+    link.href = "#phase-"+p.num;
+    nameTd.append(link);
+    tr.append(nameTd);
+
+    tr.append(el("td", null, p.goal));
+
+    const priTd = el("td");
+    priTd.append(badge("pri-"+p.priority, PRIORITY_LABEL[p.priority]));
+    tr.append(priTd);
+
+    tr.append(el("td", null, p.complexity));
+    tr.append(el("td", null, p.duration));
+    tr.append(el("td", null, p.depsText));
+
+    const stTd = el("td");
+    stTd.id = "ovstatus-"+p.num;
+    tr.append(stTd);
+
+    const prTd = el("td");
+    const wrap = el("div","mini-prog");
+    const track = el("div","track");
+    const fill = el("i");
+    fill.id = "ovfill-"+p.num;
+    track.append(fill);
+    const pctSpan = el("span");
+    pctSpan.id = "ovpct-"+p.num;
+    wrap.append(track, pctSpan);
+    prTd.append(wrap);
+    tr.append(prTd);
+
+    body.append(tr);
+  });
+}
+
+/* ============================================================
+   RENDER: TIMELINE
+   ============================================================ */
+function renderTimeline(){
+  const tl = document.getElementById("timeline");
+  tl.textContent = "";
+  PHASES.forEach(p => {
+    const row = el("div","tl-row");
+    row.id = "tlrow-"+p.num;
+
+    row.append(el("div","tl-idx","P"+p.num));
+
+    const body = el("div","tl-body");
+    const title = el("div","tl-title", p.title);
+    const meta = el("div","tl-meta");
+    meta.append(badge("pri-"+p.priority, PRIORITY_LABEL[p.priority]));
+    const stHolder = el("span");
+    stHolder.id = "tlstatus-"+p.num;
+    meta.append(stHolder);
+    meta.append(el("span","badge meta","Complexity: "+p.complexity));
+    meta.append(el("span","badge meta","Duration: "+p.duration));
+    const dep = el("div","tl-dep","Depends on: "+p.depsText);
+    body.append(title, meta, dep);
+    row.append(body);
+    tl.append(row);
+  });
+}
+
+/* ============================================================
+   RENDER: PHASE CARDS
+   ============================================================ */
+function block(title, contentNode){
+  const b = el("div","block");
+  b.append(el("h4", null, title), contentNode);
+  return b;
+}
+function listOf(items, cls){
+  const ul = el("ul", cls);
+  items.forEach(i => ul.append(el("li", null, i)));
+  return ul;
+}
+
+function renderPhases(){
+  const list = document.getElementById("phaseList");
+  list.textContent = "";
+
+  PHASES.forEach(p => {
+    const card = el("article","phase");
+    card.id = "phase-"+p.num;
+    card.dataset.phase = String(p.num);
+    card.dataset.open = state.open[p.num] === true ? "true" : "false";
+
+    /* --- header --- */
+    const head = el("button","phase-head");
+    head.type = "button";
+    head.setAttribute("aria-expanded", card.dataset.open);
+    head.setAttribute("aria-controls","phasebody-"+p.num);
+
+    head.append(el("span","caret","▶"));
+    head.append(el("span","idx","PHASE "+p.num));
+    head.append(el("span","ptitle", p.title));
+
+    const hmeta = el("span","hmeta");
+    hmeta.append(badge("pri-"+p.priority, PRIORITY_LABEL[p.priority]));
+    const stSpan = el("span");
+    stSpan.id = "hstatus-"+p.num;
+    hmeta.append(stSpan);
+    head.append(hmeta);
+
+    const hprog = el("span","hprog");
+    const track = el("span","track");
+    const fill = el("i");
+    fill.id = "hfill-"+p.num;
+    track.append(fill);
+    const cnt = el("span");
+    cnt.id = "hcount-"+p.num;
+    hprog.append(track, cnt);
+    head.append(hprog);
+
+    card.append(head);
+
+    /* --- body --- */
+    const body = el("div","phase-body");
+    body.id = "phasebody-"+p.num;
+
+    if(p.milestone){
+      const m = el("div","milestone");
+      const strong = el("strong", null, "⚑ ");
+      m.append(strong, document.createTextNode(p.milestone));
+      body.append(m);
+    }
+
+    const goalBlock = block("Goal", el("p", null, p.goal));
+    goalBlock.classList.add("goal");
+    body.append(goalBlock);
+    body.append(block("Why this phase is needed", el("p", null, p.why)));
+
+    /* impact grid */
+    const grid = el("div","grid2");
+    [["Dependencies", p.depsText],
+     ["Database impact", p.dbImpact],
+     ["API impact", p.apiImpact],
+     ["Frontend impact", p.frontendImpact],
+     ["Security considerations", p.security],
+     ["Estimated effort", p.complexity + " complexity · Duration: " + p.duration]
+    ].forEach(([h,txt]) => {
+      const d = el("div","impact");
+      d.append(el("h4", null, h), el("p", null, txt));
+      grid.append(d);
+    });
+    body.append(grid);
+
+    /* tasks */
+    const tasksWrap = el("div","block");
+    tasksWrap.append(el("h4", null, "Tasks ("+p.tasks.length+")"));
+    const ul = el("ul","tasks");
+    p.tasks.forEach((task, i) => {
+      const id = taskId(p.num, i);
+      const li = el("li","task");
+      li.dataset.taskId = id;
+
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.id = id;
+      cb.checked = isDone(id);
+      cb.addEventListener("change", () => {
+        state.tasks[id] = cb.checked;
+        saveState();
+        refresh();
+      });
+
+      const tb = el("div","tbody");
+      const label = el("label","tlabel", task.t);
+      label.setAttribute("for", id);
+      tb.append(label);
+
+      if(task.where){
+        const w = el("div","where");
+        w.append(el("strong", null, "Where: "), document.createTextNode(task.where));
+        tb.append(w);
+      }
+      if(task.subs && task.subs.length){
+        tb.append(listOf(task.subs, "subs"));
+      }
+
+      li.append(cb, tb);
+      if(cb.checked) li.classList.add("checked");
+      ul.append(li);
+    });
+    tasksWrap.append(ul);
+    body.append(tasksWrap);
+
+    body.append(block("Expected outcome", el("p", null, p.outcome)));
+    body.append(block("Acceptance criteria — how we know it is done", listOf(p.acceptance,"checklist")));
+    body.append(block("Risks & notes — what could go wrong", listOf(p.risks,"risklist")));
+    body.append(block("What to test after implementation", listOf(p.tests,"testlist")));
+
+    /* actions */
+    const actions = el("div","phase-actions");
+    const blockBtn = el("button","abtn");
+    blockBtn.type = "button";
+    blockBtn.id = "blockbtn-"+p.num;
+    blockBtn.addEventListener("click", () => {
+      state.blocked[p.num] = !state.blocked[p.num];
+      saveState();
+      refresh();
+    });
+    const allBtn = el("button","abtn","Mark all tasks complete");
+    allBtn.type = "button";
+    allBtn.addEventListener("click", () => {
+      p.tasks.forEach((_,i) => { state.tasks[taskId(p.num,i)] = true; });
+      saveState(); renderPhaseChecks(p); refresh();
+    });
+    const noneBtn = el("button","abtn","Clear phase tasks");
+    noneBtn.type = "button";
+    noneBtn.addEventListener("click", () => {
+      p.tasks.forEach((_,i) => { state.tasks[taskId(p.num,i)] = false; });
+      saveState(); renderPhaseChecks(p); refresh();
+    });
+    actions.append(blockBtn, allBtn, noneBtn);
+    body.append(actions);
+
+    card.append(body);
+
+    head.addEventListener("click", () => {
+      const open = card.dataset.open === "true";
+      card.dataset.open = open ? "false" : "true";
+      head.setAttribute("aria-expanded", String(!open));
+      state.open[p.num] = !open;
+      saveState();
+    });
+
+    list.append(card);
+  });
+}
+
+/* sync checkbox DOM for one phase after bulk change */
+function renderPhaseChecks(p){
+  p.tasks.forEach((_,i) => {
+    const id = taskId(p.num,i);
+    const cb = document.getElementById(id);
+    if(cb){
+      cb.checked = isDone(id);
+      const li = cb.closest(".task");
+      if(li) li.classList.toggle("checked", cb.checked);
+    }
+  });
+}
+
+/* ============================================================
+   RENDER: FINAL CHECKLIST
+   ============================================================ */
+function renderFinal(){
+  const wrap = document.getElementById("finalList");
+  wrap.textContent = "";
+  FINAL_CHECKLIST.forEach(([text, note], i) => {
+    const id = "final-"+i;
+    const row = el("div","ftask");
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.id = id;
+    cb.checked = state.final[id] === true;
+    cb.addEventListener("change", () => {
+      state.final[id] = cb.checked;
+      row.classList.toggle("checked", cb.checked);
+      saveState();
+    });
+    const label = el("label");
+    label.setAttribute("for", id);
+    label.append(document.createTextNode(text));
+    label.append(el("small", null, note));
+    row.append(cb, label);
+    if(cb.checked) row.classList.add("checked");
+    wrap.append(row);
+  });
+}
+
+/* ============================================================
+   REFRESH — recompute all derived UI
+   ============================================================ */
+function refresh(){
+  let totalTasks = 0, doneTasks = 0;
+  let pDone = 0, pProg = 0, pBlocked = 0;
+
+  PHASES.forEach(p => {
+    const s = phaseStats(p);
+    const status = phaseStatus(p);
+    totalTasks += s.total;
+    doneTasks  += s.done;
+    if(status === "done") pDone++;
+    else if(status === "progress") pProg++;
+    else if(status === "blocked") pBlocked++;
+
+    /* phase card header */
+    const fill = document.getElementById("hfill-"+p.num);
+    if(fill) fill.style.width = s.pct + "%";
+    const cnt = document.getElementById("hcount-"+p.num);
+    if(cnt) cnt.textContent = s.done + "/" + s.total;
+    const hst = document.getElementById("hstatus-"+p.num);
+    if(hst){ hst.textContent = ""; hst.append(badge(STATUS_CLASS[status], STATUS_LABEL[status])); }
+
+    const card = document.getElementById("phase-"+p.num);
+    if(card) card.dataset.status = status;
+
+    const bb = document.getElementById("blockbtn-"+p.num);
+    if(bb) bb.textContent = state.blocked[p.num] ? "Unmark blocked" : "Mark as blocked";
+
+    /* overview row */
+    const ovFill = document.getElementById("ovfill-"+p.num);
+    if(ovFill) ovFill.style.width = s.pct + "%";
+    const ovPct = document.getElementById("ovpct-"+p.num);
+    if(ovPct) ovPct.textContent = s.pct + "%";
+    const ovSt = document.getElementById("ovstatus-"+p.num);
+    if(ovSt){ ovSt.textContent = ""; ovSt.append(badge(STATUS_CLASS[status], STATUS_LABEL[status])); }
+
+    /* timeline */
+    const tlRow = document.getElementById("tlrow-"+p.num);
+    if(tlRow) tlRow.dataset.status = status;
+    const tlSt = document.getElementById("tlstatus-"+p.num);
+    if(tlSt){ tlSt.textContent = ""; tlSt.append(badge(STATUS_CLASS[status], STATUS_LABEL[status])); }
+
+    /* nav dot */
+    const dot = document.getElementById("navdot-"+p.num);
+    if(dot) dot.className = "dot " + (status === "notstarted" ? "" : status);
+  });
+
+  const pct = totalTasks ? Math.round(doneTasks/totalTasks*100) : 0;
+
+  document.getElementById("statPhases").textContent        = String(PHASES.length);
+  document.getElementById("statPhasesDone").textContent     = String(pDone);
+  document.getElementById("statPhasesProg").textContent     = String(pProg);
+  document.getElementById("statPhasesBlocked").textContent  = String(pBlocked);
+  document.getElementById("statTasks").textContent          = String(totalTasks);
+  document.getElementById("statTasksDone").textContent      = String(doneTasks);
+
+  document.getElementById("overallPct").textContent = pct + "%";
+  document.getElementById("overallFill").style.width = pct + "%";
+  document.getElementById("overallBar").setAttribute("aria-valuenow", String(pct));
+  document.getElementById("topBarFill").style.width = pct + "%";
+  document.getElementById("topBarPct").textContent = pct + "%";
+  document.getElementById("topBarProgress").setAttribute("aria-valuenow", String(pct));
+
+  applyFilters();
+}
+
+/* ============================================================
+   FILTER + SEARCH
+   ============================================================ */
+let activeFilter = "all";
+
+function applyFilters(){
+  const q = (document.getElementById("searchBox").value || "").trim().toLowerCase();
+  let visible = 0;
+
+  PHASES.forEach(p => {
+    const card = document.getElementById("phase-"+p.num);
+    if(!card) return;
+
+    const status = phaseStatus(p);
+    const statusOk = activeFilter === "all" || activeFilter === status;
+
+    /* With no search term, the phase and all its tasks stay visible. */
+    let headerMatches = true;
+    let taskMatches = p.tasks.map(() => true);
+
+    if(q){
+      headerMatches =
+        p.title.toLowerCase().includes(q) ||
+        p.goal.toLowerCase().includes(q)  ||
+        p.why.toLowerCase().includes(q)   ||
+        ("phase " + p.num).includes(q);
+
+      taskMatches = p.tasks.map(t => {
+        const haystack = (t.t + " " + (t.where || "") + " " + (t.subs || []).join(" ")).toLowerCase();
+        return haystack.includes(q);
+      });
+    }
+
+    const anyTaskMatches = taskMatches.some(Boolean);
+    const show = statusOk && (headerMatches || anyTaskMatches);
+    card.hidden = !show;
+    if(show) visible++;
+
+    /* When the search matched specific tasks, narrow the list to those tasks.
+       When it matched only the phase header, keep every task visible. */
+    const narrowToMatchingTasks = Boolean(q) && anyTaskMatches && !headerMatches;
+    card.querySelectorAll(".task").forEach((li, i) => {
+      li.hidden = narrowToMatchingTasks && !taskMatches[i];
+    });
+  });
+
+  document.getElementById("emptyState").hidden = visible !== 0;
+}
+
+/* ============================================================
+   WIRING
+   ============================================================ */
+function wireControls(){
+  document.getElementById("searchBox").addEventListener("input", applyFilters);
+
+  document.querySelectorAll(".fbtn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      activeFilter = btn.dataset.filter;
+      document.querySelectorAll(".fbtn").forEach(b =>
+        b.setAttribute("aria-pressed", String(b === btn)));
+      applyFilters();
+    });
+  });
+
+  document.getElementById("expandAll").addEventListener("click", () => {
+    PHASES.forEach(p => {
+      const card = document.getElementById("phase-"+p.num);
+      if(card){
+        card.dataset.open = "true";
+        card.querySelector(".phase-head").setAttribute("aria-expanded","true");
+      }
+      state.open[p.num] = true;
+    });
+    saveState();
+  });
+
+  document.getElementById("collapseAll").addEventListener("click", () => {
+    PHASES.forEach(p => {
+      const card = document.getElementById("phase-"+p.num);
+      if(card){
+        card.dataset.open = "false";
+        card.querySelector(".phase-head").setAttribute("aria-expanded","false");
+      }
+      state.open[p.num] = false;
+    });
+    saveState();
+  });
+
+  document.getElementById("resetAll").addEventListener("click", () => {
+    if(!window.confirm("Reset all task progress, blocked flags and the final checklist? This cannot be undone.")) return;
+    state = { tasks:{}, blocked:{}, final:{}, open:state.open };
+    saveState();
+    PHASES.forEach(renderPhaseChecks);
+    renderFinal();
+    refresh();
+  });
+
+  /* mobile nav */
+  const sidebar = document.getElementById("sidebar");
+  const toggle = document.getElementById("menuToggle");
+  toggle.addEventListener("click", () => {
+    const open = sidebar.classList.toggle("open");
+    toggle.setAttribute("aria-expanded", String(open));
+  });
+  sidebar.addEventListener("click", e => {
+    if(e.target.closest("a") && window.innerWidth <= 960){
+      sidebar.classList.remove("open");
+      toggle.setAttribute("aria-expanded","false");
+    }
+  });
+
+  /* theme toggle */
+  const themeBtn = document.getElementById("themeToggle");
+  const savedTheme = (function(){
+    try{ return localStorage.getItem("dentallink-roadmap-theme"); }catch(e){ return null; }
+  })();
+  if(savedTheme === "dark" || savedTheme === "light"){
+    document.documentElement.setAttribute("data-theme", savedTheme);
+  }
+  themeBtn.addEventListener("click", () => {
+    const current = document.documentElement.getAttribute("data-theme");
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const effective = current || (prefersDark ? "dark" : "light");
+    const next = effective === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    try{ localStorage.setItem("dentallink-roadmap-theme", next); }catch(e){ /* ignore */ }
+  });
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+function init(){
+  loadState();
+  renderNav();
+  renderOverview();
+  renderTimeline();
+  renderPhases();
+  renderFinal();
+  wireControls();
+  refresh();
+}
+
+if(document.readyState === "loading"){
+  document.addEventListener("DOMContentLoaded", init);
+}else{
+  init();
+}
+</script>
+</body>
+</html>

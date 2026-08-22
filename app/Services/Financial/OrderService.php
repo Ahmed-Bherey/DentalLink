@@ -18,6 +18,57 @@ use App\Services\Notifaction\NotificationsCenterService;
 
 class OrderService
 {
+    /**
+     * Security (Stage 1): interim ownership boundary for order fulfilment.
+     *
+     * updateStatus() moves stock between users and accrues debt into
+     * order_expenses, but took a caller-supplied order id with no authorization
+     * at all. Only a supplier that actually owns at least one product in the
+     * order may drive its status.
+     *
+     * NOTE: this contains the access-control hole only. The non-idempotent
+     * accrual, the missing transaction and the caller-derived supplier_id
+     * (audit FIN-14/FIN-15) are order-flow defects deferred to Stage 7.
+     *
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    protected function guardOrderSupplier($user, Order $order): void
+    {
+        $ownsAnyLine = $user && $order->orderItems()
+            ->whereHas('product', fn($q) => $q->where('user_id', $user->id))
+            ->exists();
+
+        if (!$ownsAnyLine) {
+            throw new AuthorizationException('عفوا، ليس لديك صلاحية على هذا الطلب.');
+        }
+    }
+
+    /**
+     * Security (Stage 1): the doctor who placed the order is the only party that
+     * may request its deletion or request a line-item return.
+     *
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    protected function guardOrderDoctor($user, Order $order): void
+    {
+        if (!$user || (int) $order->doctor_id !== (int) $user->id) {
+            throw new AuthorizationException('عفوا، ليس لديك صلاحية على هذا الطلب.');
+        }
+    }
+
+    /**
+     * Security (Stage 1): approving/rejecting a line-item return moves stock and
+     * rewrites the ledger. Only the supplier that owns the product may do it.
+     *
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    protected function guardOrderItemSupplier($user, OrderItem $orderItem): void
+    {
+        if (!$user || (int) optional($orderItem->product)->user_id !== (int) $user->id) {
+            throw new AuthorizationException('عفوا، ليس لديك صلاحية على هذا المنتج.');
+        }
+    }
+
     // عرض قائمة الطلبات للمورد والطبيب
     public function indexForTypes($user, $perPage = 10)
     {
@@ -171,6 +222,9 @@ class OrderService
     public function updateStatus($user, int $orderId, array $data)
     {
         $order = Order::findOrFail($orderId);
+
+        $this->guardOrderSupplier($user, $order);
+
         $oldStatus = $order->status; // 👈 حفظ الحالة القديمة قبل التغيير
 
         // تحديث الحالة الجديدة
@@ -403,8 +457,10 @@ class OrderService
     //     ];
     // }
 
-    public function updateItemStatus(array $data, OrderItem $orderItem)
+    public function updateItemStatus(array $data, OrderItem $orderItem, $user = null)
     {
+        $this->guardOrderItemSupplier($user, $orderItem);
+
         $currentStatus = $orderItem->status;
 
         // ✅ المورد وافق على إرجاع المنتج
@@ -530,8 +586,16 @@ class OrderService
     }
 
     // تعديل منتج من الطلب
-    public function UpdateItem(OrderItem $orderItem, $data)
+    public function UpdateItem(OrderItem $orderItem, $data, $user = null)
     {
+        // Security (Stage 1): changing a line quantity changes what the order is
+        // worth, so it is restricted to the doctor who placed the order.
+        $order = $orderItem->order;
+        if (!$order) {
+            throw new AuthorizationException('عفوا، ليس لديك صلاحية على هذا المنتج.');
+        }
+        $this->guardOrderDoctor($user, $order);
+
         return DB::transaction(function () use ($orderItem, $data) {
             $orderItem->update($data);
             return $orderItem;
@@ -664,6 +728,9 @@ class OrderService
 
     public function requestDelete($user, Order $order)
     {
+        // Security (Stage 1): only the ordering doctor may flag their own order.
+        $this->guardOrderDoctor($user, $order);
+
         $order->update([
             'status' => 'delete_pending',
         ]);
@@ -697,6 +764,14 @@ class OrderService
 
     public function requestDeleteItem($quantity, $user, OrderItem $orderItem)
     {
+        // Security (Stage 1): only the doctor who placed the parent order may
+        // request a return on one of its lines.
+        $order = $orderItem->order;
+        if (!$order) {
+            throw new AuthorizationException('عفوا، ليس لديك صلاحية على هذا المنتج.');
+        }
+        $this->guardOrderDoctor($user, $order);
+
         $orderItem->update([
             'status' => 'delete_pending',
             'returned_quantity' => ($orderItem->returned_quantity ?? 0) + $quantity,

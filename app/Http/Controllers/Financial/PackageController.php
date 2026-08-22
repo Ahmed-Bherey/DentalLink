@@ -14,6 +14,7 @@ use App\Http\Requests\Financial\BuyPackageRequest;
 use App\Http\Requests\Financial\PackageStoreRequest;
 use App\Http\Requests\Financial\PackageUpdateRequest;
 use App\Http\Resources\Shopping\PackageProductResource;
+use Illuminate\Auth\Access\AuthorizationException;
 
 class PackageController extends Controller
 {
@@ -126,6 +127,8 @@ class PackageController extends Controller
     public function update(PackageUpdateRequest $request, Package $package)
     {
         try {
+            $this->guardPackageOwner($request->user(), $package);
+
             $updated = $this->packageService->update($package, $request->validated());
 
             if (!$updated || !$updated->exists) {
@@ -133,6 +136,8 @@ class PackageController extends Controller
             }
 
             return $this->successResponse(new PackageResource($updated));
+        } catch (AuthorizationException $e) {
+            return $this->errorResponse($e->getMessage(), 403);
         } catch (Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ ما. برجاء المحاولة لاحقاً',
@@ -145,11 +150,13 @@ class PackageController extends Controller
     public function destroy(Package $package)
     {
         try {
-            //$this->authorize('delete', $package);
+            $this->guardPackageOwner(request()->user(), $package);
 
             $this->packageService->delete($package);
 
             return $this->successResponse('تم حذف العرض بنجاح');
+        } catch (AuthorizationException $e) {
+            return $this->errorResponse($e->getMessage(), 403);
         } catch (\Exception $e) {
             return $this->errorResponse('تعذر حذف العرض', 422);
         }
@@ -159,6 +166,8 @@ class PackageController extends Controller
     public function toggleStatus(Package $package)
     {
         try {
+            $this->guardPackageOwner(request()->user(), $package);
+
             $updated = $this->packageService->toggleStatus($package);
 
             return $this->createSuccessResponse(
@@ -168,6 +177,8 @@ class PackageController extends Controller
                 ['active' => $updated->active],
                 200
             );
+        } catch (AuthorizationException $e) {
+            return $this->errorResponse($e->getMessage(), 403);
         } catch (\Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ ما. برجاء المحاولة لاحقاً',
@@ -194,6 +205,23 @@ class PackageController extends Controller
                 'عذراً، حدث خطأ أثناء جلب بيانات العروض',
                 422
             );
+        }
+    }
+
+    /**
+     * Security (Stage 1): interim ownership boundary for package mutations.
+     *
+     * update/destroy/toggleStatus use route-model binding and previously had no
+     * ownership check at all (the authorize() call in destroy() was commented out),
+     * so any authenticated user could rewrite, delete or deactivate any supplier's
+     * package by id. A PackagePolicy replaces this guard in Stage 4.
+     *
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    private function guardPackageOwner($user, Package $package): void
+    {
+        if (!$user || (int) $package->supplier_id !== (int) $user->id) {
+            throw new AuthorizationException('عفوا، ليس لديك صلاحية التعديل على هذه الباقة.');
         }
     }
 }

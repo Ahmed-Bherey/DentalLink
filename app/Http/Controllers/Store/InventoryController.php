@@ -16,6 +16,8 @@ use App\Http\Requests\Store\InventoryRequest;
 use App\Http\Requests\Store\MultiDeleteRequest;
 use App\Http\Resources\Store\InventoryResource;
 use App\Http\Requests\Store\InventoryUpdateRequest;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class InventoryController extends Controller
 {
@@ -90,11 +92,14 @@ class InventoryController extends Controller
     public function update(InventoryUpdateRequest $request, $id)
     {
         try {
-            $inventory = $this->inventoryService->update($id, $request->validated());
+            $inventory = $this->inventoryService->update($request->user(), $id, $request->validated());
             return $this->createSuccessResponse(
                 'تم تحديث المنتج بنجاح',
                 new InventoryResource($inventory['product']),
             );
+        } catch (ModelNotFoundException $e) {
+            // Owner-scoped lookup: not found OR not owned by the caller.
+            return $this->errorResponse('المنتج غير موجود', 404);
         } catch (Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ ما أثناء التحديث. برجاء المحاولة مرة أخرى',
@@ -107,8 +112,11 @@ class InventoryController extends Controller
     public function destroy($id)
     {
         try {
-            $this->inventoryService->delete($id);
+            $this->inventoryService->delete(request()->user(), $id);
             return $this->successResponse('تم حذف المنتج بنجاح');
+        } catch (ModelNotFoundException $e) {
+            // Owner-scoped lookup: not found OR not owned by the caller.
+            return $this->errorResponse('المنتج غير موجود', 404);
         } catch (Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ ما أثناء الحذف. برجاء المحاولة مرة أخرى',
@@ -121,9 +129,11 @@ class InventoryController extends Controller
     public function multiDestroy(MultiDeleteRequest $request)
     {
         try {
-            $this->inventoryService->multiDelete($request->validated()['ids']);
+            $this->inventoryService->multiDelete($request->user(), $request->validated()['ids']);
 
             return $this->successResponse('تم حذف المنتجات بنجاح');
+        } catch (AuthorizationException $e) {
+            return $this->errorResponse($e->getMessage(), 403);
         } catch (Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ ما أثناء الحذف. برجاء المحاولة مرة أخرى.',

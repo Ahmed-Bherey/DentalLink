@@ -6,12 +6,43 @@ use App\Models\User;
 use App\Models\FcmToken;
 use App\Models\Financial\Payment;
 use App\Models\Financial\OrderExpense;
+use Illuminate\Auth\Access\AuthorizationException;
 use App\Services\Notifaction\FirebaseService;
 use App\Services\Notifaction\NotificationService;
 use App\Services\Notifaction\FirebaseRealtimeService;
 
 class PaymentService
 {
+    /**
+     * Security (Stage 1): interim ownership boundary for payment mutations.
+     *
+     * update/confirm/delete previously took a caller-supplied payment id with no
+     * ownership check whatsoever, so any authenticated user could amend, approve
+     * or delete any payment in the system. These guards enforce the two-party
+     * boundary that already exists implicitly in the data model
+     * (payments.supplier_id / payments.doctor_id).
+     *
+     * A PaymentPolicy replaces these guards in Stage 4.
+     *
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    protected function guardSupplierParty($user, $paymentRecord): void
+    {
+        if (!$user || (int) $paymentRecord->supplier_id !== (int) $user->id) {
+            throw new AuthorizationException('عفوا، ليس لديك صلاحية على هذه المدفوعة.');
+        }
+    }
+
+    /**
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    protected function guardDoctorParty($user, $paymentRecord): void
+    {
+        if (!$user || (int) $paymentRecord->doctor_id !== (int) $user->id) {
+            throw new AuthorizationException('عفوا، ليس لديك صلاحية على هذه المدفوعة.');
+        }
+    }
+
     public function index($user, $perPage = 10)
     {
         $baseQuery = Payment::orderBy('created_at', 'desc');
@@ -82,6 +113,9 @@ class PaymentService
     // تحديث مدفوعة
     public function update($user, $data, $paymentRecord)
     {
+        // Security (Stage 1): only the supplier that recorded the payment may amend it.
+        $this->guardSupplierParty($user, $paymentRecord);
+
         $orderExpense = OrderExpense::where('doctor_id', $paymentRecord->doctor_id)
             ->where('supplier_id', $paymentRecord->supplier_id)
             ->first();
@@ -149,8 +183,13 @@ class PaymentService
     //     return $paymentRecord;
     // }
 
-    public function updatePaymentStatus($data, $paymentRecord)
+    public function updatePaymentStatus($data, $paymentRecord, $user = null)
     {
+        // Security (Stage 1): confirming/rejecting a payment is the DOCTOR's decision.
+        // It can delete the payment and mutate the shared balance, so only the doctor
+        // party on the record may perform it.
+        $this->guardDoctorParty($user, $paymentRecord);
+
         $currentStatus = $paymentRecord->status;
 
         // ✅ الطبيب وافق (سواء تعديل أو حذف)
@@ -245,6 +284,9 @@ class PaymentService
     // حذف مدفوعة
     public function requestDelete($user, $paymentRecord)
     {
+        // Security (Stage 1): only the supplier party may request deletion.
+        $this->guardSupplierParty($user, $paymentRecord);
+
         $paymentRecord->update([
             'status' => 'delete_pending',
         ]);
