@@ -34,10 +34,9 @@ class CategoryService
     }
 
     // تحديث تصنيف
-    public function update($user, $id, $data)
+    /** Update an already-resolved, already-authorized category (CategoryPolicy::update). */
+    public function update(Category $category, $data)
     {
-        $category = Category::where('user_id', $user->id)->findOrFail($id);
-
         if (isset($data['img'])) {
             // حذف الصورة القديمة إن وجدت
             if ($category->img && Storage::disk('public')->exists($category->img)) {
@@ -51,10 +50,9 @@ class CategoryService
     }
 
     // حذف تصنيف
-    public function delete($user, $id)
+    /** Delete an already-resolved, already-authorized category (CategoryPolicy::delete). */
+    public function delete(Category $category)
     {
-        $category = Category::where('user_id', $user->id)->findOrFail($id);
-
         if ($category->products()->exists()) {
             throw new \Exception('لا يمكن حذف القسم لأنه يحتوي على منتجات');
         }

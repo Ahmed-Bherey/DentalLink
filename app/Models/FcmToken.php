@@ -8,11 +8,13 @@ use Illuminate\Database\Eloquent\Model;
 class FcmToken extends Model
 {
     use HasFactory;
+
     protected $table = 'fcm_tokens';
+
     protected $fillable = [
         'user_id',
         'device',
         'device_id',
-        'fcm_token'
+        'fcm_token',
     ];
 }

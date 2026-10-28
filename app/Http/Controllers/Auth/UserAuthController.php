@@ -2,21 +2,21 @@
 
 namespace App\Http\Controllers\Auth;
 
-use Exception;
-use App\Models\FcmToken;
-use App\Traits\ApiResponse;
-use Illuminate\Http\Request;
-use App\Services\Auth\AuthService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\AuthRequest;
-use App\Http\Resources\Auth\UserResource;
-use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\UpdateProfileRequest;
+use App\Http\Resources\Auth\UserResource;
+use App\Models\FcmToken;
+use App\Services\Auth\AuthService;
+use App\Traits\ApiResponse;
+use Exception;
+use Illuminate\Http\Request;
 
 class UserAuthController extends Controller
 {
     use ApiResponse;
+
     protected $authService;
 
     public function __construct(AuthService $authService)
@@ -39,13 +39,13 @@ class UserAuthController extends Controller
     // تسجيل الدخول
     public function login(AuthRequest $request)
     {
-        //try {
+        // try {
         $user = $this->authService->login(
             $request->login,
             $request->password
         );
 
-        if (!$user) {
+        if (! $user) {
             return $this->errorResponse('Invalid credentials', 401);
         }
 
@@ -65,7 +65,10 @@ class UserAuthController extends Controller
             'address' => $user->address,
             'city_id' => $user->city_id,
             'city_name' => $user->city?->name,
-            'role' => $user->department?->code,
+            // AUTHORITATIVE identity (Stage 3). Same key, same values as before.
+            'role' => $user->roleCode(),
+            // LEGACY, retained for frontend compatibility.
+            'department_id' => $user->department_id,
             'token' => $token,
         ];
 
@@ -81,6 +84,7 @@ class UserAuthController extends Controller
         try {
             $user = $this->authService->register($request->validated());
             $token = $user->createToken('API Token')->plainTextToken;
+
             return $this->createSuccessResponse('تم انشاء حسابك بنجاح', new UserResource($user), 201);
         } catch (Exception $e) {
             return $this->errorResponse('عذرا حدث خطأ ما, برجاء المحاولة مرة اخرى', 422);
@@ -103,7 +107,7 @@ class UserAuthController extends Controller
         return response()->json([
             'status' => true,
             'message' => 'تم تحديث الملف الشخصي بنجاح',
-            'data' => $updated
+            'data' => $updated,
         ]);
     }
 
@@ -113,15 +117,15 @@ class UserAuthController extends Controller
             // ✅ التحقق من صحة البيانات
             $validated = $request->validate([
                 'fcm_token' => 'required|string',
-                'device'    => 'required|string|in:web,android,ios',
+                'device' => 'required|string|in:web,android,ios',
             ]);
 
             // ✅ المستخدم الحالي
             $user = auth()->user();
 
-            if (!$user) {
+            if (! $user) {
                 return response()->json([
-                    'status'  => false,
+                    'status' => false,
                     'message' => 'User not authenticated.',
                 ], 401);
             }
@@ -131,26 +135,26 @@ class UserAuthController extends Controller
                 ->where('fcm_token', $validated['fcm_token'])
                 ->first();
 
-            if (!$existingToken) {
+            if (! $existingToken) {
                 // ➕ إنشاء سجل جديد للمستخدم
                 FcmToken::create([
-                    'user_id'   => $user->id,
+                    'user_id' => $user->id,
                     'fcm_token' => $validated['fcm_token'],
-                    'device'    => $validated['device'],
+                    'device' => $validated['device'],
                 ]);
             }
 
             // ✅ الاستجابة الناجحة
             return response()->json([
-                'status'  => true,
+                'status' => true,
                 'message' => 'FCM token saved successfully.',
             ], 200);
         } catch (\Exception $e) {
             // ⚠️ التعامل مع أي خطأ غير متوقع
             return response()->json([
-                'status'  => false,
+                'status' => false,
                 'message' => 'Something went wrong.',
-                'error'   => $e->getMessage(),
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -167,5 +171,4 @@ class UserAuthController extends Controller
             $fcmToken->delete();
         }
     }
-
 }

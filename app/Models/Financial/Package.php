@@ -3,18 +3,19 @@
 namespace App\Models\Financial;
 
 use App\Models\User;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Package extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'supplier_id',
         'name',
         'desc',
         'price',
-        'active'
+        'active',
     ];
 
     public function supplier()

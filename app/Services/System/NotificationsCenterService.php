@@ -2,8 +2,8 @@
 
 namespace App\Services\System;
 
-use App\Models\General\NotificationsCenter;
 use App\Http\Resources\System\NotificationsCenterResource;
+use App\Models\General\NotificationsCenter;
 
 class NotificationsCenterService
 {

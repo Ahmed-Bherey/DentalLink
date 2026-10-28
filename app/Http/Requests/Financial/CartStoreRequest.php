@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests\Financial;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 class CartStoreRequest extends FormRequest
@@ -27,7 +27,7 @@ class CartStoreRequest extends FormRequest
     {
         return [
             'product_id' => 'required|exists:products,id',
-            'quantity'   => 'nullable|integer|min:1',
+            'quantity' => 'nullable|integer|min:1',
         ];
     }
 
@@ -35,7 +35,7 @@ class CartStoreRequest extends FormRequest
     {
         throw new HttpResponseException(response()->json([
             'message' => 'Validation errors',
-            'errors' => $validator->errors()
+            'errors' => $validator->errors(),
         ], 422));
     }
 }

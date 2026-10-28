@@ -11,6 +11,12 @@
         <testsuite name="Feature">
             <directory suffix="Test.php">./tests/Feature</directory>
         </testsuite>
+        <!-- Security regression suite. Runnable on its own by passing the
+             testsuite option with the value "Security". Its files also live
+             under Feature, so a default full run does not execute them twice. -->
+        <testsuite name="Security">
+            <directory suffix="Test.php">./tests/Feature/Security</directory>
+        </testsuite>
     </testsuites>
     <coverage processUncoveredFiles="true">
         <include>
@@ -21,8 +27,23 @@
         <env name="APP_ENV" value="testing"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="CACHE_DRIVER" value="array"/>
-        <!-- <env name="DB_CONNECTION" value="sqlite"/> -->
-        <!-- <env name="DB_DATABASE" value=":memory:"/> -->
+
+        <!--
+            DEDICATED TEST DATABASE.
+
+            Only the database NAME is pinned here. Host/username/password are
+            inherited from the developer's own .env (or from CI environment
+            variables), so no credentials are ever committed to the repository.
+
+            tests/TestCase::guardTestDatabase() refuses to run unless the
+            resolved database name ends in _test or _testing, which prevents the
+            suite from ever truncating the development or production database.
+
+            Create it once with:  php artisan db:create-test-database
+        -->
+        <env name="DB_CONNECTION" value="mysql"/>
+        <env name="DB_DATABASE" value="denthub_testing"/>
+
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>

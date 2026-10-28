@@ -2,9 +2,9 @@
 
 namespace App\Exports;
 
+use App\Http\Resources\Financial\PaymentResource;
 use App\Models\Financial\Payment;
 use Maatwebsite\Excel\Concerns\FromCollection;
-use App\Http\Resources\Financial\PaymentResource;
 
 class PaymentsExport implements FromCollection
 {
@@ -20,9 +20,9 @@ class PaymentsExport implements FromCollection
         $query = Payment::orderBy('created_at', 'desc')
             ->where('status', 'confirmed');
 
-        if ($this->user->department->code == 'doctor') {
+        if ($this->user->isDoctor()) {
             $query->where('doctor_id', $this->user->id);
-        } elseif ($this->user->department->code == 'supplier') {
+        } elseif ($this->user->isSupplier()) {
             $query->where('supplier_id', $this->user->id);
         }
 

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 class NotificationsCenter extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'user_id',
         'title',
@@ -17,7 +18,7 @@ class NotificationsCenter extends Model
         'color',
         'related_id',
         'related_type',
-        'is_read'
+        'is_read',
     ];
 
     public function user()

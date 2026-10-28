@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests\System;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 class CategoryUpdateRequest extends FormRequest
@@ -28,7 +28,7 @@ class CategoryUpdateRequest extends FormRequest
         return [
             'name' => ['sometimes', 'string'],
             'desc' => ['nullable', 'string', 'max:500'],
-            'img'  => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
+            'img' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
         ];
     }
 
@@ -36,7 +36,7 @@ class CategoryUpdateRequest extends FormRequest
     {
         throw new HttpResponseException(response()->json([
             'message' => 'Validation errors',
-            'errors' => $validator->errors()
+            'errors' => $validator->errors(),
         ], 422));
     }
 }

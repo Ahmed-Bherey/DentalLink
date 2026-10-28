@@ -7,6 +7,9 @@
 .env
 .env.backup
 .env.production
+# Stage 5: real testing credentials stay local. `.env.testing.example` IS
+# committed so a new clone knows which database name the safety gate expects.
+.env.testing
 .phpunit.result.cache
 Homestead.json
 Homestead.yaml

@@ -110,19 +110,46 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Self-Assignable Department Codes
+    | Self-Assignable Department Codes  (DEPRECATED - Stage 3)
     |--------------------------------------------------------------------------
     |
-    | Departments double as the application's role model. Public registration
-    | lets the caller pick a department_id, so the set of codes a self-registering
-    | user may claim MUST be restricted to non-privileged ones. Any department
-    | whose code is not listed here can only be assigned out-of-band.
+    | Superseded by the `roles.assignable_at_registration` column, which is now
+    | the authoritative rule. Retained only so the legacy public department list
+    | keeps returning the same rows during the compatibility period.
     |
-    | This is an interim Stage 1 containment control. A first-class role model
-    | replaces it in Stage 3.
+    | Derived from App\Support\RoleCode so the two can never drift apart.
     |
     */
 
-    'self_assignable_department_codes' => ['doctor', 'supplier'],
+    'self_assignable_department_codes' => \App\Support\RoleCode::selfAssignable(),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Password Policy
+    |--------------------------------------------------------------------------
+    |
+    | Applied by App\Support\PasswordPolicy to registration, password change and
+    | password reset. Raising this affects NEW passwords only; existing stored
+    | hashes remain valid and users are not forced to reset.
+    |
+    */
+
+    'password_policy' => [
+        'min_length' => (int) env('AUTH_PASSWORD_MIN_LENGTH', 8),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Password Reset Link
+    |--------------------------------------------------------------------------
+    |
+    | This is an API-only backend, so the reset link must point at the frontend
+    | application, which then posts the token back to /api/password/reset.
+    |
+    | Set APP_FRONTEND_RESET_URL in the deployment environment. See ROLE_MODEL.md.
+    |
+    */
+
+    'frontend_reset_url' => env('APP_FRONTEND_RESET_URL'),
 
 ];

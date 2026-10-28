@@ -2,24 +2,25 @@
 
 namespace App\Http\Controllers\Financial;
 
-use Exception;
-use App\Traits\ApiResponse;
-use Illuminate\Http\Request;
+use App\Exceptions\Financial\PaymentException;
 use App\Exports\PaymentsExport;
-use App\Models\Financial\Payment;
 use App\Http\Controllers\Controller;
-use Maatwebsite\Excel\Facades\Excel;
-use App\Services\Financial\PaymentService;
 use App\Http\Requests\Financial\PaymentRequest;
-use App\Http\Resources\Financial\PaymentResource;
 use App\Http\Requests\Financial\UpdatePaymentRequest;
 use App\Http\Requests\Financial\UpdatePaymentStatusRequest;
-use Illuminate\Auth\Access\AuthorizationException;
+use App\Http\Resources\Financial\PaymentResource;
 use App\Models\FcmToken;
+use App\Models\Financial\Payment;
+use App\Services\Financial\PaymentService;
+use App\Traits\ApiResponse;
+use Exception;
+use Illuminate\Auth\Access\AuthorizationException;
+use Maatwebsite\Excel\Facades\Excel;
 
 class PaymentController extends Controller
 {
     use ApiResponse;
+
     protected $paymentService;
 
     public function __construct(PaymentService $paymentService)
@@ -31,13 +32,24 @@ class PaymentController extends Controller
     public function index()
     {
         try {
+            $this->authorize('viewAny', Payment::class);
+
             $user = request()->user();
             $perPage = request()->get('per_page', 10);
             $payments = $this->paymentService->search($user, $perPage);
+
             return $this->paginatedResponse(
                 PaymentResource::collection($payments),
                 $payments,
             );
+        } catch (AuthorizationException $e) {
+            // Stage 4: authorization failures render centrally. Never swallow them.
+            throw $e;
+        } catch (PaymentException $e) {
+            // Stage 6: financial refusals carry a specific, actionable reason
+            // ("amount exceeds the outstanding balance"). The generic handler
+            // below would replace it with "something went wrong".
+            throw $e;
         } catch (Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
@@ -49,9 +61,11 @@ class PaymentController extends Controller
     // انشاء مدفوعة
     public function store(PaymentRequest $request)
     {
-        //try {
+        $this->authorize('create', Payment::class);
+
         $user = request()->user();
         $payment = $this->paymentService->store($user, $request->validated());
+
         return $this->createSuccessResponse(
             'تم انشاء المدفوعة بنجاح',
             new PaymentResource($payment),
@@ -71,19 +85,23 @@ class PaymentController extends Controller
             $user = request()->user();
             $paymentRecord = Payment::findOrFail($payment_id);
 
-            if (!$paymentRecord) {
+            if (! $paymentRecord) {
                 return $this->errorResponse(
                     'عفوا, المدفوعة غير موجودة , برجاء اختيار مدفوعة صحيحة',
                     404
                 );
             }
+            $this->authorize('update', $paymentRecord);
+
             $payment = $this->paymentService->update($user, $request->validated(), $paymentRecord);
+
             return $this->successResponseWithId(
                 'تم انشاء المدفوعة بنجاح',
                 $payment->id,
             );
         } catch (AuthorizationException $e) {
-            return $this->errorResponse($e->getMessage(), 403);
+            // Stage 4: authorization failures render centrally. Never swallow them.
+            throw $e;
         } catch (\Exception $e) {
             // NOTE: this handler still echoes the exception message to the client.
             // Narrowed to business-rule messages only now that authorization failures
@@ -98,23 +116,32 @@ class PaymentController extends Controller
         try {
             $paymentRecord = Payment::findOrFail($payment_id);
 
-            if (!$paymentRecord) {
+            if (! $paymentRecord) {
                 return $this->errorResponse(
                     'عفوا, المدفوعة غير موجودة , برجاء اختيار مدفوعة صحيحة',
                     404
                 );
             }
+            $this->authorize('decide', $paymentRecord);
+
             $payment = $this->paymentService->updatePaymentStatus(
                 $request->validated(),
                 $paymentRecord,
                 $request->user()
             );
+
             return $this->successResponseWithId(
                 'تم تحديث حالة المدفوعة بنجاح',
                 $payment->id,
             );
         } catch (AuthorizationException $e) {
-            return $this->errorResponse($e->getMessage(), 403);
+            // Stage 4: authorization failures render centrally. Never swallow them.
+            throw $e;
+        } catch (PaymentException $e) {
+            // Stage 6: financial refusals carry a specific, actionable reason
+            // ("amount exceeds the outstanding balance"). The generic handler
+            // below would replace it with "something went wrong".
+            throw $e;
         } catch (Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ ما. برجاء المحاولة لاحقاً',
@@ -127,19 +154,24 @@ class PaymentController extends Controller
     public function pendingPyments()
     {
         try {
+            $this->authorize('viewPending', Payment::class);
+
             $user = request()->user();
-            if ($user->department->code != 'doctor') {
-                return $this->errorResponse(
-                    'عفوا, ليس لديك صلاحية',
-                    403
-                );
-            }
             $perPage = request()->get('per_page', 10);
             $payments = $this->paymentService->pendingPyments($user, $perPage);
+
             return $this->paginatedResponse(
                 PaymentResource::collection($payments),
                 $payments,
             );
+        } catch (AuthorizationException $e) {
+            // Stage 4: authorization failures render centrally. Never swallow them.
+            throw $e;
+        } catch (PaymentException $e) {
+            // Stage 6: financial refusals carry a specific, actionable reason
+            // ("amount exceeds the outstanding balance"). The generic handler
+            // below would replace it with "something went wrong".
+            throw $e;
         } catch (Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
@@ -155,12 +187,14 @@ class PaymentController extends Controller
             $user = request()->user();
             $paymentRecord = Payment::findOrFail($payment_id);
 
-            if (!$paymentRecord) {
+            if (! $paymentRecord) {
                 return $this->errorResponse(
                     'عفوا, المدفوعة غير موجودة , برجاء اختيار مدفوعة صحيحة',
                     404
                 );
             }
+
+            $this->authorize('requestDeletion', $paymentRecord);
 
             // نرسل الطلب إلى الطبيب لتأكيد الحذف
             $payment = $this->paymentService->requestDelete($user, $paymentRecord);
@@ -170,7 +204,13 @@ class PaymentController extends Controller
                 $payment->id,
             );
         } catch (AuthorizationException $e) {
-            return $this->errorResponse($e->getMessage(), 403);
+            // Stage 4: authorization failures render centrally. Never swallow them.
+            throw $e;
+        } catch (PaymentException $e) {
+            // Stage 6: financial refusals carry a specific, actionable reason
+            // ("amount exceeds the outstanding balance"). The generic handler
+            // below would replace it with "something went wrong".
+            throw $e;
         } catch (Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ ما. برجاء المحاولة لاحقاً',
@@ -183,9 +223,20 @@ class PaymentController extends Controller
     public function exportToExcel()
     {
         try {
+            $this->authorize('viewAny', Payment::class);
+
             $user = request()->user();
-            $fileName = 'payments_' . now()->format('Y_m_d_H_i') . '.xlsx';
+            $fileName = 'payments_'.now()->format('Y_m_d_H_i').'.xlsx';
+
             return Excel::download(new PaymentsExport($user), $fileName);
+        } catch (AuthorizationException $e) {
+            // Stage 4: authorization failures render centrally. Never swallow them.
+            throw $e;
+        } catch (PaymentException $e) {
+            // Stage 6: financial refusals carry a specific, actionable reason
+            // ("amount exceeds the outstanding balance"). The generic handler
+            // below would replace it with "something went wrong".
+            throw $e;
         } catch (Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ أثناء تصدير الملف. برجاء المحاولة لاحقاً',
@@ -198,16 +249,20 @@ class PaymentController extends Controller
     public function search()
     {
         try {
+            $this->authorize('viewAny', Payment::class);
+
             $user = request()->user();
             $perPage = request()->get('per_page', 10);
 
-            // فقط نستدعي الخدمة
             $payments = $this->paymentService->search($user, $perPage);
 
             return $this->paginatedResponse(
                 PaymentResource::collection($payments),
                 $payments
             );
+        } catch (AuthorizationException $e) {
+            // Stage 4: authorization failures render centrally. Never swallow them.
+            throw $e;
         } catch (\Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
@@ -221,10 +276,14 @@ class PaymentController extends Controller
         try {
             $user = request()->user();
             $fcmTokens = FcmToken::where('user_id', $user->id)->get();
+
             // foreach($fcmTokens as $fcmToken){
             //     $fcmToken->delete();
             // }
             return response()->json($fcmTokens);
+        } catch (AuthorizationException $e) {
+            // Stage 4: authorization failures render centrally. Never swallow them.
+            throw $e;
         } catch (\Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
@@ -232,5 +291,4 @@ class PaymentController extends Controller
             );
         }
     }
-
 }

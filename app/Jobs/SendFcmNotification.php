@@ -2,20 +2,23 @@
 
 namespace App\Jobs;
 
+use App\Services\Notifaction\FirebaseService;
 use Illuminate\Bus\Queueable;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use App\Services\Notifaction\FirebaseService;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
 
 class SendFcmNotification implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $token;
+
     public $title;
+
     public $body;
+
     public $data;
 
     public function __construct($token, $title, $body, $data = [])
@@ -28,7 +31,7 @@ class SendFcmNotification implements ShouldQueue
 
     public function handle()
     {
-        $firebase = new FirebaseService();
+        $firebase = new FirebaseService;
         $firebase->sendNotification($this->token, $this->title, $this->body, $this->data);
     }
 }

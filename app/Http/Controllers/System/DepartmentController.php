@@ -2,16 +2,17 @@
 
 namespace App\Http\Controllers\System;
 
-use Exception;
-use App\Traits\ApiResponse;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\System\DepartmentResource;
 use App\Services\System\DepartmentService;
+use App\Traits\ApiResponse;
+use Exception;
+use Illuminate\Http\Request;
 
 class DepartmentController extends Controller
 {
     use ApiResponse;
+
     protected $departmentService;
 
     public function __construct(DepartmentService $departmentService)
@@ -23,6 +24,7 @@ class DepartmentController extends Controller
     {
         try {
             $departments = $this->departmentService->getAll();
+
             return $this->successResponse(DepartmentResource::collection($departments), 200);
         } catch (Exception $e) {
             return $this->errorResponse('عذرا حدث خطأ ما, برجاء المحاولة مرة اخرى', 422);

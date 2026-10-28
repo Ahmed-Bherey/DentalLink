@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests\Financial;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 class PackageUpdateRequest extends FormRequest
@@ -26,11 +26,11 @@ class PackageUpdateRequest extends FormRequest
     public function rules()
     {
         return [
-            'name'                => 'sometimes|string|max:255',
-            'price'               => 'sometimes|numeric|min:0',
-            'desc'                => 'nullable|string',
-            'products'            => 'sometimes|array|min:1',
-            'products.*.id'       => 'required_with:products|exists:products,id',
+            'name' => 'sometimes|string|max:255',
+            'price' => 'sometimes|numeric|min:0',
+            'desc' => 'nullable|string',
+            'products' => 'sometimes|array|min:1',
+            'products.*.id' => 'required_with:products|exists:products,id',
             'products.*.quantity' => 'required_with:products|integer|min:1',
         ];
     }
@@ -39,7 +39,7 @@ class PackageUpdateRequest extends FormRequest
     {
         throw new HttpResponseException(response()->json([
             'message' => 'Validation errors',
-            'errors'  => $validator->errors(),
+            'errors' => $validator->errors(),
         ], 422));
     }
 }

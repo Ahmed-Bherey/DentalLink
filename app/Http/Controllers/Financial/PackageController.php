@@ -2,23 +2,23 @@
 
 namespace App\Http\Controllers\Financial;
 
-use Exception;
-use App\Traits\ApiResponse;
-use Illuminate\Http\Request;
-use App\Models\Financial\Package;
 use App\Http\Controllers\Controller;
-use App\Services\Financial\PackageService;
-use App\Http\Resources\Store\InventoryResource;
-use App\Http\Resources\Financial\PackageResource;
 use App\Http\Requests\Financial\BuyPackageRequest;
 use App\Http\Requests\Financial\PackageStoreRequest;
 use App\Http\Requests\Financial\PackageUpdateRequest;
-use App\Http\Resources\Shopping\PackageProductResource;
+use App\Http\Resources\Financial\PackageResource;
+use App\Http\Resources\Store\InventoryResource;
+use App\Models\Financial\Package;
+use App\Services\Financial\PackageService;
+use App\Traits\ApiResponse;
+use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Http\Request;
 
 class PackageController extends Controller
 {
     use ApiResponse;
+
     protected $packageService;
 
     public function __construct(PackageService $packageService)
@@ -29,6 +29,8 @@ class PackageController extends Controller
     public function index(Request $request)
     {
         try {
+            $this->authorize('viewAny', Package::class);
+
             $supplier = $request->user();
             $perPage = $request->get('per_page', 10);
             $search = $request->query('search');
@@ -41,6 +43,9 @@ class PackageController extends Controller
                 PackageResource::collection($packages),
                 $packages
             );
+        } catch (AuthorizationException $e) {
+            // Stage 4: authorization failures render centrally. Never swallow them.
+            throw $e;
         } catch (\Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ أثناء جلب بيانات العروض',
@@ -53,6 +58,8 @@ class PackageController extends Controller
     public function createPackage(PackageStoreRequest $request)
     {
         try {
+            $this->authorize('create', Package::class);
+
             $supplier = request()->user();
             $package = $this->packageService->createPackage($supplier, $request->validated());
 
@@ -60,6 +67,9 @@ class PackageController extends Controller
                 'تم إضافة الباقة بنجاح',
                 new PackageResource($package),
             );
+        } catch (AuthorizationException $e) {
+            // Stage 4: authorization failures render centrally. Never swallow them.
+            throw $e;
         } catch (Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ ما. برجاء المحاولة لاحقاً',
@@ -75,10 +85,16 @@ class PackageController extends Controller
             $doctor = $request->user(); // الطبيب الحالي
             $package = Package::with('packageItems')->findOrFail($packageId);
 
+            $this->authorize('buy', $package);
+
             $order = $this->packageService->buyPackage($doctor, $package, $request->validated());
+
             return $this->successResponseWithoutData(
                 'تم طلب العرض بنجاح',
             );
+        } catch (AuthorizationException $e) {
+            // Stage 4: authorization failures render centrally. Never swallow them.
+            throw $e;
         } catch (Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ ما. برجاء المحاولة لاحقاً',
@@ -91,9 +107,14 @@ class PackageController extends Controller
     {
         try {
 
-            $package = $this->packageService->show($package_id, request()->user());
+            $package = Package::findOrFail($package_id);
+
+            $this->authorize('view', $package);
 
             return $this->successResponse(new PackageResource($package));
+        } catch (AuthorizationException $e) {
+            // Stage 4: authorization failures render centrally. Never swallow them.
+            throw $e;
         } catch (Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ أثناء جلب بيانات الباقة',
@@ -109,12 +130,17 @@ class PackageController extends Controller
             $perPage = $request->get('per_page', 10);
             $search = $request->query('search');
 
+            $this->authorize('viewRemainingProducts', Package::findOrFail($packageId));
+
             $products = $this->packageService->getRemainingProducts($packageId, $supplier, $perPage, $search);
 
             return $this->paginatedResponse(
                 InventoryResource::collection($products),
                 $products
             );
+        } catch (AuthorizationException $e) {
+            // Stage 4: authorization failures render centrally. Never swallow them.
+            throw $e;
         } catch (Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ أثناء جلب المنتجات المتبقية',
@@ -123,21 +149,21 @@ class PackageController extends Controller
         }
     }
 
-
     public function update(PackageUpdateRequest $request, Package $package)
     {
         try {
-            $this->guardPackageOwner($request->user(), $package);
+            $this->authorize('update', $package);
 
             $updated = $this->packageService->update($package, $request->validated());
 
-            if (!$updated || !$updated->exists) {
+            if (! $updated || ! $updated->exists) {
                 return $this->errorResponse('فشل في تحديث الباقة', 422);
             }
 
             return $this->successResponse(new PackageResource($updated));
         } catch (AuthorizationException $e) {
-            return $this->errorResponse($e->getMessage(), 403);
+            // Stage 4: authorization failures render centrally. Never swallow them.
+            throw $e;
         } catch (Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ ما. برجاء المحاولة لاحقاً',
@@ -150,13 +176,14 @@ class PackageController extends Controller
     public function destroy(Package $package)
     {
         try {
-            $this->guardPackageOwner(request()->user(), $package);
+            $this->authorize('delete', $package);
 
             $this->packageService->delete($package);
 
             return $this->successResponse('تم حذف العرض بنجاح');
         } catch (AuthorizationException $e) {
-            return $this->errorResponse($e->getMessage(), 403);
+            // Stage 4: authorization failures render centrally. Never swallow them.
+            throw $e;
         } catch (\Exception $e) {
             return $this->errorResponse('تعذر حذف العرض', 422);
         }
@@ -166,7 +193,7 @@ class PackageController extends Controller
     public function toggleStatus(Package $package)
     {
         try {
-            $this->guardPackageOwner(request()->user(), $package);
+            $this->authorize('toggleStatus', $package);
 
             $updated = $this->packageService->toggleStatus($package);
 
@@ -178,7 +205,8 @@ class PackageController extends Controller
                 200
             );
         } catch (AuthorizationException $e) {
-            return $this->errorResponse($e->getMessage(), 403);
+            // Stage 4: authorization failures render centrally. Never swallow them.
+            throw $e;
         } catch (\Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ ما. برجاء المحاولة لاحقاً',
@@ -191,6 +219,8 @@ class PackageController extends Controller
     public function allPackages(Request $request)
     {
         try {
+            $this->authorize('viewAny', Package::class);
+
             $perPage = $request->get('per_page', 10);
             $search = $request->query('search');
 
@@ -200,28 +230,14 @@ class PackageController extends Controller
                 PackageResource::collection($packages),
                 $packages
             );
+        } catch (AuthorizationException $e) {
+            // Stage 4: authorization failures render centrally. Never swallow them.
+            throw $e;
         } catch (\Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ أثناء جلب بيانات العروض',
                 422
             );
-        }
-    }
-
-    /**
-     * Security (Stage 1): interim ownership boundary for package mutations.
-     *
-     * update/destroy/toggleStatus use route-model binding and previously had no
-     * ownership check at all (the authorize() call in destroy() was commented out),
-     * so any authenticated user could rewrite, delete or deactivate any supplier's
-     * package by id. A PackagePolicy replaces this guard in Stage 4.
-     *
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     */
-    private function guardPackageOwner($user, Package $package): void
-    {
-        if (!$user || (int) $package->supplier_id !== (int) $user->id) {
-            throw new AuthorizationException('عفوا، ليس لديك صلاحية التعديل على هذه الباقة.');
         }
     }
 }

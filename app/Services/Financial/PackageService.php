@@ -2,11 +2,11 @@
 
 namespace App\Services\Financial;
 
-use App\Models\User;
 use App\Models\Financial\Order;
 use App\Models\Financial\Package;
-use Illuminate\Support\Facades\DB;
+use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class PackageService
 {
@@ -16,12 +16,12 @@ class PackageService
             'packageItems.product.category',
         ]);
 
-        if ($supplier->department->code === 'supplier') {
+        if ($supplier->isSupplier()) {
             $query->where('supplier_id', $supplier->id);
         }
 
         if ($search) {
-            $query->where('name', 'like', '%' . $search . '%');
+            $query->where('name', 'like', '%'.$search.'%');
         }
 
         if ($from) {
@@ -52,16 +52,16 @@ class PackageService
         return DB::transaction(function () use ($supplier, $data) {
             $package = Package::create([
                 'supplier_id' => $supplier->id,
-                'name'        => $data['name'],
-                'desc'        => $data['desc'],
-                'price'       => $data['price'],
+                'name' => $data['name'],
+                'desc' => $data['desc'],
+                'price' => $data['price'],
             ]);
 
             // إضافة المنتجات للباقة
             foreach ($data['products'] as $productData) {
                 $package->packageItems()->create([
                     'product_id' => $productData['id'],
-                    'quantity'   => $productData['quantity'],
+                    'quantity' => $productData['quantity'],
                 ]);
             }
 
@@ -74,27 +74,46 @@ class PackageService
     {
         // إنشاء الطلب
         $order = Order::create([
-            'doctor_id'      => $doctor->id,
-            'price'          => $package->price,
-            'notes'          => $data['notes'] ?? null,
+            'doctor_id' => $doctor->id,
+            'price' => $package->price,
+            'notes' => $data['notes'] ?? null,
             'payment_method' => $data['payment_method'] ?? 'مدفوعات',
         ]);
 
         // إدخال منتجات الباقة في order_items
+        //
+        // H-1: the IDENTITY half of the snapshot is recorded here —
+        // product_master_id and supplier_id — so a package line is as
+        // traceable as any other and survives the supplier withdrawing or
+        // renaming their offer. These carry no pricing ambiguity.
+        //
+        // unit_price and line_total are deliberately LEFT NULL. A package is
+        // sold for one agreed price (`orders.price`); how that price is
+        // allocated across its components is not defined anywhere in this
+        // domain, and inventing an allocation would invent a refund value.
+        // Until that rule is decided, a per-line return on a package line is
+        // refused with a clear message rather than priced from the product's
+        // current price. See OrderService::updateItemStatus().
         foreach ($package->packageItems as $item) {
+            $product = $item->product;
+
             $order->orderItems()->create([
                 'product_id' => $item->product_id,
-                'quantity'   => $item->quantity,
+                'product_master_id' => $product?->product_master_id,
+                'supplier_id' => $product?->user_id ?? $package->supplier_id,
+                'quantity' => $item->quantity,
             ]);
         }
 
         return $order;
     }
 
-    public function show($id, $user)
-    {
-        return Package::where('supplier_id', $user->id)->findOrFail($id);
-    }
+    /*
+     * Stage 4: show() was removed. It scoped a package lookup to the calling
+     * supplier, which meant a doctor could never view a package they are
+     * offered for sale. Reading a package is now governed by
+     * PackagePolicy::view and resolved in the controller.
+     */
 
     public function getRemainingProducts($packageId, $supplier, $perPage = 10, $search = null)
     {
@@ -108,7 +127,7 @@ class PackageService
         return $supplier->products()
             ->whereNotIn('id', $productIdsInPackage)
             ->when($search, function ($query) use ($search) {
-                $query->where('name', 'like', '%' . $search . '%');
+                $query->where('name', 'like', '%'.$search.'%');
             })
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
@@ -119,18 +138,18 @@ class PackageService
         return DB::transaction(function () use ($package, $data) {
 
             $package->update([
-                'name'  => $data['name'],
-                'desc'  => $data['desc'],
+                'name' => $data['name'],
+                'desc' => $data['desc'],
                 'price' => $data['price'],
             ]);
 
-            if (!empty($data['products'])) {
+            if (! empty($data['products'])) {
                 $package->packageItems()->delete();
 
                 foreach ($data['products'] as $product) {
                     $package->packageItems()->create([
                         'product_id' => $product['id'],
-                        'quantity'   => $product['quantity'],
+                        'quantity' => $product['quantity'],
                     ]);
                 }
             }
@@ -157,7 +176,7 @@ class PackageService
     public function toggleStatus(Package $package): Package
     {
         // نعكس الحالة
-        $package->active = !$package->active;
+        $package->active = ! $package->active;
 
         // نحفظ التغيير
         $package->save();
@@ -173,7 +192,7 @@ class PackageService
             'packageItems.product.category',
         ])
             ->when($search, function ($query) use ($search) {
-                $query->where('name', 'like', '%' . $search . '%');
+                $query->where('name', 'like', '%'.$search.'%');
             })
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);

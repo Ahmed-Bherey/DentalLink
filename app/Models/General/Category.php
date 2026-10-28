@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 class Category extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'user_id',
         'name',
@@ -29,6 +30,6 @@ class Category extends Model
 
     public function getImgAttribute($value)
     {
-        return $value ? asset('storage/' . $value) : null;
+        return $value ? asset('storage/'.$value) : null;
     }
 }

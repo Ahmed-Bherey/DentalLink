@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Financial;
 
+use App\Support\Money;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class PackageResource extends JsonResource
@@ -15,24 +16,24 @@ class PackageResource extends JsonResource
     public function toArray($request)
     {
         return [
-            'id'          => $this->id,
-            'name'        => $this->name,
-            'desc'        => $this->desc,
-            'total_price' => (int)$this->price,
-            'checked'     => (bool)$this->active,
+            'id' => $this->id,
+            'name' => $this->name,
+            'desc' => $this->desc,
+            'total_price' => (float) Money::of($this->price),
+            'checked' => (bool) $this->active,
             'supplier_name' => $this->supplier?->name,
-            'created_at'  => $this->created_at?->format('Y-m-d'),
-            'products'    => $this->packageItems->map(function ($item) {
+            'created_at' => $this->created_at?->format('Y-m-d'),
+            'products' => $this->packageItems->map(function ($item) {
                 return [
-                    'id'                => $item->id,
-                    'product_id'        => $item->product?->id,
-                    'category_id'       => (int)$item->product?->category_id,
-                    'category_name'     => $item->product?->category?->name,
-                    'name'              => $item->product?->name,
-                    'desc'              => $item->product?->desc,
-                    'img'               => $item->product?->img,
-                    'price'             => (int)$item->product?->price,
-                    'quantity'          => (int)$item->quantity,
+                    'id' => $item->id,
+                    'product_id' => $item->product?->id,
+                    'category_id' => (int) $item->product?->category_id,
+                    'category_name' => $item->product?->category?->name,
+                    'name' => $item->product?->name,
+                    'desc' => $item->product?->desc,
+                    'img' => $item->product?->img,
+                    'price' => (float) Money::of($item->product?->price),
+                    'quantity' => (int) $item->quantity,
                 ];
             }),
         ];

@@ -2,16 +2,18 @@
 
 namespace App\Http\Controllers\Clinic;
 
-use Exception;
-use App\Traits\ApiResponse;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Services\Clinic\ProductService;
 use App\Http\Resources\Store\InventoryResource;
+use App\Models\Store\Product;
+use App\Services\Clinic\ProductService;
+use App\Traits\ApiResponse;
+use Exception;
+use Illuminate\Auth\Access\AuthorizationException;
 
 class ProductController extends Controller
 {
     use ApiResponse;
+
     protected $productService;
 
     public function __construct(ProductService $productService)
@@ -23,6 +25,8 @@ class ProductController extends Controller
     public function search()
     {
         try {
+            $this->authorize('viewAny', Product::class);
+
             $user = request()->user();
 
             $search = request()->query('search');
@@ -36,6 +40,9 @@ class ProductController extends Controller
                 InventoryResource::collection($results),
                 200,
             );
+        } catch (AuthorizationException $e) {
+            // Stage 4: authorization failures render centrally. Never swallow them.
+            throw $e;
         } catch (Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ أثناء البحث. برجاء المحاولة لاحقاً',

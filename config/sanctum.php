@@ -46,7 +46,17 @@ return [
     |
     */
 
-    'expiration' => null,
+    /*
+     * Stage 3: tokens now expire.
+     *
+     * Previously null, meaning a token issued once was valid forever and — with
+     * no logout endpoint — could never be revoked. The default below is 7 days,
+     * which suits the current web + mobile clients; override with
+     * SANCTUM_TOKEN_EXPIRATION (minutes) per environment.
+     *
+     * Expired rows are pruned by the scheduled sanctum:prune-expired command.
+     */
+    'expiration' => (int) env('SANCTUM_TOKEN_EXPIRATION', 60 * 24 * 7),
 
     /*
     |--------------------------------------------------------------------------

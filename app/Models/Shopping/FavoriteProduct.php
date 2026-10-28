@@ -3,14 +3,15 @@
 namespace App\Models\Shopping;
 
 use App\Models\General\NotificationsCenter;
-use App\Models\User;
 use App\Models\Store\Product;
-use Illuminate\Database\Eloquent\Model;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class FavoriteProduct extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'doctor_id',
         'product_id',

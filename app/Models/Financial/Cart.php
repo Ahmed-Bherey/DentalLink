@@ -4,12 +4,13 @@ namespace App\Models\Financial;
 
 use App\Models\Store\Product;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Cart extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'doctor_id',
         'product_id',

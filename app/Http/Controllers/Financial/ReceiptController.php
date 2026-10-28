@@ -2,21 +2,22 @@
 
 namespace App\Http\Controllers\Financial;
 
-use Exception;
-use App\Traits\ApiResponse;
-use Illuminate\Http\Request;
-use App\Models\Financial\Receipt;
 use App\Http\Controllers\Controller;
-use App\Services\Financial\ReceiptService;
-use Illuminate\Pagination\LengthAwarePaginator;
-use App\Http\Resources\Financial\ReceiptResource;
-use App\Http\Resources\Financial\ReceiptCollection;
 use App\Http\Requests\Financial\ReceiptStoreRequest;
 use App\Http\Requests\Financial\ReceiptUpdateRequest;
+use App\Http\Resources\Financial\ReceiptCollection;
+use App\Http\Resources\Financial\ReceiptResource;
+use App\Models\Financial\Receipt;
+use App\Services\Financial\ReceiptService;
+use App\Traits\ApiResponse;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class ReceiptController extends Controller
 {
     use ApiResponse;
+
     protected $receiptService;
 
     public function __construct(ReceiptService $receiptService)
@@ -28,6 +29,8 @@ class ReceiptController extends Controller
     {
         try {
             // نجيب كل الفواتير ونرتبها
+            $this->authorize('viewAny', Receipt::class);
+
             $receipts = $this->receiptService->index($request->user())->get();
 
             // نجروبهم حسب الشهر/السنة
@@ -37,7 +40,7 @@ class ReceiptController extends Controller
                 return [
                     'date' => $month,
                     'total_price' => (float) $receipts->sum('value'),
-                    'receipts' => (new ReceiptCollection($receipts))->toArray($request)
+                    'receipts' => (new ReceiptCollection($receipts))->toArray($request),
                 ];
             })->values();
 
@@ -55,6 +58,9 @@ class ReceiptController extends Controller
             );
 
             return $this->paginatedResponse($paginator->items(), $paginator);
+        } catch (AuthorizationException $e) {
+            // Stage 4: authorization failures render centrally. Never swallow them.
+            throw $e;
         } catch (\Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ أثناء تحميل الفواتير',
@@ -67,6 +73,8 @@ class ReceiptController extends Controller
     {
         try {
             // خد Query من الخدمة
+            $this->authorize('create', Receipt::class);
+
             $query = $this->receiptService->store($request->user(), $request->validated());
 
             // هات كل الإيصالات (عدد كبير عشان نضمن grouping صحيح)
@@ -80,9 +88,9 @@ class ReceiptController extends Controller
                 })
                 ->map(function ($receipts, $monthYear) {
                     return [
-                        'date'        => $monthYear,
+                        'date' => $monthYear,
                         'total_price' => (float) $receipts->sum('value'),
-                        'receipts'    => ReceiptResource::collection(
+                        'receipts' => ReceiptResource::collection(
                             $receipts->sortByDesc('created_at')->values()
                         ),
                     ];
@@ -90,8 +98,8 @@ class ReceiptController extends Controller
                 ->values();
 
             // Pagination على مستوى الشهور (الجروبات)
-            $perPage   = 10; // عدد الشهور في الصفحة
-            $current   = LengthAwarePaginator::resolveCurrentPage();
+            $perPage = 10; // عدد الشهور في الصفحة
+            $current = LengthAwarePaginator::resolveCurrentPage();
             $currentItems = $grouped->forPage($current, $perPage);
 
             $paginatedGroups = new LengthAwarePaginator(
@@ -106,6 +114,9 @@ class ReceiptController extends Controller
                 $paginatedGroups->values(),
                 $paginatedGroups
             );
+        } catch (AuthorizationException $e) {
+            // Stage 4: authorization failures render centrally. Never swallow them.
+            throw $e;
         } catch (\Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ ما. برجاء المحاولة لاحقاً',
@@ -117,9 +128,14 @@ class ReceiptController extends Controller
     public function show($id)
     {
         try {
-            $receipt = $this->receiptService->show($id, request()->user());
+            $receipt = Receipt::findOrFail($id);
+
+            $this->authorize('view', $receipt);
 
             return $this->successResponse(new ReceiptResource($receipt));
+        } catch (AuthorizationException $e) {
+            // Stage 4: authorization failures render centrally. Never swallow them.
+            throw $e;
         } catch (\Exception $e) {
             return $this->errorResponse('الإيصال غير موجود', 404);
         }
@@ -128,9 +144,16 @@ class ReceiptController extends Controller
     public function update(ReceiptUpdateRequest $request, $id)
     {
         try {
-            $receipt = $this->receiptService->update($id, $request->user(), $request->validated());
+            $receipt = Receipt::findOrFail($id);
+
+            $this->authorize('update', $receipt);
+
+            $receipt = $this->receiptService->update($receipt, $request->validated());
 
             return $this->createSuccessResponse('تم تحديث الإيصال بنجاح', new ReceiptResource($receipt));
+        } catch (AuthorizationException $e) {
+            // Stage 4: authorization failures render centrally. Never swallow them.
+            throw $e;
         } catch (\Exception $e) {
             return $this->errorResponse('تعذر تحديث الإيصال', 422);
         }
@@ -139,9 +162,16 @@ class ReceiptController extends Controller
     public function destroy($id)
     {
         try {
-            $this->receiptService->delete($id, request()->user());
+            $receipt = Receipt::findOrFail($id);
+
+            $this->authorize('delete', $receipt);
+
+            $this->receiptService->delete($receipt);
 
             return $this->successResponse('تم حذف الإيصال بنجاح');
+        } catch (AuthorizationException $e) {
+            // Stage 4: authorization failures render centrally. Never swallow them.
+            throw $e;
         } catch (\Exception $e) {
             return $this->errorResponse('تعذر حذف الإيصال', 422);
         }
@@ -154,6 +184,8 @@ class ReceiptController extends Controller
         ]);
 
         try {
+            $this->authorize('deleteAny', Receipt::class);
+
             $deleted = $this->receiptService->deleteByDate($request->user(), $validated['date']);
 
             if (! $deleted) {
@@ -161,6 +193,9 @@ class ReceiptController extends Controller
             }
 
             return $this->successResponse('تم حذف جميع الإيصالات بنجاح');
+        } catch (AuthorizationException $e) {
+            // Stage 4: authorization failures render centrally. Never swallow them.
+            throw $e;
         } catch (\Exception $e) {
             return $this->errorResponse('تعذر حذف الإيصالات', 422);
         }

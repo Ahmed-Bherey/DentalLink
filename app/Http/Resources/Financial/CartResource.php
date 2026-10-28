@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Financial;
 
+use App\Support\Money;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class CartResource extends JsonResource
@@ -15,16 +16,18 @@ class CartResource extends JsonResource
     public function toArray($request)
     {
         return [
-            'id'            => $this->id,
-            'product_id'    => $this->product?->id,
-            'category_id'   => (int)$this->product?->category_id,
+            'id' => $this->id,
+            'product_id' => $this->product?->id,
+            'category_id' => (int) $this->product?->category_id,
             'category_name' => $this->product?->category?->name,
-            'name'          => $this->product?->name,
-            'desc'          => $this->product?->desc,
-            'img'           => $this->product?->img,
-            'price'         => (int)$this->product?->price,
-            'total_price'   => (int)$this->product?->price * $this->quantity,
-            'quantity'      => (int)$this->quantity,
+            'name' => $this->product?->name,
+            'desc' => $this->product?->desc,
+            'img' => $this->product?->img,
+            // Exact decimal: a cart line of 10.50 reported as 10 misstates what
+            // the doctor is about to be charged.
+            'price' => (float) Money::of($this->product?->price),
+            'total_price' => (float) Money::mul($this->product?->price, (int) $this->quantity),
+            'quantity' => (int) $this->quantity,
         ];
     }
 }

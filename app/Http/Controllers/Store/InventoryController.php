@@ -2,26 +2,27 @@
 
 namespace App\Http\Controllers\Store;
 
-use Exception;
-use App\Models\User;
-use App\Models\FcmToken;
-use App\Traits\ApiResponse;
-use Illuminate\Http\Request;
 use App\Exports\ProductsExport;
-use App\Imports\ProductsImport;
 use App\Http\Controllers\Controller;
-use Maatwebsite\Excel\Facades\Excel;
-use App\Services\Store\InventoryService;
 use App\Http\Requests\Store\InventoryRequest;
+use App\Http\Requests\Store\InventoryUpdateRequest;
 use App\Http\Requests\Store\MultiDeleteRequest;
 use App\Http\Resources\Store\InventoryResource;
-use App\Http\Requests\Store\InventoryUpdateRequest;
+use App\Imports\ProductsImport;
+use App\Models\FcmToken;
+use App\Models\Store\Product;
+use App\Services\Store\InventoryService;
+use App\Traits\ApiResponse;
+use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class InventoryController extends Controller
 {
     use ApiResponse;
+
     protected $inventoryService;
 
     public function __construct(InventoryService $inventoryService)
@@ -33,6 +34,8 @@ class InventoryController extends Controller
     public function index()
     {
         try {
+            $this->authorize('viewAny', Product::class);
+
             $user = request()->user();
             $perPage = request()->get('per_page', 10);
             $search = request()->query('search');
@@ -43,6 +46,10 @@ class InventoryController extends Controller
                 InventoryResource::collection($inventories),
                 $inventories
             );
+        } catch (AuthorizationException $e) {
+            // Authorization failures render centrally (403, or 404 for
+            // denyAsNotFound policies). Never swallow them below.
+            throw $e;
         } catch (Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
@@ -55,14 +62,21 @@ class InventoryController extends Controller
     public function show($id)
     {
         try {
-            $user = request()->user();
-            $product = $this->inventoryService->getById($user, $id);
+            $product = $this->inventoryService->getById($id);
 
-            if (!$product) {
+            if (! $product) {
                 return $this->errorResponse('المنتج غير موجود', 404);
             }
 
+            // ProductPolicy::view denies as NOT FOUND, so a non-owner cannot tell
+            // an existing product from a missing one.
+            $this->authorize('view', $product);
+
             return $this->successResponse(new InventoryResource($product));
+        } catch (AuthorizationException $e) {
+            // Authorization failures render centrally (403, or 404 for
+            // denyAsNotFound policies). Never swallow them below.
+            throw $e;
         } catch (Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ أثناء جلب المنتج. برجاء المحاولة لاحقاً',
@@ -75,11 +89,18 @@ class InventoryController extends Controller
     public function Store(InventoryRequest $request)
     {
         try {
+            $this->authorize('create', Product::class);
+
             $inventory = $this->inventoryService->create($request->validated());
+
             return $this->createSuccessResponse(
                 'تم إضافة المنتج بنجاح',
                 new InventoryResource($inventory['product']),
             );
+        } catch (AuthorizationException $e) {
+            // Authorization failures render centrally (403, or 404 for
+            // denyAsNotFound policies). Never swallow them below.
+            throw $e;
         } catch (Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ ما. برجاء المحاولة مرة أخرى',
@@ -92,7 +113,12 @@ class InventoryController extends Controller
     public function update(InventoryUpdateRequest $request, $id)
     {
         try {
-            $inventory = $this->inventoryService->update($request->user(), $id, $request->validated());
+            $product = Product::findOrFail($id);
+
+            $this->authorize('update', $product);
+
+            $inventory = $this->inventoryService->update($product, $request->validated());
+
             return $this->createSuccessResponse(
                 'تم تحديث المنتج بنجاح',
                 new InventoryResource($inventory['product']),
@@ -100,6 +126,10 @@ class InventoryController extends Controller
         } catch (ModelNotFoundException $e) {
             // Owner-scoped lookup: not found OR not owned by the caller.
             return $this->errorResponse('المنتج غير موجود', 404);
+        } catch (AuthorizationException $e) {
+            // Authorization failures render centrally (403, or 404 for
+            // denyAsNotFound policies). Never swallow them below.
+            throw $e;
         } catch (Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ ما أثناء التحديث. برجاء المحاولة مرة أخرى',
@@ -112,11 +142,20 @@ class InventoryController extends Controller
     public function destroy($id)
     {
         try {
-            $this->inventoryService->delete(request()->user(), $id);
+            $product = Product::findOrFail($id);
+
+            $this->authorize('delete', $product);
+
+            $this->inventoryService->delete($product);
+
             return $this->successResponse('تم حذف المنتج بنجاح');
         } catch (ModelNotFoundException $e) {
             // Owner-scoped lookup: not found OR not owned by the caller.
             return $this->errorResponse('المنتج غير موجود', 404);
+        } catch (AuthorizationException $e) {
+            // Authorization failures render centrally (403, or 404 for
+            // denyAsNotFound policies). Never swallow them below.
+            throw $e;
         } catch (Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ ما أثناء الحذف. برجاء المحاولة مرة أخرى',
@@ -129,11 +168,26 @@ class InventoryController extends Controller
     public function multiDestroy(MultiDeleteRequest $request)
     {
         try {
-            $this->inventoryService->multiDelete($request->user(), $request->validated()['ids']);
+            $ids = array_unique($request->validated()['ids']);
+            $products = Product::whereIn('id', $ids)->get();
+
+            if ($products->count() !== count($ids)) {
+                return $this->errorResponse('أحد المنتجات المحددة غير موجود.', 404);
+            }
+
+            // Authorize EVERY product before deleting ANY, so the batch is all
+            // or nothing. A single unauthorized id refuses the whole request.
+            foreach ($products as $product) {
+                $this->authorize('delete', $product);
+            }
+
+            $this->inventoryService->multiDelete($products);
 
             return $this->successResponse('تم حذف المنتجات بنجاح');
         } catch (AuthorizationException $e) {
-            return $this->errorResponse($e->getMessage(), 403);
+            // Authorization failures render centrally (403, or 404 for
+            // denyAsNotFound policies). Never swallow them below.
+            throw $e;
         } catch (Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ ما أثناء الحذف. برجاء المحاولة مرة أخرى.',
@@ -146,12 +200,9 @@ class InventoryController extends Controller
     public function allSuppliersProducts(Request $request)
     {
         try {
+            $this->authorize('browseCatalogue', Product::class);
+
             $user = $request->user();
-
-            if ($user->department->code == 'supplier') {
-                return $this->errorResponse('عفوا، ليس لديك صلاحية الدخول', 403);
-            }
-
             $filters = $request->only(['search', 'category_id', 'sort']);
             $inventories = $this->inventoryService->getAllSuppliersProducts($filters, $user);
 
@@ -159,6 +210,10 @@ class InventoryController extends Controller
                 InventoryResource::collection($inventories),
                 $inventories
             );
+        } catch (AuthorizationException $e) {
+            // Authorization failures render centrally (403, or 404 for
+            // denyAsNotFound policies). Never swallow them below.
+            throw $e;
         } catch (\Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ أثناء جلب البيانات. برجاء المحاولة لاحقاً',
@@ -171,6 +226,8 @@ class InventoryController extends Controller
     public function search()
     {
         try {
+            $this->authorize('viewAny', Product::class);
+
             $user = request()->user();
             $search = request()->query('search');
 
@@ -180,6 +237,10 @@ class InventoryController extends Controller
                 InventoryResource::collection($results),
                 200,
             );
+        } catch (AuthorizationException $e) {
+            // Authorization failures render centrally (403, or 404 for
+            // denyAsNotFound policies). Never swallow them below.
+            throw $e;
         } catch (Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ أثناء البحث. برجاء المحاولة لاحقاً',
@@ -192,8 +253,15 @@ class InventoryController extends Controller
     public function exportExcel()
     {
         try {
+            $this->authorize('viewAny', Product::class);
+
             $user = request()->user();
+
             return Excel::download(new ProductsExport($user), 'products.xlsx');
+        } catch (AuthorizationException $e) {
+            // Authorization failures render centrally (403, or 404 for
+            // denyAsNotFound policies). Never swallow them below.
+            throw $e;
         } catch (\Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ أثناء تحميل البيانات. برجاء المحاولة لاحقاً',
@@ -205,6 +273,8 @@ class InventoryController extends Controller
     // استيراد ملف اكسيل لرفع منتجات
     public function importProducts(Request $request)
     {
+        $this->authorize('create', Product::class);
+
         $request->validate([
             'file' => 'required|mimes:xlsx,xls',
         ]);
@@ -215,7 +285,7 @@ class InventoryController extends Controller
         );
 
         return response()->json([
-            'message' => 'تم بدء استيراد المنتجات في الخلفية'
+            'message' => 'تم بدء استيراد المنتجات في الخلفية',
         ]);
     }
 

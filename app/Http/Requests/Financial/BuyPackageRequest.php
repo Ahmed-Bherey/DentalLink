@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests\Financial;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 class BuyPackageRequest extends FormRequest
@@ -26,8 +26,8 @@ class BuyPackageRequest extends FormRequest
     public function rules()
     {
         return [
-            'notes'               => 'nullable|string',
-            'payment_method'      => 'nullable|in:كاش,الكترونى,مدفوعات',
+            'notes' => 'nullable|string',
+            'payment_method' => 'nullable|in:كاش,الكترونى,مدفوعات',
         ];
     }
 
@@ -35,7 +35,7 @@ class BuyPackageRequest extends FormRequest
     {
         throw new HttpResponseException(response()->json([
             'message' => 'Validation errors',
-            'errors' => $validator->errors()
+            'errors' => $validator->errors(),
         ], 422));
     }
 }

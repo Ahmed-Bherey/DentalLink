@@ -13,19 +13,19 @@ class ProductService
 
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', '%' . $search . '%');
+                $q->where('name', 'like', '%'.$search.'%');
             });
         }
 
-        if (!is_null($minPrice)) {
+        if (! is_null($minPrice)) {
             $query->where('price', '>=', $minPrice);
         }
 
-        if (!is_null($maxPrice)) {
+        if (! is_null($maxPrice)) {
             $query->where('price', '<=', $maxPrice);
         }
 
-        if (!is_null($categoryId)) {
+        if (! is_null($categoryId)) {
             $query->where('category_id', $categoryId);
         }
 

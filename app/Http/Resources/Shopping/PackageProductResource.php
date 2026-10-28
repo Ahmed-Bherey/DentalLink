@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Shopping;
 
+use App\Support\Money;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class PackageProductResource extends JsonResource
@@ -15,15 +16,15 @@ class PackageProductResource extends JsonResource
     public function toArray($request)
     {
         return [
-            'id'            => $this->id,
-            'product_id'    => $this->product?->id,
-            'category_id'   => (int)$this->product?->category_id,
+            'id' => $this->id,
+            'product_id' => $this->product?->id,
+            'category_id' => (int) $this->product?->category_id,
             'category_name' => $this->product?->category?->name,
-            'name'          => $this->product?->name,
-            'desc'          => $this->product?->desc,
-            'img'           => $this->product?->img,
-            'price'         => (int)$this->product?->price,
-            'quantity'      => (int)$this->quantity,
+            'name' => $this->product?->name,
+            'desc' => $this->product?->desc,
+            'img' => $this->product?->img,
+            'price' => (float) Money::of($this->product?->price),
+            'quantity' => (int) $this->quantity,
         ];
     }
 }

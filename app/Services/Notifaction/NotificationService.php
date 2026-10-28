@@ -2,8 +2,8 @@
 
 namespace App\Services\Notifaction;
 
-use App\Models\FcmToken;
 use App\Jobs\SendFcmNotification;
+use App\Models\FcmToken;
 
 class NotificationService
 {

@@ -3,6 +3,7 @@
 namespace App\Services\Report;
 
 use App\Models\User;
+use App\Support\RoleCode;
 
 class DoctorService
 {
@@ -11,9 +12,7 @@ class DoctorService
         $search = request()->get('search');
         $interactedOnly = request()->boolean('interacted_only');
 
-        $query = User::whereHas('department', function ($q) {
-            $q->where('code', 'supplier');
-        })
+        $query = User::withRole(RoleCode::SUPPLIER)
             ->when($search, function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%");
             })

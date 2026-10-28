@@ -29,10 +29,10 @@ class ReceiptService
 
             Receipt::create([
                 'user_id' => $user->id,
-                'name'    => $receiptData['name'],
-                'value'   => $receiptData['price'],
-                'img'     => $imagePath,
-                'date'    => $receiptData['date'],
+                'name' => $receiptData['name'],
+                'value' => $receiptData['price'],
+                'img' => $imagePath,
+                'date' => $receiptData['date'],
             ]);
         }
 
@@ -47,14 +47,13 @@ class ReceiptService
         return Receipt::where('user_id', $user->id)->findOrFail($id);
     }
 
-    public function update($id, $user, $data)
+    /** Update an already-resolved, already-authorized receipt (ReceiptPolicy::update). */
+    public function update(Receipt $receipt, $data)
     {
-        $receipt = Receipt::where('user_id', $user->id)->findOrFail($id);
-
         $updateData = [
-            'name'  => $data['name'],
+            'name' => $data['name'],
             'value' => $data['price'],
-            'date'  => $data['date'],
+            'date' => $data['date'],
         ];
 
         if (isset($data['img']) && $data['img'] instanceof UploadedFile) {
@@ -70,10 +69,9 @@ class ReceiptService
         return $receipt;
     }
 
-    public function delete($id, $user)
+    /** Delete an already-resolved, already-authorized receipt (ReceiptPolicy::delete). */
+    public function delete(Receipt $receipt)
     {
-        $receipt = Receipt::where('user_id', $user->id)->findOrFail($id);
-
         if ($receipt->img && Storage::disk('public')->exists($receipt->img)) {
             Storage::disk('public')->delete($receipt->img);
         }

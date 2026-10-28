@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests\Financial;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 class OrderRequest extends FormRequest
@@ -26,16 +26,16 @@ class OrderRequest extends FormRequest
     public function rules()
     {
         return [
-            'products'            => 'required|array|min:1',
-            'products.*.id'       => 'required|exists:products,id',
+            'products' => 'required|array|min:1',
+            'products.*.id' => 'required|exists:products,id',
             'products.*.quantity' => 'required|integer|min:1',
-            'notes'               => 'nullable|string',
+            'notes' => 'nullable|string',
             // Security (Stage 1): `status` is NOT accepted from the client on create.
             // Order status is a server-side lifecycle value; a new order is always
             // created as 'pending' by the database default. OrderService::store()
             // already ignored this input, so removing it is behaviour-preserving and
             // removes a latent mass-assignment path onto Order::$fillable['status'].
-            'payment_method'      => 'nullable|in:كاش,الكترونى,مدفوعات',
+            'payment_method' => 'nullable|in:كاش,الكترونى,مدفوعات',
         ];
     }
 
@@ -43,7 +43,7 @@ class OrderRequest extends FormRequest
     {
         throw new HttpResponseException(response()->json([
             'message' => 'Validation errors',
-            'errors' => $validator->errors()
+            'errors' => $validator->errors(),
         ], 422));
     }
 }

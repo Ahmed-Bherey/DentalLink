@@ -29,16 +29,16 @@ class CityServices
     {
         return City::create([
             'user_id' => $user->id,
-            'name'    => $data['name'],
+            'name' => $data['name'],
         ]);
     }
 
     /**
      * تحديث مدينة
      */
-    public function update($user, $id, array $data)
+    /** Update an already-resolved, already-authorized city (CityPolicy::update). */
+    public function update(City $city, array $data)
     {
-        $city = City::where('user_id', $user->id)->findOrFail($id);
         $city->update($data);
 
         return $city;
@@ -47,9 +47,9 @@ class CityServices
     /**
      * حذف مدينة
      */
-    public function delete($user, $id)
+    /** Delete an already-resolved, already-authorized city (CityPolicy::delete). */
+    public function delete(City $city)
     {
-        $city = City::where('user_id', $user->id)->findOrFail($id);
         $city->delete();
     }
 }

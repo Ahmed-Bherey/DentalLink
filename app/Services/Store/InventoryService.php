@@ -2,10 +2,11 @@
 
 namespace App\Services\Store;
 
+use App\Models\Catalogue\ProductMaster;
 use App\Models\Store\Product;
+use App\Support\RoleCode;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Auth\Access\AuthorizationException;
 
 class InventoryService
 {
@@ -13,61 +14,91 @@ class InventoryService
     {
         return Product::where('user_id', $user->id)
             ->when($search, function ($query) use ($search) {
-                $query->where('name', 'like', '%' . $search . '%');
+                $query->where('name', 'like', '%'.$search.'%');
             })
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
     }
 
-    // عرض منتج واحد
-    // Security (Stage 1): scoped to the owner. Previously `$user` was accepted and
-    // ignored, so any authenticated user could read any product by id (IDOR).
-    public function getById($user, $id)
+    /**
+     * Resolve a product by id.
+     *
+     * NO authorization here by design (Stage 4): the caller authorizes via
+     * ProductPolicy. Keeping the owner filter in the query as well would put the
+     * same rule in two places, and the one in the query is the one nobody sees.
+     */
+    public function getById($id): ?Product
     {
-        return Product::where('id', $id)
-            ->where('user_id', $user->id)
-            ->first();
+        return Product::find($id);
     }
 
+    /**
+     * Create a user's holding of a CANONICAL product (Stage 7).
+     *
+     * The caller no longer defines a product; they pick one from the catalogue
+     * and state their own terms for it. Descriptive fields default to the
+     * canonical entry so a supplier does not have to retype them, and may be
+     * overridden per holding.
+     *
+     * @throws \Exception when the owner already holds this product
+     */
     public function create(array $data)
     {
         return DB::transaction(function () use ($data) {
+            $owner = request()->user();
+            $master = ProductMaster::findOrFail($data['product_master_id']);
+
+            // One holding per owner per canonical product — the rule that stops
+            // a supplier listing the same product twice. There is also a unique
+            // index behind this; checking here turns a constraint violation into
+            // a message the user can act on.
+            $existing = Product::where('user_id', $owner->id)
+                ->where('product_master_id', $master->id)
+                ->first();
+
+            if ($existing !== null) {
+                throw new \Exception('هذا المنتج مضاف لديك بالفعل. يمكنك تعديل الكمية أو السعر بدلاً من إضافته مرة أخرى.');
+            }
+
             $imgPath = null;
-            if (!empty($data['img'])) {
-                $img = $data['img'];
-                $imgPath = $img->store('products', 'public');
+            if (! empty($data['img'])) {
+                $imgPath = $data['img']->store('products', 'public');
             }
 
             $product = Product::create([
-                'user_id'    => request()->user()->id,
-                'name'  => $data['name'],
-                'category_id'  => $data['category_id'],
-                'img'  => $imgPath,
-                'desc'  => $data['desc'],
+                'user_id' => $owner->id,
+                'product_master_id' => $master->id,
+                // Inherited from the canonical entry unless overridden.
+                'name' => $data['name'] ?? $master->name,
+                'category_id' => $data['category_id'] ?? $master->category_id,
+                'img' => $imgPath ?? $master->getRawOriginal('img'),
+                'desc' => $data['desc'] ?? $master->desc,
                 'price' => $data['price'],
-                'quantity'   => $data['quantity'],
+                'base_price' => $data['base_price'] ?? null,
+                'quantity' => $data['quantity'],
             ]);
 
             return [
-                'product'   => $product,
+                'product' => $product,
             ];
         });
     }
 
-    // تحديث المنتج
-    // Security (Stage 1): the owner scope is enforced in the query. Previously any
-    // authenticated user could rewrite any product (price, quantity, name) by id.
-    public function update($user, int $productId, array $data)
+    /**
+     * Update an already-resolved, already-authorized product.
+     *
+     * Authorization is the caller's job (ProductPolicy::update).
+     */
+    public function update(Product $product, array $data)
     {
-        return DB::transaction(function () use ($user, $productId, $data) {
-            $product = Product::where('user_id', $user->id)->findOrFail($productId);
+        return DB::transaction(function () use ($product, $data) {
 
             // معالجة الصورة إن وجدت
             // معالجة الصورة إن وجدت وكانت ملف فعلي
             if (array_key_exists('img', $data)) {
                 if ($data['img'] instanceof \Illuminate\Http\UploadedFile) {
                     // حذف الصورة القديمة إن وجدت
-                    if (!empty($product->img) && Storage::disk('public')->exists($product->img)) {
+                    if (! empty($product->img) && Storage::disk('public')->exists($product->img)) {
                         Storage::disk('public')->delete($product->img);
                     }
 
@@ -93,13 +124,22 @@ class InventoryService
         });
     }
 
-    // حذف منتج واحد
-    // Security (Stage 1): owner-scoped. Product deletion cascades into order_items,
-    // so an unscoped delete destroyed other suppliers' historical order lines.
-    public function delete($user, int $productId)
+    /**
+     * Delete an already-resolved, already-authorized product.
+     *
+     * Stage 5: order_items.product_id is now ON DELETE RESTRICT, so a product
+     * that appears in any order can no longer be deleted. Previously this
+     * succeeded and cascaded — silently removing lines from doctors' historical
+     * orders and changing what those orders totalled.
+     *
+     * The check below turns that database refusal into the same kind of message
+     * CategoryService already gives for a category that still has products,
+     * rather than letting an SQL constraint error surface to the client.
+     */
+    public function delete(Product $product)
     {
-        return DB::transaction(function () use ($user, $productId) {
-            $product = Product::where('user_id', $user->id)->findOrFail($productId);
+        return DB::transaction(function () use ($product) {
+            $this->assertNotUsedInAnyOrder($product);
 
             // حذف الصورة من التخزين إن وجدت
             if ($product->img && Storage::disk('public')->exists($product->img)) {
@@ -112,20 +152,44 @@ class InventoryService
         });
     }
 
-    // حذف مجموعة منتجات
-    // Security (Stage 1): owner-scoped. Previously an unbounded id array could
-    // delete any supplier's catalog in a single request.
-    public function multiDelete($user, array $productIds)
+    /**
+     * A product that has been ordered is part of somebody's purchase history.
+     *
+     * Deleting it is refused outright rather than soft-deleted or anonymised:
+     * introducing soft deletes is a domain change, and this stage only closes
+     * the hole. The image is left in storage too, since the product row stays.
+     *
+     * @throws \Exception
+     */
+    private function assertNotUsedInAnyOrder(Product $product): void
     {
-        return DB::transaction(function () use ($user, $productIds) {
-            $products = Product::whereIn('id', $productIds)
-                ->where('user_id', $user->id)
-                ->get();
+        $orderedCount = $product->orderItems()->count();
 
-            // Refuse the whole batch if it references products the caller does not own,
-            // rather than silently deleting the subset they do own.
-            if ($products->count() !== count(array_unique($productIds))) {
-                throw new AuthorizationException('عفوا، ليس لديك صلاحية حذف أحد المنتجات المحددة.');
+        if ($orderedCount === 0) {
+            return;
+        }
+
+        throw new \Exception(
+            'لا يمكن حذف المنتج لأنه مستخدم في '.$orderedCount.' من سجلات الطلبات. '
+            .'يمكنك إخفاؤه أو تعديل الكمية بدلاً من حذفه.'
+        );
+    }
+
+    /**
+     * Delete a batch of already-resolved, already-authorized products.
+     *
+     * The caller authorizes EVERY product before calling, and refuses the whole
+     * batch if any one fails - never a partial delete.
+     */
+    public function multiDelete($products)
+    {
+        return DB::transaction(function () use ($products) {
+            // Check the whole batch before touching anything. Storage deletions
+            // are not covered by the transaction, so discovering an ordered
+            // product halfway through would already have removed earlier images
+            // with no way to roll them back.
+            foreach ($products as $product) {
+                $this->assertNotUsedInAnyOrder($product);
             }
 
             foreach ($products as $product) {
@@ -144,20 +208,20 @@ class InventoryService
     // عرض قائمة منتجات كل الموردين للطبيب
     public function getAllSuppliersProducts($filters = [], $doctor = null)
     {
-        $query = Product::with(['user.department', 'category'])
-            ->whereHas('user.department', function ($q) {
-                $q->where('code', '!=', 'doctor');
+        $query = Product::with(['user.role', 'category'])
+            ->whereHas('user.role', function ($q) {
+                $q->where('code', '!=', RoleCode::DOCTOR);
             });
 
         if ($doctor) {
             $query->with([
-                'favoriteProducts' => fn($q) => $q->where('doctor_id', $doctor->id),
-                'carts' => fn($q) => $q->where('doctor_id', $doctor->id),
+                'favoriteProducts' => fn ($q) => $q->where('doctor_id', $doctor->id),
+                'carts' => fn ($q) => $q->where('doctor_id', $doctor->id),
             ]);
         }
 
         // 🔍 فلتر بحث عام باسم المنتج أو المورد
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
@@ -168,12 +232,12 @@ class InventoryService
         }
 
         // 🗂️ فلتر بالتصنيف
-        if (!empty($filters['category_id'])) {
+        if (! empty($filters['category_id'])) {
             $query->where('category_id', $filters['category_id']);
         }
 
         // ↕️ فلتر ترتيب السعر (الأعلى أو الأقل)
-        if (!empty($filters['sort']) && in_array($filters['sort'], ['asc', 'desc'])) {
+        if (! empty($filters['sort']) && in_array($filters['sort'], ['asc', 'desc'])) {
             $query->orderBy('price', $filters['sort']);
         } else {
             $query->latest();
@@ -187,7 +251,7 @@ class InventoryService
     {
         return Product::where('user_id', $user->id)
             ->where(function ($query) use ($search) {
-                $query->where('name', 'like', '%' . $search . '%');
+                $query->where('name', 'like', '%'.$search.'%');
             })
             ->orderBy('created_at', 'desc')
             ->get();

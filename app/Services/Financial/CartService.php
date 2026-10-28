@@ -11,6 +11,7 @@ class CartService
     {
         $cart = Cart::where('doctor_id', $doctor->id)
             ->paginate($perPage);
+
         return $cart;
     }
 
@@ -26,27 +27,28 @@ class CartService
         return $cart;
     }
 
-    // تحديث عنصر في السلة
-    // Security (Stage 1): owner-scoped. Previously any authenticated user could
-    // change the quantity on another user's cart line by id.
-    public function update($doctor, $id, $data)
+    /**
+     * Update an already-resolved, already-authorized cart line.
+     *
+     * Authorization moved to CartPolicy::update in Stage 4. Keeping the owner
+     * filter here as well would put the same rule in two places.
+     */
+    public function update(Cart $cart, $data)
     {
-        $cart = Cart::where('doctor_id', $doctor->id)->findOrFail($id);
-
         $cart->update([
-            'quantity'   => $data['quantity'],
+            'quantity' => $data['quantity'],
         ]);
 
         return $cart;
     }
 
-    // حذف عنصر من السلة
-    // Security (Stage 1): owner-scoped. Previously any authenticated user could
-    // delete another user's cart line by id.
-    public function destroy($doctor, $id)
+    /**
+     * Delete an already-resolved, already-authorized cart line.
+     *
+     * Authorization lives in CartPolicy::delete.
+     */
+    public function destroy(Cart $cart)
     {
-        $cart = Cart::where('doctor_id', $doctor->id)->findOrFail($id);
-
         $cart->delete();
 
         return true;

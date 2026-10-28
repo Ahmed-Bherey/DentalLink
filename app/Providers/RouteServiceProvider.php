@@ -48,5 +48,15 @@ class RouteServiceProvider extends ServiceProvider
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
+
+        // Password reset is unauthenticated and triggers email, so it gets its
+        // own tight limiter keyed on the address as well as the IP. This is on
+        // top of Laravel's own per-address broker throttle.
+        RateLimiter::for('password-reset', function (Request $request) {
+            return [
+                Limit::perMinute(5)->by($request->ip()),
+                Limit::perMinute(3)->by((string) $request->input('email')),
+            ];
+        });
     }
 }

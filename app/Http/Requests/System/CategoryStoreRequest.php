@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests\System;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 class CategoryStoreRequest extends FormRequest
@@ -27,7 +27,7 @@ class CategoryStoreRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string'],
-            'img'  => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            'img' => 'required|image|mimes:jpeg,png,jpg|max:2048',
             'desc' => ['nullable', 'string', 'max:500'],
         ];
     }
@@ -36,12 +36,12 @@ class CategoryStoreRequest extends FormRequest
     {
         return [
             'name.required' => 'اسم القسم مطلوب',
-            'img.required'  => 'صورة القسم مطلوبة',
-            'img.image'     =>  'يجب ان تكون صورة وليست ملف',
-            'img.mimes'     => 'نوع الصورة غير مسموح به. الامتدادات المسموح بها: jpeg, png, jpg',
-            'img.max'       => 'حجم الصورة يجب الا يزيد عن 2 ميجا',
+            'img.required' => 'صورة القسم مطلوبة',
+            'img.image' => 'يجب ان تكون صورة وليست ملف',
+            'img.mimes' => 'نوع الصورة غير مسموح به. الامتدادات المسموح بها: jpeg, png, jpg',
+            'img.max' => 'حجم الصورة يجب الا يزيد عن 2 ميجا',
             'desc.string' => 'الوصف يجب أن يكون نصًا',
-            'desc.max'    => 'الوصف لا يجب أن يتجاوز 500 حرف',
+            'desc.max' => 'الوصف لا يجب أن يتجاوز 500 حرف',
         ];
     }
 
@@ -49,7 +49,7 @@ class CategoryStoreRequest extends FormRequest
     {
         throw new HttpResponseException(response()->json([
             'message' => 'Validation errors',
-            'errors' => $validator->errors()
+            'errors' => $validator->errors(),
         ], 422));
     }
 }

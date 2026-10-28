@@ -2,18 +2,18 @@
 
 namespace App\Http\Controllers\Report;
 
-use Exception;
-use App\Traits\ApiResponse;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Services\Report\SupplierService;
 use App\Http\Resources\Report\DoctorResource;
-use App\Http\Resources\Financial\OrderResource;
-use App\Http\Resources\Financial\PaymentResource;
+use App\Models\User;
+use App\Services\Report\SupplierService;
+use App\Traits\ApiResponse;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class SupplierController extends Controller
 {
     use ApiResponse;
+
     protected $supplierService;
 
     public function __construct(SupplierService $supplierService)
@@ -24,6 +24,8 @@ class SupplierController extends Controller
     public function getAllDoctors()
     {
         try {
+            $this->authorize('viewDoctorDirectory', User::class);
+
             $user = request()->user();
             $perPage = request()->get('per_page', 10);
 
@@ -33,6 +35,9 @@ class SupplierController extends Controller
                 DoctorResource::collection($doctors),
                 $doctors
             );
+        } catch (AuthorizationException $e) {
+            // Stage 4: authorization failures render centrally. Never swallow them.
+            throw $e;
         } catch (\Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ أثناء جلب قائمة الأطباء. برجاء المحاولة لاحقاً.',
@@ -44,12 +49,23 @@ class SupplierController extends Controller
     public function showDoctorDetails($doctorId)
     {
         try {
-            $user = request()->user(); // المورد الحالي
-            $data = $this->supplierService->getDoctorDetails($user, $doctorId);
+            $doctor = User::findOrFail($doctorId);
+
+            $this->authorize('viewCounterparty', $doctor);
+
+            $data = ['doctor' => $doctor];
 
             return $this->successResponse([
-                'doctor'   => new DoctorResource($data['doctor']),
+                'doctor' => new DoctorResource($data['doctor']),
             ]);
+        } catch (AuthorizationException $e) {
+            // Stage 4: authorization failures render centrally. Never swallow them.
+            throw $e;
+        } catch (ModelNotFoundException $e) {
+            // Must match the policy's denyAsNotFound shape exactly. If a missing
+            // id returned a different status from a forbidden one, the endpoint
+            // would still be an enumeration oracle — just in reverse.
+            return $this->errorResponse('غير موجود', 404);
         } catch (\Exception $e) {
             return $this->errorResponse(
                 'عذراً، حدث خطأ أثناء جلب تفاصيل الطبيب',

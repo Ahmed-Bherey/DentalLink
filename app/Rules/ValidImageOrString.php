@@ -2,8 +2,8 @@
 
 namespace App\Rules;
 
-use Illuminate\Http\UploadedFile;
 use Illuminate\Contracts\Validation\Rule;
+use Illuminate\Http\UploadedFile;
 
 class ValidImageOrString implements Rule
 {

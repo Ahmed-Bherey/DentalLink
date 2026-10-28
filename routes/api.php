@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\PasswordController;
+use App\Http\Controllers\Auth\RoleController;
+use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\Auth\UserAuthController;
 use App\Http\Controllers\Clinic\ProductController;
 use App\Http\Controllers\Financial\CartController;
@@ -12,6 +15,7 @@ use App\Http\Controllers\Index\StatisticController;
 use App\Http\Controllers\Report\DoctorController;
 use App\Http\Controllers\Report\SupplierController;
 use App\Http\Controllers\Shopping\FavoriteProductController;
+use App\Http\Controllers\Catalogue\ProductMasterController;
 use App\Http\Controllers\Store\InventoryController;
 use App\Http\Controllers\System\CategoryController;
 use App\Http\Controllers\System\CityController;
@@ -35,7 +39,23 @@ use Illuminate\Support\Facades\Route;
 Route::post('register', [UserAuthController::class, 'userRegister']);
 Route::post('login', [UserAuthController::class, 'login']);
 
+// Password reset (unauthenticated by necessity - the user cannot sign in).
+// Throttled independently of the general API limiter.
+Route::middleware('throttle:password-reset')->group(function () {
+    Route::post('password/forgot', [PasswordController::class, 'sendResetLink']);
+    Route::post('password/reset', [PasswordController::class, 'reset']);
+});
+
 Route::middleware('auth:sanctum')->group(function () {
+    // session lifecycle
+    Route::controller(SessionController::class)->group(function () {
+        Route::post('logout', 'logout');
+        Route::post('logout-all', 'logoutAll');
+    });
+
+    // authenticated password change
+    Route::post('password/change', [PasswordController::class, 'change']);
+
     // departments
     // NOTE (Stage 1 security hardening): `POST department/store` was removed.
     // It allowed ANY authenticated user to mint a new department (= role) code,
@@ -78,6 +98,23 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('add/{product_id}', 'addToFavorite');
         Route::delete('remove/{product_id}', 'removeFromFavorite');
     });
+    /*
+     * STAGE 7 — canonical product catalogue.
+     *
+     * Reading is open to every authenticated user: suppliers and doctors have
+     * to be able to SEARCH the catalogue in order to select from it, which is
+     * the mechanism that replaces inventing duplicate products. Writing is
+     * Super Admin only, enforced by ProductMasterPolicy rather than by route
+     * placement — Stage 1 established that hiding an endpoint is not security.
+     */
+    Route::controller(ProductMasterController::class)->prefix('product-master')->group(function () {
+        Route::get('index', 'index');
+        Route::get('show/{id}', 'show');
+        Route::post('store', 'store');
+        Route::post('update/{product_master}', 'update');
+        Route::post('toggle-active/{product_master}', 'toggleActive');
+    });
+
     // store
     Route::controller(InventoryController::class)->prefix('product')->group(function () {
         Route::get('index', 'index');
@@ -108,6 +145,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('{orderItem_id}/update-status', 'updateItemStatus');
         Route::get('refund', 'refundOrder');
         //Route::get('showexpen', 'showexpen');
+
+        /*
+         * STAGE 7.5 — single-order detail (Gap #5).
+         *
+         * Declared LAST and constrained to a numeric id on purpose. Laravel
+         * matches routes in declaration order, so an unconstrained `{id}` placed
+         * earlier would shadow the literal GET routes in this group
+         * (index-type, all-delivered, search, refund).
+         */
+        Route::get('{id}', 'show')->whereNumber('id');
     });
     // payments
     Route::controller(PaymentController::class)->prefix('payment')->group(function () {
@@ -171,5 +218,13 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 // Un Auth
 // Index department
+// Roles a visitor may pick at registration. Read-only; privileged roles are
+// never listed. This supersedes department/index for the registration form.
+Route::get('role/index', [RoleController::class, 'index']);
+Route::get('password/policy', [PasswordController::class, 'policy']);
+
+// LEGACY (deprecated): the registration form used department/index to pick an
+// account type before roles existed. Retained for compatibility; remove once
+// the frontend reads role/index.
 Route::get('department/index', [DepartmentController::class, 'index']);
 Route::get('city/index', [CityController::class, 'index']);

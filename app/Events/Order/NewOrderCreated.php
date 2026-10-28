@@ -2,9 +2,7 @@
 
 namespace App\Events\Order;
 
-use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
@@ -15,6 +13,7 @@ class NewOrderCreated implements ShouldBroadcast
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $order;
+
     public $supplierId;
 
     public function __construct($order, $supplierId)
@@ -26,16 +25,16 @@ class NewOrderCreated implements ShouldBroadcast
     // 🔹 القناة الخاصة بالمورد
     public function broadcastOn()
     {
-        return new PrivateChannel('supplier.' . $this->supplierId);
+        return new PrivateChannel('supplier.'.$this->supplierId);
     }
 
     // 🔹 الحمولة التي تُرسل للفرونت
     public function broadcastWith()
     {
         return [
-            'order_id'    => $this->order->id,
+            'order_id' => $this->order->id,
             'doctor_name' => $this->order->doctor?->name,
-            'message'     => "تم إنشاء طلب جديد من الطبيب {$this->order->doctor?->name}",
+            'message' => "تم إنشاء طلب جديد من الطبيب {$this->order->doctor?->name}",
         ];
     }
 

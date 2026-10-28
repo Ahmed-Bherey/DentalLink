@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests\System;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 class CityStoreRequest extends FormRequest
@@ -29,7 +29,7 @@ class CityStoreRequest extends FormRequest
     {
         return [
             'name.required' => 'اسم المدينة مطلوب.',
-            'name.unique'   => 'اسم المدينة موجود بالفعل.',
+            'name.unique' => 'اسم المدينة موجود بالفعل.',
         ];
     }
 
@@ -37,7 +37,7 @@ class CityStoreRequest extends FormRequest
     {
         throw new HttpResponseException(response()->json([
             'message' => 'Validation errors',
-            'errors' => $validator->errors()
+            'errors' => $validator->errors(),
         ], 422));
     }
 }

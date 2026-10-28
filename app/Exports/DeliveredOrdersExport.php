@@ -2,7 +2,6 @@
 
 namespace App\Exports;
 
-use App\Models\Order;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 
@@ -26,8 +25,8 @@ class DeliveredOrdersExport implements FromCollection
                 'total_order_price' => $order->total_order_price,
                 'created_at' => $order->created_at->format('Y-m-d H:i'),
                 'products' => $order->orderItems->map(function ($item) {
-                    return $item->product?->name . ' (x' . $item->quantity . ')';
-                })->implode(', ')
+                    return $item->product?->name.' (x'.$item->quantity.')';
+                })->implode(', '),
             ];
         }));
     }

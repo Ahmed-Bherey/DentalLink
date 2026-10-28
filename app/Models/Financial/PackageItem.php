@@ -3,17 +3,17 @@
 namespace App\Models\Financial;
 
 use App\Models\Store\Product;
-use App\Models\Financial\Package;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class PackageItem extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'package_id',
         'product_id',
-        'quantity'
+        'quantity',
     ];
 
     public function package()

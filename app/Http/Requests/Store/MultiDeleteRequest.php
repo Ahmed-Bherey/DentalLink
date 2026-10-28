@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests\Store;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 class MultiDeleteRequest extends FormRequest
@@ -26,7 +26,7 @@ class MultiDeleteRequest extends FormRequest
     public function rules()
     {
         return [
-            'ids'   => 'required|array|min:1',
+            'ids' => 'required|array|min:1',
             'ids.*' => 'integer|exists:products,id',
         ];
     }
@@ -34,11 +34,11 @@ class MultiDeleteRequest extends FormRequest
     public function messages()
     {
         return [
-            'ids.required'   => 'يرجى تحديد المنتجات المطلوب حذفها.',
-            'ids.array'      => 'يجب إرسال قائمة المنتجات كمصفوفة.',
-            'ids.min'        => 'يجب تحديد منتج واحد على الأقل.',
-            'ids.*.integer'  => 'معرف المنتج يجب أن يكون رقمًا صحيحًا.',
-            'ids.*.exists'   => 'أحد المنتجات المحددة غير موجود.',
+            'ids.required' => 'يرجى تحديد المنتجات المطلوب حذفها.',
+            'ids.array' => 'يجب إرسال قائمة المنتجات كمصفوفة.',
+            'ids.min' => 'يجب تحديد منتج واحد على الأقل.',
+            'ids.*.integer' => 'معرف المنتج يجب أن يكون رقمًا صحيحًا.',
+            'ids.*.exists' => 'أحد المنتجات المحددة غير موجود.',
         ];
     }
 
@@ -46,7 +46,7 @@ class MultiDeleteRequest extends FormRequest
     {
         throw new HttpResponseException(response()->json([
             'message' => 'Validation errors',
-            'errors'  => $validator->errors()
+            'errors' => $validator->errors(),
         ], 422));
     }
 }

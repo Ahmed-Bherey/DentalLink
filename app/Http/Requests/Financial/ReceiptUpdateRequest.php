@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests\Financial;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 class ReceiptUpdateRequest extends FormRequest
@@ -26,10 +26,10 @@ class ReceiptUpdateRequest extends FormRequest
     public function rules()
     {
         return [
-            'name'  => 'sometimes|required|string|max:255',
+            'name' => 'sometimes|required|string|max:255',
             'price' => 'sometimes|required|numeric',
-            'date'  => 'sometimes|required|date',
-            'img'   => 'nullable|image|max:2048',
+            'date' => 'sometimes|required|date',
+            'img' => 'nullable|image|max:2048',
         ];
     }
 
@@ -37,7 +37,7 @@ class ReceiptUpdateRequest extends FormRequest
     {
         throw new HttpResponseException(response()->json([
             'message' => 'Validation errors',
-            'errors' => $validator->errors()
+            'errors' => $validator->errors(),
         ], 422));
     }
 }

@@ -3,6 +3,8 @@
 namespace App\Http\Resources\Financial;
 
 use App\Models\Financial\OrderExpense;
+use App\Services\Financial\LedgerService;
+use App\Support\Money;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class PaymentResource extends JsonResource
@@ -21,19 +23,27 @@ class PaymentResource extends JsonResource
 
         $authUser = $request->user();
         $name = null;
-        if ($authUser->department?->code === 'doctor') {
+        if ($authUser->isDoctor()) {
             $name = $orderExpense?->supplier?->name;
-        } elseif ($authUser->department?->code === 'supplier') {
+        } elseif ($authUser->isSupplier()) {
             $name = $orderExpense?->doctor?->name;
         }
+
+        // Stage 6: the `(int)` casts here truncated every fractional amount —
+        // a payment of 150.75 was reported to both parties as 150. `remaining`
+        // was also recomputed inline (note the stored column commented out
+        // beside it, a workaround for a balance that used to be wrong). Both
+        // now come from LedgerService, the single definition of the balance.
         return [
-            'id'             => $this->id,
-            'name'           => $name,
-            'supplier_name'  => $this->supplier?->name,
-            'paid'           => (int)$this->amount,
-            'requested_paid' => (int)$this->requested_amount,
-            'remaining'      => (int)$orderExpense?->total - $orderExpense?->paid /*(int)$orderExpense?->remaining*/,
-            'date'           => $this->date ?? $this->created_at->format('Y-m-d'),
+            'id' => $this->id,
+            'name' => $name,
+            'supplier_name' => $this->supplier?->name,
+            'paid' => (float) Money::of($this->amount),
+            'requested_paid' => $this->requested_amount === null
+                ? null
+                : (float) Money::of($this->requested_amount),
+            'remaining' => (float) app(LedgerService::class)->outstanding($orderExpense),
+            'date' => $this->date ?? $this->created_at->format('Y-m-d'),
         ];
     }
 }

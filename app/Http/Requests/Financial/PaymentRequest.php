@@ -2,11 +2,12 @@
 
 namespace App\Http\Requests\Financial;
 
-use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Foundation\Http\FormRequest;
+use App\Support\RoleCode;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class PaymentRequest extends FormRequest
 {
@@ -31,17 +32,28 @@ class PaymentRequest extends FormRequest
             // Security (Stage 1): `exists:users,id` alone let a supplier record a
             // payment against ANY user account, including other suppliers. The
             // counterparty on a payment must actually be a doctor.
+            //
+            // IDENTITY (Stage 4): resolved through `roles`, not `departments`.
+            // Stage 3 made `role_id` the authoritative identity column and left
+            // `department_id` nullable for legacy callers, so a doctor who
+            // registered with `role_id` has no department and was being rejected
+            // here. The predicate is unchanged — "this user is a doctor" — only
+            // the column it reads from.
             'doctor_id' => [
                 'required',
                 'integer',
                 Rule::exists('users', 'id')->where(
-                    fn($query) => $query->whereIn(
-                        'department_id',
-                        DB::table('departments')->select('id')->where('code', 'doctor')
+                    fn ($query) => $query->whereIn(
+                        'role_id',
+                        DB::table('roles')->select('id')->where('code', RoleCode::DOCTOR)
                     )
                 ),
             ],
-            'paid' => 'required|numeric|min:0.01',
+            // Stage 6: min prevents zero/negative; max is the ceiling of the
+            // DECIMAL(12,2) column the value lands in. Without it a larger
+            // number passes validation and then fails at the database, which
+            // surfaces as a 500 instead of a field error.
+            'paid' => 'required|numeric|min:0.01|max:9999999999.99',
             'date' => 'required|date',
         ];
     }
@@ -54,6 +66,7 @@ class PaymentRequest extends FormRequest
             'paid.required' => 'الرجاء تحديد المبلغ.',
             'paid.numeric' => 'المبلغ يجب أن يكون رقمًا.',
             'paid.min' => 'المبلغ يجب أن يكون أكبر من 0.',
+            'paid.max' => 'المبلغ أكبر من الحد المسموح به.',
             'date.required' => 'الرجاء تحديد التاريخ.',
             'date.date' => 'تنسيق التاريخ غير صحيح',
         ];
@@ -63,7 +76,7 @@ class PaymentRequest extends FormRequest
     {
         throw new HttpResponseException(response()->json([
             'message' => 'Validation errors',
-            'errors' => $validator->errors()
+            'errors' => $validator->errors(),
         ], 422));
     }
 }
