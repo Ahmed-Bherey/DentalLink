@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Security;
 
-use Tests\TestCase;
 use App\Models\User;
+use Tests\TestCase;
 
 /**
  * Stage 1 security regression tests for invariants that hold without a database:
@@ -30,12 +30,12 @@ class HardeningInvariantsTest extends TestCase
                     continue;
                 }
                 if (preg_match($pattern, $line)) {
-                    $offenders[] = str_replace(base_path() . DIRECTORY_SEPARATOR, '', $file) . ':' . ($i + 1);
+                    $offenders[] = str_replace(base_path().DIRECTORY_SEPARATOR, '', $file).':'.($i + 1);
                 }
             }
         }
 
-        $this->assertSame([], $offenders, 'Shell execution found in HTTP-reachable code: ' . implode(', ', $offenders));
+        $this->assertSame([], $offenders, 'Shell execution found in HTTP-reachable code: '.implode(', ', $offenders));
     }
 
     /**
@@ -55,12 +55,12 @@ class HardeningInvariantsTest extends TestCase
                     continue;
                 }
                 if (preg_match($pattern, $line)) {
-                    $offenders[] = str_replace(base_path() . DIRECTORY_SEPARATOR, '', $file) . ':' . ($i + 1);
+                    $offenders[] = str_replace(base_path().DIRECTORY_SEPARATOR, '', $file).':'.($i + 1);
                 }
             }
         }
 
-        $this->assertSame([], $offenders, 'Debug dump statements found: ' . implode(', ', $offenders));
+        $this->assertSame([], $offenders, 'Debug dump statements found: '.implode(', ', $offenders));
     }
 
     /**
@@ -113,16 +113,28 @@ class HardeningInvariantsTest extends TestCase
      *
      * @test
      */
-    public function registration_restricts_self_assignable_departments(): void
+    public function registration_restricts_self_assignable_roles(): void
     {
-        $codes = config('auth.self_assignable_department_codes');
+        $codes = \App\Support\RoleCode::selfAssignable();
 
         $this->assertIsArray($codes);
         $this->assertNotEmpty($codes, 'The whitelist must not be empty, or registration would accept nothing.');
         $this->assertSame(['doctor', 'supplier'], $codes);
+        $this->assertNotContains(
+            \App\Support\RoleCode::SUPER_ADMIN,
+            $codes,
+            'super_admin must never be self-assignable.'
+        );
+
+        // The legacy config key is derived from RoleCode so the two cannot drift.
+        $this->assertSame($codes, config('auth.self_assignable_department_codes'));
 
         $rules = (new \App\Http\Requests\Auth\RegisterRequest)->rules();
-        $this->assertContains('required', $rules['department_id'], 'department_id must be required; a NULL department bypasses row-level filtering.');
+
+        // Exactly one of role_id / department_id must be supplied. A request with
+        // neither is rejected, so a user can never land with a NULL identity.
+        $this->assertContains('required_without:department_id', $rules['role_id']);
+        $this->assertContains('required_without:role_id', $rules['department_id']);
     }
 
     /**
@@ -164,11 +176,11 @@ class HardeningInvariantsTest extends TestCase
         foreach ($this->filesIn(base_path('public')) as $file) {
             if (preg_match('/(firebase-adminsdk|service-account)/i', basename($file))
                 || preg_match('/\.(pem|p12|pfx|key)$/i', $file)) {
-                $found[] = str_replace(base_path() . DIRECTORY_SEPARATOR, '', $file);
+                $found[] = str_replace(base_path().DIRECTORY_SEPARATOR, '', $file);
             }
         }
 
-        $this->assertSame([], $found, 'Credential material in web root: ' . implode(', ', $found));
+        $this->assertSame([], $found, 'Credential material in web root: '.implode(', ', $found));
     }
 
     /** @return iterable<string> */
@@ -186,7 +198,7 @@ class HardeningInvariantsTest extends TestCase
     /** @return iterable<string> */
     private function filesIn(string $dir): iterable
     {
-        if (!is_dir($dir)) {
+        if (! is_dir($dir)) {
             return;
         }
 

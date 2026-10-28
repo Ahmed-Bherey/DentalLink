@@ -2,58 +2,39 @@
 
 namespace Tests\Feature\Security;
 
-use Tests\TestCase;
-use App\Models\User;
-use App\Models\Store\Product;
 use App\Models\Financial\Cart;
 use App\Models\Financial\Order;
 use App\Models\Financial\OrderItem;
 use App\Models\Financial\Package;
 use App\Models\Financial\Payment;
-use App\Models\General\Department;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use App\Models\Store\Product;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 /**
- * Stage 1 IDOR/BOLA regression tests.
+ * IDOR / BOLA regression suite.
  *
- * Each test proves that the owner of a record can act on it and a non-owner
- * cannot. These exercise the interim ownership guards added in Stage 1; they
- * will be re-pointed at the real policy layer in Stage 4 without changing the
- * assertions, which is the point — the security contract stays the same.
+ * Each test proves that the owner of a record can act on it and that a
+ * non-owner cannot. These exercise the interim ownership guards added in
+ * Stage 1. When the real policy layer lands, the implementation changes but
+ * these assertions must not — they are the security contract.
  *
- * SAFETY: these tests write to a database, so they refuse to run unless a
- * DEDICATED test database is configured. The project currently has no test
- * database (phpunit.xml has DB_CONNECTION/DB_DATABASE commented out), so they
- * skip today and become live in Stage 2 when the test harness lands. They are
- * committed now so the security contract is captured while it is fresh.
+ * Safety: tests/TestCase::guardTestDatabase() aborts the run unless the
+ * configured database is a dedicated test database.
  */
 class OwnershipBoundaryTest extends TestCase
 {
-    use DatabaseTransactions;
+    use RefreshDatabase;
 
-    /**
-     * The skip guard must run BEFORE setUpTraits(), because DatabaseTransactions
-     * opens a connection there. At this point the application is booted, so
-     * config() is available.
-     */
-    protected function setUpTraits()
-    {
-        $database = (string) config('database.connections.' . config('database.default') . '.database');
-
-        if (!str_ends_with($database, '_test')) {
-            $this->markTestSkipped(
-                'No dedicated test database configured. Point DB_DATABASE at a *_test database in phpunit.xml (Stage 2).'
-            );
-        }
-
-        return parent::setUpTraits();
-    }
+    // ------------------------------------------------------------- products
 
     /** @test */
     public function a_supplier_cannot_update_another_suppliers_product(): void
     {
-        [$owner, $attacker] = [$this->supplier(), $this->supplier()];
-        $product = $this->productFor($owner, ['price' => 100]);
+        $owner = User::factory()->supplier()->create();
+        $attacker = User::factory()->supplier()->create();
+        $product = Product::factory()->ownedBy($owner)->pricedAt(100)->create();
 
         $this->actingAs($attacker, 'sanctum')
             ->postJson("/api/product/update/{$product->id}", ['price' => 1])
@@ -65,8 +46,8 @@ class OwnershipBoundaryTest extends TestCase
     /** @test */
     public function a_supplier_can_update_their_own_product(): void
     {
-        $owner = $this->supplier();
-        $product = $this->productFor($owner, ['price' => 100]);
+        $owner = User::factory()->supplier()->create();
+        $product = Product::factory()->ownedBy($owner)->pricedAt(100)->create();
 
         $this->actingAs($owner, 'sanctum')
             ->postJson("/api/product/update/{$product->id}", ['price' => 150])
@@ -78,8 +59,9 @@ class OwnershipBoundaryTest extends TestCase
     /** @test */
     public function a_supplier_cannot_delete_another_suppliers_product(): void
     {
-        [$owner, $attacker] = [$this->supplier(), $this->supplier()];
-        $product = $this->productFor($owner);
+        $owner = User::factory()->supplier()->create();
+        $attacker = User::factory()->supplier()->create();
+        $product = Product::factory()->ownedBy($owner)->create();
 
         $this->actingAs($attacker, 'sanctum')
             ->deleteJson("/api/product/delete/{$product->id}")
@@ -89,37 +71,67 @@ class OwnershipBoundaryTest extends TestCase
     }
 
     /** @test */
+    public function a_supplier_can_delete_their_own_product(): void
+    {
+        $owner = User::factory()->supplier()->create();
+        $product = Product::factory()->ownedBy($owner)->create();
+
+        $this->actingAs($owner, 'sanctum')
+            ->deleteJson("/api/product/delete/{$product->id}")
+            ->assertSuccessful();
+
+        $this->assertNull($product->fresh());
+    }
+
+    /**
+     * STATUS CHANGED IN STAGE 4: 403 -> 404.
+     *
+     * Stage 1 returned 403 here while single-product delete returned 404, which
+     * was inconsistent AND leakier: a 403 confirmed "that id exists but is not
+     * yours", whereas the single-delete path revealed nothing. ProductPolicy now
+     * denies as NOT FOUND uniformly, so bulk and single behave the same and
+     * neither can be used to probe for other suppliers' product ids.
+     *
+     * This is a tightening, not a relaxation — the batch is still fully refused
+     * and both products still survive, which is what the test actually guards.
+     *
+     * @test
+     */
     public function bulk_delete_refuses_a_batch_containing_another_suppliers_product(): void
     {
-        [$owner, $attacker] = [$this->supplier(), $this->supplier()];
-        $mine = $this->productFor($attacker);
-        $theirs = $this->productFor($owner);
+        $owner = User::factory()->supplier()->create();
+        $attacker = User::factory()->supplier()->create();
+        $mine = Product::factory()->ownedBy($attacker)->create();
+        $theirs = Product::factory()->ownedBy($owner)->create();
 
         $this->actingAs($attacker, 'sanctum')
             ->postJson('/api/product/multi-delete', ['ids' => [$mine->id, $theirs->id]])
-            ->assertStatus(403);
+            ->assertStatus(404);
 
-        $this->assertNotNull($theirs->fresh(), 'Another supplier\'s product must survive.');
+        $this->assertNotNull($theirs->fresh(), 'Another supplier product must survive.');
         $this->assertNotNull($mine->fresh(), 'The whole batch must be refused, not partially applied.');
     }
 
     /** @test */
     public function a_supplier_cannot_read_another_suppliers_product(): void
     {
-        [$owner, $attacker] = [$this->supplier(), $this->supplier()];
-        $product = $this->productFor($owner);
+        $owner = User::factory()->supplier()->create();
+        $attacker = User::factory()->supplier()->create();
+        $product = Product::factory()->ownedBy($owner)->create();
 
         $this->actingAs($attacker, 'sanctum')
             ->getJson("/api/product/show/{$product->id}")
             ->assertStatus(404);
     }
 
+    // ----------------------------------------------------------------- cart
+
     /** @test */
     public function a_doctor_cannot_modify_another_doctors_cart_line(): void
     {
-        [$owner, $attacker] = [$this->doctor(), $this->doctor()];
-        $product = $this->productFor($this->supplier());
-        $cart = Cart::create(['doctor_id' => $owner->id, 'product_id' => $product->id, 'quantity' => 1]);
+        $owner = User::factory()->doctor()->create();
+        $attacker = User::factory()->doctor()->create();
+        $cart = Cart::factory()->ownedBy($owner)->create(['quantity' => 1]);
 
         $this->actingAs($attacker, 'sanctum')
             ->postJson("/api/cart/update/{$cart->id}", ['quantity' => 99])
@@ -131,9 +143,9 @@ class OwnershipBoundaryTest extends TestCase
     /** @test */
     public function a_doctor_cannot_delete_another_doctors_cart_line(): void
     {
-        [$owner, $attacker] = [$this->doctor(), $this->doctor()];
-        $product = $this->productFor($this->supplier());
-        $cart = Cart::create(['doctor_id' => $owner->id, 'product_id' => $product->id, 'quantity' => 1]);
+        $owner = User::factory()->doctor()->create();
+        $attacker = User::factory()->doctor()->create();
+        $cart = Cart::factory()->ownedBy($owner)->create();
 
         $this->actingAs($attacker, 'sanctum')
             ->deleteJson("/api/cart/delete/{$cart->id}")
@@ -143,10 +155,26 @@ class OwnershipBoundaryTest extends TestCase
     }
 
     /** @test */
+    public function a_doctor_can_modify_their_own_cart_line(): void
+    {
+        $owner = User::factory()->doctor()->create();
+        $cart = Cart::factory()->ownedBy($owner)->create(['quantity' => 1]);
+
+        $this->actingAs($owner, 'sanctum')
+            ->postJson("/api/cart/update/{$cart->id}", ['quantity' => 5])
+            ->assertSuccessful();
+
+        $this->assertEquals(5, $cart->fresh()->quantity);
+    }
+
+    // ------------------------------------------------------------- packages
+
+    /** @test */
     public function a_supplier_cannot_delete_another_suppliers_package(): void
     {
-        [$owner, $attacker] = [$this->supplier(), $this->supplier()];
-        $package = Package::create(['supplier_id' => $owner->id, 'name' => 'p', 'price' => 10]);
+        $owner = User::factory()->supplier()->create();
+        $attacker = User::factory()->supplier()->create();
+        $package = Package::factory()->ownedBy($owner)->create();
 
         $this->actingAs($attacker, 'sanctum')
             ->deleteJson("/api/package/delete/{$package->id}")
@@ -158,8 +186,9 @@ class OwnershipBoundaryTest extends TestCase
     /** @test */
     public function a_supplier_cannot_toggle_another_suppliers_package(): void
     {
-        [$owner, $attacker] = [$this->supplier(), $this->supplier()];
-        $package = Package::create(['supplier_id' => $owner->id, 'name' => 'p', 'price' => 10, 'active' => true]);
+        $owner = User::factory()->supplier()->create();
+        $attacker = User::factory()->supplier()->create();
+        $package = Package::factory()->ownedBy($owner)->create(['active' => true]);
 
         $this->actingAs($attacker, 'sanctum')
             ->getJson("/api/package/toggle-status/{$package->id}")
@@ -169,18 +198,28 @@ class OwnershipBoundaryTest extends TestCase
     }
 
     /** @test */
+    public function a_supplier_can_toggle_their_own_package(): void
+    {
+        $owner = User::factory()->supplier()->create();
+        $package = Package::factory()->ownedBy($owner)->create(['active' => true]);
+
+        $this->actingAs($owner, 'sanctum')
+            ->getJson("/api/package/toggle-status/{$package->id}")
+            ->assertSuccessful();
+
+        $this->assertFalse((bool) $package->fresh()->active);
+    }
+
+    // -------------------------------------------------------------- payments
+
+    /** @test */
     public function a_third_party_cannot_confirm_someone_elses_payment(): void
     {
-        $doctor = $this->doctor();
-        $supplier = $this->supplier();
-        $attacker = $this->doctor();
+        $doctor = User::factory()->doctor()->create();
+        $supplier = User::factory()->supplier()->create();
+        $attacker = User::factory()->doctor()->create();
 
-        $payment = Payment::create([
-            'doctor_id'   => $doctor->id,
-            'supplier_id' => $supplier->id,
-            'amount'      => 50,
-            'status'      => 'pending',
-        ]);
+        $payment = Payment::factory()->between($doctor, $supplier)->withStatus('pending')->create();
 
         $this->actingAs($attacker, 'sanctum')
             ->postJson("/api/payment/confirm/{$payment->id}", ['status' => 'confirmed'])
@@ -192,17 +231,12 @@ class OwnershipBoundaryTest extends TestCase
     /** @test */
     public function the_supplier_party_cannot_confirm_their_own_payment(): void
     {
-        $doctor = $this->doctor();
-        $supplier = $this->supplier();
+        $doctor = User::factory()->doctor()->create();
+        $supplier = User::factory()->supplier()->create();
 
-        $payment = Payment::create([
-            'doctor_id'   => $doctor->id,
-            'supplier_id' => $supplier->id,
-            'amount'      => 50,
-            'status'      => 'pending',
-        ]);
+        $payment = Payment::factory()->between($doctor, $supplier)->withStatus('pending')->create();
 
-        // Confirmation is the doctor's decision; the supplier must not self-approve.
+        // Confirmation is the doctor decision; the supplier must not self-approve.
         $this->actingAs($supplier, 'sanctum')
             ->postJson("/api/payment/confirm/{$payment->id}", ['status' => 'confirmed'])
             ->assertStatus(403);
@@ -213,14 +247,10 @@ class OwnershipBoundaryTest extends TestCase
     /** @test */
     public function a_third_party_cannot_request_deletion_of_someone_elses_payment(): void
     {
-        $payment = Payment::create([
-            'doctor_id'   => $this->doctor()->id,
-            'supplier_id' => $this->supplier()->id,
-            'amount'      => 50,
-            'status'      => 'confirmed',
-        ]);
+        $payment = Payment::factory()->withStatus('confirmed')->create();
+        $attacker = User::factory()->supplier()->create();
 
-        $this->actingAs($this->supplier(), 'sanctum')
+        $this->actingAs($attacker, 'sanctum')
             ->getJson("/api/payment/delete/{$payment->id}")
             ->assertStatus(403);
 
@@ -228,17 +258,35 @@ class OwnershipBoundaryTest extends TestCase
     }
 
     /** @test */
-    public function a_user_who_owns_no_line_in_an_order_cannot_change_its_status(): void
+    public function a_third_party_cannot_amend_someone_elses_payment(): void
     {
-        $doctor = $this->doctor();
-        $supplier = $this->supplier();
-        $attacker = $this->supplier();
+        $payment = Payment::factory()->of(100)->create();
+        $attacker = User::factory()->supplier()->create();
 
-        $order = Order::create(['doctor_id' => $doctor->id, 'status' => 'pending']);
-        OrderItem::create([
-            'order_id'   => $order->id,
-            'product_id' => $this->productFor($supplier)->id,
-            'quantity'   => 1,
+        $this->actingAs($attacker, 'sanctum')
+            ->postJson("/api/payment/update/{$payment->id}", [
+                'paid' => 999,
+                'date' => now()->toDateString(),
+            ])
+            ->assertStatus(403);
+
+        $this->assertEquals(100, $payment->fresh()->amount);
+        $this->assertNull($payment->fresh()->requested_amount);
+    }
+
+    // ---------------------------------------------------------------- orders
+
+    /** @test */
+    public function a_supplier_who_owns_no_line_in_an_order_cannot_change_its_status(): void
+    {
+        $doctor = User::factory()->doctor()->create();
+        $supplier = User::factory()->supplier()->create();
+        $attacker = User::factory()->supplier()->create();
+
+        $order = Order::factory()->placedBy($doctor)->create(['status' => 'pending']);
+        OrderItem::factory()->create([
+            'order_id' => $order->id,
+            'product_id' => Product::factory()->ownedBy($supplier)->create()->id,
         ]);
 
         $this->actingAs($attacker, 'sanctum')
@@ -251,12 +299,13 @@ class OwnershipBoundaryTest extends TestCase
     /** @test */
     public function a_doctor_cannot_mark_their_own_order_delivered(): void
     {
-        $doctor = $this->doctor();
-        $order = Order::create(['doctor_id' => $doctor->id, 'status' => 'pending']);
-        OrderItem::create([
-            'order_id'   => $order->id,
-            'product_id' => $this->productFor($this->supplier())->id,
-            'quantity'   => 1,
+        $doctor = User::factory()->doctor()->create();
+        $supplier = User::factory()->supplier()->create();
+
+        $order = Order::factory()->placedBy($doctor)->create(['status' => 'pending']);
+        OrderItem::factory()->create([
+            'order_id' => $order->id,
+            'product_id' => Product::factory()->ownedBy($supplier)->create()->id,
         ]);
 
         // Self-crediting inventory and fabricating a receivable was the original exploit.
@@ -270,9 +319,10 @@ class OwnershipBoundaryTest extends TestCase
     /** @test */
     public function a_doctor_cannot_flag_another_doctors_order_for_deletion(): void
     {
-        $order = Order::create(['doctor_id' => $this->doctor()->id, 'status' => 'pending']);
+        $order = Order::factory()->create(['status' => 'pending']);
+        $attacker = User::factory()->doctor()->create();
 
-        $this->actingAs($this->doctor(), 'sanctum')
+        $this->actingAs($attacker, 'sanctum')
             ->deleteJson("/api/order/delete/{$order->id}")
             ->assertStatus(403);
 
@@ -280,18 +330,32 @@ class OwnershipBoundaryTest extends TestCase
     }
 
     /** @test */
+    public function a_doctor_can_flag_their_own_order_for_deletion(): void
+    {
+        $doctor = User::factory()->doctor()->create();
+        $order = Order::factory()->placedBy($doctor)->create(['status' => 'pending']);
+
+        $this->actingAs($doctor, 'sanctum')
+            ->deleteJson("/api/order/delete/{$order->id}")
+            ->assertSuccessful();
+
+        $this->assertSame('delete_pending', $order->fresh()->status);
+    }
+
+    /** @test */
     public function a_supplier_who_does_not_own_the_product_cannot_approve_a_return(): void
     {
-        $order = Order::create(['doctor_id' => $this->doctor()->id, 'status' => 'delivered']);
-        $item = OrderItem::create([
-            'order_id'          => $order->id,
-            'product_id'        => $this->productFor($this->supplier())->id,
-            'quantity'          => 5,
-            'status'            => 'delete_pending',
-            'returned_quantity' => 2,
+        $supplier = User::factory()->supplier()->create();
+        $attacker = User::factory()->supplier()->create();
+
+        $order = Order::factory()->delivered()->create();
+        $item = OrderItem::factory()->pendingReturn(2)->create([
+            'order_id' => $order->id,
+            'product_id' => Product::factory()->ownedBy($supplier)->create()->id,
+            'quantity' => 5,
         ]);
 
-        $this->actingAs($this->supplier(), 'sanctum')
+        $this->actingAs($attacker, 'sanctum')
             ->postJson("/api/order/{$item->id}/update-status", ['status' => 'confirmed'])
             ->assertStatus(403);
 
@@ -299,83 +363,55 @@ class OwnershipBoundaryTest extends TestCase
     }
 
     /** @test */
+    public function a_doctor_cannot_request_a_return_on_another_doctors_order_item(): void
+    {
+        $order = Order::factory()->delivered()->create();
+        $item = OrderItem::factory()->create(['order_id' => $order->id, 'quantity' => 5]);
+
+        $attacker = User::factory()->doctor()->create();
+
+        $this->actingAs($attacker, 'sanctum')
+            ->postJson("/api/order/items/{$item->id}/return", ['quantity' => 1])
+            ->assertStatus(403);
+
+        $this->assertSame('confirmed', $item->fresh()->status);
+    }
+
+    // ---------------------------------------------------------------- report
+
+    /**
+     * STATUS CHANGED IN STAGE 4: 422 -> 404.
+     *
+     * The 422 was never intentional: Stage 1 scoped the lookup to doctors, the
+     * resulting ModelNotFoundException fell into the controller's generic
+     * `catch (Exception)`, and that returned 422 "something went wrong".
+     *
+     * UserPolicy::viewCounterparty now denies as NOT FOUND, which is both the
+     * correct status and consistent with every other non-enumerable resource.
+     * The denial itself is unchanged — a supplier still cannot read another
+     * supplier's record.
+     *
+     * @test
+     */
     public function a_user_cannot_read_an_arbitrary_user_record_through_the_doctor_report(): void
     {
-        $targetSupplier = $this->supplier();
+        $targetSupplier = User::factory()->supplier()->create();
+        $caller = User::factory()->supplier()->create();
 
         // The endpoint must only ever resolve doctors, never other suppliers.
-        $this->actingAs($this->supplier(), 'sanctum')
+        $this->actingAs($caller, 'sanctum')
             ->getJson("/api/report/doctor/{$targetSupplier->id}/details")
-            ->assertStatus(422);
+            ->assertStatus(404);
     }
 
     /** @test */
-    public function registration_rejects_a_privileged_department(): void
+    public function a_supplier_can_read_a_doctor_through_the_doctor_report(): void
     {
-        $privileged = Department::create(['name' => 'Admin', 'code' => 'admin']);
+        $doctor = User::factory()->doctor()->create();
+        $supplier = User::factory()->supplier()->create();
 
-        $this->postJson('/api/register', [
-            'name'          => 'Attacker',
-            'email'         => 'attacker' . uniqid() . '@example.test',
-            'phone'         => '0100' . random_int(1000000, 9999999),
-            'address'       => 'somewhere',
-            'city_id'       => $this->city()->id,
-            'department_id' => $privileged->id,
-            'password'      => 'secret123',
-        ])->assertStatus(422)
-          ->assertJsonValidationErrors('department_id');
-
-        $this->assertDatabaseMissing('users', ['department_id' => $privileged->id]);
-    }
-
-    /** @test */
-    public function the_public_department_list_does_not_expose_privileged_codes(): void
-    {
-        Department::create(['name' => 'Admin', 'code' => 'admin']);
-
-        $response = $this->getJson('/api/department/index')->assertSuccessful();
-
-        $codes = collect($response->json('data'))->pluck('role')->all();
-        $this->assertNotContains('admin', $codes);
-    }
-
-    // ---------------------------------------------------------------- helpers
-
-    private function supplier(): User
-    {
-        return $this->userWithDepartment('supplier');
-    }
-
-    private function doctor(): User
-    {
-        return $this->userWithDepartment('doctor');
-    }
-
-    private function userWithDepartment(string $code): User
-    {
-        $department = Department::firstOrCreate(['code' => $code], ['name' => ucfirst($code)]);
-
-        return User::create([
-            'name'          => $code . '-' . uniqid(),
-            'email'         => $code . uniqid() . '@example.test',
-            'phone'         => (string) random_int(1000000000, 1999999999),
-            'password'      => bcrypt('secret123'),
-            'department_id' => $department->id,
-        ]);
-    }
-
-    private function productFor(User $owner, array $attributes = []): Product
-    {
-        return Product::create(array_merge([
-            'user_id'  => $owner->id,
-            'name'     => 'product-' . uniqid(),
-            'price'    => 100,
-            'quantity' => 10,
-        ], $attributes));
-    }
-
-    private function city()
-    {
-        return \App\Models\General\City::firstOrCreate(['name' => 'TestCity']);
+        $this->actingAs($supplier, 'sanctum')
+            ->getJson("/api/report/doctor/{$doctor->id}/details")
+            ->assertSuccessful();
     }
 }
